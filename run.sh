@@ -48,7 +48,9 @@ run(){
 	build_image $EXECNAME
     fi
 
-    source ${SCRIPT_DIR}/${EXECNAME}/*.env
+    if [ -a ${SCRIPT_DIR}/${EXECNAME}/*.env ]; then
+        source ${SCRIPT_DIR}/${EXECNAME}/*.env
+    fi
 
     docker run $GENERAL_DOCKER_RUN_FLAGS \
 	$LOCAL_DOCKER_RUN_FLAGS \
