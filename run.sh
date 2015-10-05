@@ -22,7 +22,7 @@ clean() {
 
     # Removing containers
     for containerid in $(docker ps -a | grep $DOCKER_IMAGE_NAME | cut -f 1 --delimiter=" ") ; do
-	docker rm -v $containerid
+        docker rm -v $containerid
     done
 
     # Removing image
@@ -45,7 +45,7 @@ run(){
     local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
 
     if $FORCE_BUILD || [ -z "$(docker images -q $DOCKER_IMAGE_NAME)" ]; then
-	build_image $EXECNAME
+        build_image $EXECNAME
     fi
 
     if [ -a ${SCRIPT_DIR}/${EXECNAME}/*.env ]; then
@@ -53,10 +53,10 @@ run(){
     fi
 
     docker run $GENERAL_DOCKER_RUN_FLAGS \
-	$LOCAL_DOCKER_RUN_FLAGS \
-	-v $WORKING_DIRECTORY:/workspace \
-	-u $UID \
-	$DOCKER_IMAGE_NAME $@
+        $LOCAL_DOCKER_RUN_FLAGS \
+        -v $WORKING_DIRECTORY:/workspace \
+        -u $UID \
+        $DOCKER_IMAGE_NAME $@
 }
 
 # runtime
