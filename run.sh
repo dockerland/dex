@@ -43,6 +43,7 @@ run(){
     shift
     local WORKING_DIRECTORY=$(pwd)
     local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
+    local PIPED=0
 
     if $FORCE_BUILD || [ -z "$(docker images -q $DOCKER_IMAGE_NAME)" ]; then
         build_image $EXECNAME
@@ -54,10 +55,14 @@ run(){
 
     # Piping to Docker requires interactive
     if !(tty -s); then
+	PIPED=1
 	GENERAL_DOCKER_RUN_FLAGS="$GENERAL_DOCKER_RUN_FLAGS -i"
     fi
 
+    # Detached mode negates piping
+    # It's also incompatible with the --rm flag
     if [ $DETACH ]; then
+	PIPED=0
 	GENERAL_DOCKER_RUN_FLAGS=${GENERAL_DOCKER_RUN_FLAGS//--rm/-d}
     fi
 
@@ -70,7 +75,7 @@ run(){
 
 
     # This will re-pipe standard input
-    if tty -s; then
+    if [ !$PIPED ]; then
 
 	if [ $DETACH ]; then
 	    PID=$($runline)
