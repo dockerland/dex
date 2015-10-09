@@ -6,6 +6,8 @@ BIN_DIR="$BLUEACORN_DIR/bin"
 GENERAL_DOCKER_RUN_FLAGS="--rm"
 FORCE_BUILD=false
 
+DOCKER_BUILD_FLAGS="--rm -q --pull"
+
 # This won't work with symlinks might need to revisit
 # http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -37,6 +39,7 @@ build_image() {
     local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
     local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/."
 
+    echo "Building image for $EXECNAME"
     docker build $DOCKER_BUILD_FLAGS -t $DOCKER_IMAGE_NAME $DOCKER_BUILD_DIR
 }
 
@@ -46,6 +49,8 @@ install(){
 	local INSTALLNAME=$EXECNAME
 	local SCRIPT=${SCRIPT_DIR}/images/${EXECNAME}/${SCRIPTNAME}
 	read_image_env
+
+	build_image $EXECNAME
 
 	# Unlink existing symlink
 	if [ -L $BIN_DIR/$INSTALLNAME ]; then
