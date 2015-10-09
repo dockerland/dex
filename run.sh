@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+BLUEACORN_DIR=${BLUEACORN_DIR:-/etc/blueacorn}
+BIN_DIR="$BLUEACORN_DIR/bin"
+
 GENERAL_DOCKER_RUN_FLAGS="--rm"
 FORCE_BUILD=false
 
@@ -37,6 +40,41 @@ build_image() {
     docker build $DOCKER_BUILD_FLAGS -t $DOCKER_IMAGE_NAME $DOCKER_BUILD_DIR
 }
 
+install(){
+    local EXECNAME=$1
+    local SCRIPTNAME="${EXECNAME}.sh"
+    local INSTALLNAME=$EXECNAME
+    local SCRIPT=${SCRIPT_DIR}/images/${EXECNAME}/${SCRIPTNAME}
+    read_image_env
+
+    # Unlink existing symlink
+    if [ -L $BIN_DIR/$INSTALLNAME ]; then
+    	echo "Unlinking old $INSTALLNAME"
+    	unlink $BIN_DIR/$INSTALLNAME
+    fi
+
+    # Archive existing file
+    if [ -f $BIN_DIR/$INSTALLNAME ]; then
+    	current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+    	echo "Archiving $INSTALLNAME as ${INSTALLNAME}.$current_time"
+    	mv $BIN_DIR/$INSTALLNAME $BIN_DIR/${INSTALLNAME}.$current_time
+    fi
+
+    # Install new symlink
+    echo "Linking $INSTALLNAME to $SCRIPT"
+    if [ ! -x $SCRIPT ]; then
+	echo "Making $SCRIPT executable"
+	chmod +x $SCRIPT
+    fi
+    ln -s $SCRIPT $BIN_DIR/${INSTALLNAME}
+}
+
+read_image_env(){
+    if [ -a ${SCRIPT_DIR}/images/${EXECNAME}/*.env ]; then
+        source ${SCRIPT_DIR}/images/${EXECNAME}/*.env
+    fi
+}
+
 
 run(){
     local EXECNAME=$1
@@ -49,9 +87,7 @@ run(){
         build_image $EXECNAME
     fi
 
-    if [ -a ${SCRIPT_DIR}/images/${EXECNAME}/*.env ]; then
-        source ${SCRIPT_DIR}/images/${EXECNAME}/*.env
-    fi
+    read_image_env
 
     # Piping to Docker requires interactive
     if !(tty -s); then
@@ -101,6 +137,9 @@ else
     case $1 in
 	build)
 	    runstr="build_image"
+	    shift ;;
+	install)
+	    runstr="install"
 	    shift ;;
 	clean)
 	    runstr="clean"
