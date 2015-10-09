@@ -41,32 +41,33 @@ build_image() {
 }
 
 install(){
-    local EXECNAME=$1
-    local SCRIPTNAME="${EXECNAME}.sh"
-    local INSTALLNAME=$EXECNAME
-    local SCRIPT=${SCRIPT_DIR}/images/${EXECNAME}/${SCRIPTNAME}
-    read_image_env
+    for EXECNAME in $@ ; do
+	local SCRIPTNAME="${EXECNAME}.sh"
+	local INSTALLNAME=$EXECNAME
+	local SCRIPT=${SCRIPT_DIR}/images/${EXECNAME}/${SCRIPTNAME}
+	read_image_env
 
-    # Unlink existing symlink
-    if [ -L $BIN_DIR/$INSTALLNAME ]; then
-    	echo "Unlinking old $INSTALLNAME"
-    	unlink $BIN_DIR/$INSTALLNAME
-    fi
+	# Unlink existing symlink
+	if [ -L $BIN_DIR/$INSTALLNAME ]; then
+    	    echo "Unlinking old $INSTALLNAME"
+    	    unlink $BIN_DIR/$INSTALLNAME
+	fi
 
-    # Archive existing file
-    if [ -f $BIN_DIR/$INSTALLNAME ]; then
-    	current_time=$(date "+%Y.%m.%d-%H.%M.%S")
-    	echo "Archiving $INSTALLNAME as ${INSTALLNAME}.$current_time"
-    	mv $BIN_DIR/$INSTALLNAME $BIN_DIR/${INSTALLNAME}.$current_time
-    fi
+	# Archive existing file
+	if [ -f $BIN_DIR/$INSTALLNAME ]; then
+    	    current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+    	    echo "Archiving $INSTALLNAME as ${INSTALLNAME}.$current_time"
+    	    mv $BIN_DIR/$INSTALLNAME $BIN_DIR/${INSTALLNAME}.$current_time
+	fi
 
-    # Install new symlink
-    echo "Linking $INSTALLNAME to $SCRIPT"
-    if [ ! -x $SCRIPT ]; then
-	echo "Making $SCRIPT executable"
-	chmod +x $SCRIPT
-    fi
-    ln -s $SCRIPT $BIN_DIR/${INSTALLNAME}
+	# Install new symlink
+	echo "Linking $INSTALLNAME to $SCRIPT"
+	if [ ! -x $SCRIPT ]; then
+	    echo "Making $SCRIPT executable"
+	    chmod +x $SCRIPT
+	fi
+	ln -s $SCRIPT $BIN_DIR/${INSTALLNAME}
+    done
 }
 
 read_image_env(){
