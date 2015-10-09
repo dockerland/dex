@@ -52,6 +52,11 @@ run(){
         source ${SCRIPT_DIR}/images/${EXECNAME}/*.env
     fi
 
+    # Piping to Docker requires interactive
+    if !(tty -s); then
+	GENERAL_DOCKER_RUN_FLAGS="$GENERAL_DOCKER_RUN_FLAGS -i"
+    fi
+
     runline="docker run $GENERAL_DOCKER_RUN_FLAGS \
             $LOCAL_DOCKER_RUN_FLAGS \
             -v $WORKING_DIRECTORY:/workspace \
