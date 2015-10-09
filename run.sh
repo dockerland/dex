@@ -61,7 +61,8 @@ run(){
             $LOCAL_DOCKER_RUN_FLAGS \
             -v $WORKING_DIRECTORY:/workspace \
             -u $UID \
-            $DOCKER_IMAGE_NAME $@"
+            $DOCKER_IMAGE_NAME $@ \
+            $LOCAL_COMMAND_FLAGS"
 
     # This will re-pipe standard input
     if tty -s; then
