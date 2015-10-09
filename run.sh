@@ -57,6 +57,10 @@ run(){
 	GENERAL_DOCKER_RUN_FLAGS="$GENERAL_DOCKER_RUN_FLAGS -i"
     fi
 
+    if [ $DETACH ]; then
+	GENERAL_DOCKER_RUN_FLAGS=${GENERAL_DOCKER_RUN_FLAGS//--rm/-d}
+    fi
+
     runline="docker run $GENERAL_DOCKER_RUN_FLAGS \
             $LOCAL_DOCKER_RUN_FLAGS \
             -v $WORKING_DIRECTORY:/workspace \
@@ -64,9 +68,17 @@ run(){
             $DOCKER_IMAGE_NAME $@ \
             $LOCAL_COMMAND_FLAGS"
 
+
     # This will re-pipe standard input
     if tty -s; then
-    	($runline)
+
+	if [ $DETACH ]; then
+	    PID=$($runline)
+	    [ -z "$PID" ] && echo "Container failed to start!" && exit 1 || (docker wait $PID &>/dev/null && docker rm -v $PID &>/dev/null)&
+	else
+	    ($runline)
+	fi
+
     else
     	cat - | ($runline)
     fi
