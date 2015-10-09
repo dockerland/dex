@@ -52,11 +52,18 @@ run(){
         source ${SCRIPT_DIR}/images/${EXECNAME}/*.env
     fi
 
-    docker run $GENERAL_DOCKER_RUN_FLAGS \
-        $LOCAL_DOCKER_RUN_FLAGS \
-        -v $WORKING_DIRECTORY:/workspace \
-        -u $UID \
-        $DOCKER_IMAGE_NAME $@
+    runline="docker run $GENERAL_DOCKER_RUN_FLAGS \
+            $LOCAL_DOCKER_RUN_FLAGS \
+            -v $WORKING_DIRECTORY:/workspace \
+            -u $UID \
+            $DOCKER_IMAGE_NAME $@"
+
+    # This will re-pipe standard input
+    if tty -s; then
+    	($runline)
+    else
+    	cat - | ($runline)
+    fi
 }
 
 # runtime
