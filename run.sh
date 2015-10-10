@@ -43,6 +43,12 @@ build_image() {
     docker build $DOCKER_BUILD_FLAGS -t $DOCKER_IMAGE_NAME $DOCKER_BUILD_DIR
 }
 
+list(){
+    for EXECNAME in $(find ${SCRIPT_DIR}/images -type d -printf "%f ") ; do
+	echo $EXECNAME
+    done
+}
+
 install(){
     for EXECNAME in $@ ; do
 	local SCRIPTNAME="${EXECNAME}.sh"
@@ -149,6 +155,9 @@ else
 	    shift ;;
 	clean)
 	    runstr="clean"
+	    shift ;;
+	list)
+	    runstr="list"
 	    shift ;;
 	*)                runstr="run" ;;
     esac
