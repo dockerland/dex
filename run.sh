@@ -76,15 +76,19 @@ normalize_image_name(){
 }
 
 clean() {
-    local DOCKER_IMAGE_NAME=$(normalize_image_name $1)
+    for EXECNAME in $@ ; do
+	local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
 
-    # Removing containers
-    for containerid in $(docker ps -a | grep $DOCKER_IMAGE_NAME | cut -f 1 --delimiter=" ") ; do
-        docker rm -v $containerid
+	out_info "Cleaning $DOCKER_IMAGE_NAME"
+
+	out_info "Removing containers"
+	for containerid in $(docker ps -a | grep $DOCKER_IMAGE_NAME | cut -f 1 --delimiter=" ") ; do
+            docker rm -v $containerid
+	done
+
+	out_info "Removing image"
+	docker rmi -f $(docker images -q $DOCKER_IMAGE_NAME)
     done
-
-    # Removing image
-    docker rmi -f $(docker images -q $DOCKER_IMAGE_NAME)
 }
 
 build_image() {
