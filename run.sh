@@ -12,6 +12,59 @@ DOCKER_BUILD_FLAGS="--rm -q --pull"
 # http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# utility
+#########
+
+error(){
+  printf "\033[31m%s\n\033[0m" "$@" >&2
+  exit 1
+}
+
+out_info() {
+    colorize Green "[$1]"
+}
+
+# Should probably stick this somewhere better
+colorize() {
+    local COLOR_WORD=$1
+    shift
+
+    # Reset
+    Color_Off='\e[0m'       # Text Reset
+
+    # Regular Colors
+    Black='\e[0;30m'        # Black
+    Red='\e[0;31m'          # Red
+    Green='\e[0;32m'        # Green
+    Yellow='\e[0;33m'       # Yellow
+    Blue='\e[0;34m'         # Blue
+    Purple='\e[0;35m'       # Purple
+    Cyan='\e[0;36m'         # Cyan
+    White='\e[0;37m'        # White
+
+    # Bold
+    BBlack='\e[1;30m'       # Black
+    BRed='\e[1;31m'         # Red
+    BGreen='\e[1;32m'       # Green
+    BYellow='\e[1;33m'      # Yellow
+    BBlue='\e[1;34m'        # Blue
+    BPurple='\e[1;35m'      # Purple
+    BCyan='\e[1;36m'        # Cyan
+    BWhite='\e[1;37m'       # White
+
+    # Underline
+    UBlack='\e[4;30m'       # Black
+    URed='\e[4;31m'         # Red
+    UGreen='\e[4;32m'       # Green
+    UYellow='\e[4;33m'      # Yellow
+    UBlue='\e[4;34m'        # Blue
+    UPurple='\e[4;35m'      # Purple
+    UCyan='\e[4;36m'        # Cyan
+    UWhite='\e[4;37m'       # White
+
+    echo -e "${!COLOR_WORD}$@$Color_Off"
+}
+
 normalize_image_name(){
     local DOCKER_NAME=${1,,}
     DOCKER_NAME="${DOCKER_NAME}_batool"
@@ -52,10 +105,10 @@ info(){
 	local WORKDIR=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep WORKDIR | cut -f 2 -d " ")
 	local BUILD_STATUS=$(docker inspect $DOCKER_IMAGE_NAME >/dev/null 2>&1 && echo "Built" || echo "Not built")
 
-	echo "Info for '$EXECNAME'"
-	echo "Image: $DOCKER_IMAGE_NAME"
-	echo "From: $FROM_IMAGE"
-	echo "Build status: $BUILD_STATUS"
+	echo $(colorize UWhite "Info for '$EXECNAME'")
+	echo "$(colorize BWhite Image:) $DOCKER_IMAGE_NAME"
+	echo "$(colorize BWhite From:) $FROM_IMAGE"
+	echo "$(colorize BWhite "Build status:") $BUILD_STATUS"
 	echo
     done
 }
@@ -77,21 +130,21 @@ install(){
 
 	# Unlink existing symlink
 	if [ -L $BIN_DIR/$INSTALLNAME ]; then
-    	    echo "Unlinking old $INSTALLNAME"
+    	    out_info "Unlinking old $INSTALLNAME"
     	    unlink $BIN_DIR/$INSTALLNAME
 	fi
 
 	# Archive existing file
 	if [ -f $BIN_DIR/$INSTALLNAME ]; then
     	    current_time=$(date "+%Y.%m.%d-%H.%M.%S")
-    	    echo "Archiving $INSTALLNAME as ${INSTALLNAME}.$current_time"
+    	    out_info "Archiving $INSTALLNAME as ${INSTALLNAME}.$current_time"
     	    mv $BIN_DIR/$INSTALLNAME $BIN_DIR/${INSTALLNAME}.$current_time
 	fi
 
 	# Install new symlink
-	echo "Linking $INSTALLNAME to $SCRIPT"
+	out_info "Linking $INSTALLNAME to $SCRIPT"
 	if [ ! -x $SCRIPT ]; then
-	    echo "Making $SCRIPT executable"
+	    out_info "Making $SCRIPT executable"
 	    chmod +x $SCRIPT
 	fi
 	ln -s $SCRIPT $BIN_DIR/${INSTALLNAME}
@@ -144,7 +197,7 @@ run(){
 
 	if [ $DETACH ]; then
 	    PID=$($runline)
-	    [ -z "$PID" ] && echo "Container failed to start!" && exit 1 || (docker wait $PID &>/dev/null && docker rm -v $PID &>/dev/null)&
+	    [ -z "$PID" ] && error "Container failed to start!" || (docker wait $PID &>/dev/null && docker rm -v $PID &>/dev/null)&
 	else
 	    ($runline)
 	fi
