@@ -10,7 +10,15 @@ DOCKER_BUILD_FLAGS="--rm -q --pull"
 
 # This won't work with symlinks might need to revisit
 # http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # utility
 #########
@@ -128,7 +136,7 @@ install(){
     for EXECNAME in $@ ; do
 	local SCRIPTNAME="${EXECNAME}.sh"
 	local INSTALLNAME=$EXECNAME
-	local SCRIPT=${SCRIPT_DIR}/images/${EXECNAME}/${SCRIPTNAME}
+	local SCRIPT=${BLUEACORN_BOOTSTRAP_DIR}/tools/ba-docker-exec/images/${EXECNAME}/${SCRIPTNAME}
 	read_image_env
 
 	build_image $EXECNAME
