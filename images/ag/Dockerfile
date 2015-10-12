@@ -6,9 +6,6 @@ RUN apt-get update -qq && \
 
 RUN mkdir -p /workspace
 
-
-# ENV HOME="/tmp"
-# USER nobody
 WORKDIR /workspace
 
 VOLUME /workspace
