@@ -44,7 +44,7 @@ build_image() {
 }
 
 list(){
-    for EXECNAME in $(find ${SCRIPT_DIR}/images -type d -printf "%f ") ; do
+    for EXECNAME in $(find ${SCRIPT_DIR}/images -maxdepth 1 -mindepth 1 -type d -printf "%f ") ; do
 	echo $EXECNAME
     done
 }
