@@ -43,6 +43,19 @@ build_image() {
     docker build $DOCKER_BUILD_FLAGS -t $DOCKER_IMAGE_NAME $DOCKER_BUILD_DIR
 }
 
+info(){
+    local EXECNAME=$1
+    local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
+    local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/"
+
+    local FROM_IMAGE=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep FROM | cut -f 2 -d " ")
+    local WORKDIR=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep WORKDIR | cut -f 2 -d " ")
+
+    echo "Info for '$EXECNAME'"
+    echo "Image: $DOCKER_IMAGE_NAME"
+    echo "From: $FROM_IMAGE"
+}
+
 list(){
     for EXECNAME in $(find ${SCRIPT_DIR}/images -maxdepth 1 -mindepth 1 -type d -printf "%f ") ; do
 	echo $EXECNAME
@@ -158,6 +171,9 @@ else
 	    shift ;;
 	list)
 	    runstr="list"
+	    shift ;;
+	info)
+	    runstr="info"
 	    shift ;;
 	*)                runstr="run" ;;
     esac
