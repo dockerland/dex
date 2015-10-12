@@ -88,12 +88,13 @@ clean() {
 }
 
 build_image() {
-    local EXECNAME=$1
-    local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
-    local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/."
+    for EXECNAME in $@ ; do
+	local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
+	local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/."
 
-    echo "Building image for $EXECNAME"
-    docker build $DOCKER_BUILD_FLAGS -t $DOCKER_IMAGE_NAME $DOCKER_BUILD_DIR
+	out_info "Building image for $EXECNAME"
+	docker build $DOCKER_BUILD_FLAGS -t $DOCKER_IMAGE_NAME $DOCKER_BUILD_DIR
+    done
 }
 
 info(){
