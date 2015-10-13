@@ -249,7 +249,7 @@ else
 	build)
 	    runstr="build_image"
 	    shift ;;
-	install)
+	install|add)
 	    runstr="install"
 	    shift ;;
 	remove|uninstall|rm)
@@ -258,7 +258,7 @@ else
 	clean)
 	    runstr="clean"
 	    shift ;;
-	list)
+	list|ls)
 	    runstr="list"
 	    shift ;;
 	info)
