@@ -1,8 +1,10 @@
-FROM debian
+FROM alpine
 
-RUN apt-get update -qq && \
-  apt-get -yqq install silversearcher-ag && \
-  apt-get -yqq clean
+RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+
+RUN apk add --update \
+    the_silver_searcher@testing \
+    && rm -rf /var/cache/apk/*
 
 RUN mkdir -p /workspace
 
