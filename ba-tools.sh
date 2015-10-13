@@ -116,7 +116,7 @@ info(){
 
 	local FROM_IMAGE=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep FROM | cut -f 2 -d " ")
 	local WORKDIR=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep WORKDIR | cut -f 2 -d " ")
-	local BUILD_STATUS=$(docker inspect $DOCKER_IMAGE_NAME >/dev/null 2>&1 && echo "Built" || echo "Not built")
+	local BUILD_STATUS=$(docker inspect $DOCKER_IMAGE_NAME >/dev/null 2>&1 && echo $(colorize Green "Built") || echo $(colorize Red "Not built"))
 
 	echo $(colorize UWhite "Info for '$EXECNAME'")
 	echo "$(colorize BWhite Image:) $DOCKER_IMAGE_NAME"
