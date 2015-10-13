@@ -84,7 +84,9 @@ normalize_image_name(){
 }
 
 clean() {
-    for EXECNAME in $@ ; do
+    local EXECLIST=$(if_all $@)
+
+    for EXECNAME in $EXECLIST ; do
 	local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
 
 	out_info "Cleaning $DOCKER_IMAGE_NAME"
@@ -100,7 +102,9 @@ clean() {
 }
 
 build_image() {
-    for EXECNAME in $@ ; do
+    local EXECLIST=$(if_all $@)
+
+    for EXECNAME in $EXECLIST ; do
 	local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
 	local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/."
 
@@ -110,7 +114,9 @@ build_image() {
 }
 
 info(){
-    for EXECNAME in $@ ; do
+    local EXECLIST=$(if_all $@)
+
+    for EXECNAME in $EXECLIST ; do
 	local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
 	local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/"
 
@@ -126,14 +132,33 @@ info(){
     done
 }
 
-list(){
-    for EXECNAME in $(find ${SCRIPT_DIR}/images -maxdepth 1 -mindepth 1 -type d -printf "%f ") ; do
+print_list(){
+    for EXECNAME in $(list) ; do
 	echo $EXECNAME
     done
 }
 
+list(){
+    local EXECLIST=""
+    for EXECNAME in $(find ${SCRIPT_DIR}/images -maxdepth 1 -mindepth 1 -type d -printf "%f ") ; do
+	EXECLIST+="$EXECNAME "
+    done
+
+    echo $EXECLIST
+}
+
+if_all(){
+    if [ "$1" = "all" ]; then
+	echo $(list)
+    else
+	echo $@
+    fi
+}
+
 remove(){
-    for EXECNAME in $@ ; do
+    local EXECLIST=$(if_all $@)
+
+    for EXECNAME in $EXECLIST ; do
 	local INSTALLNAME=$EXECNAME
 	read_image_env
 
@@ -148,7 +173,9 @@ remove(){
 }
 
 install(){
-    for EXECNAME in $@ ; do
+    local EXECLIST=$(if_all $@)
+
+    for EXECNAME in $EXECLIST ; do
 	local SCRIPTNAME="${EXECNAME}.sh"
 	local INSTALLNAME=$EXECNAME
 	local SCRIPT=${BLUEACORN_BOOTSTRAP_DIR}/tools/ba-docker-exec/images/${EXECNAME}/${SCRIPTNAME}
@@ -229,6 +256,7 @@ run(){
 	    [ -z "$PID" ] && error "Container failed to start!" || (docker wait $PID &>/dev/null && docker rm -v $PID &>/dev/null)&
 	else
 	    ($runline)
+	    # echo $runline
 	fi
 
     else
@@ -259,7 +287,7 @@ else
 	    runstr="clean"
 	    shift ;;
 	list|ls)
-	    runstr="list"
+	    runstr="print_list"
 	    shift ;;
 	info)
 	    runstr="info"
