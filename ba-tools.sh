@@ -3,7 +3,7 @@
 BLUEACORN_DIR=${BLUEACORN_DIR:-/etc/blueacorn}
 BIN_DIR="$BLUEACORN_DIR/bin"
 
-GENERAL_DOCKER_RUN_FLAGS="--rm"
+GENERAL_DOCKER_RUN_FLAGS="--rm --log-driver=none"
 FORCE_BUILD=false
 
 DOCKER_BUILD_FLAGS="--rm -q --pull"
