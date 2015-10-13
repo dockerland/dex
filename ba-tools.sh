@@ -177,6 +177,7 @@ run(){
     local WORKING_DIRECTORY=$(pwd)
     local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
     local PIPED=0
+    local DOCKER_USER=$UID
 
     if $FORCE_BUILD || [ -z "$(docker images -q $DOCKER_IMAGE_NAME)" ]; then
         build_image $EXECNAME
@@ -200,7 +201,7 @@ run(){
     runline="docker run $GENERAL_DOCKER_RUN_FLAGS \
             $LOCAL_DOCKER_RUN_FLAGS \
             -v $WORKING_DIRECTORY:/workspace \
-            -u $UID \
+            -u $DOCKER_USER \
             $DOCKER_IMAGE_NAME $@ \
             $LOCAL_COMMAND_FLAGS"
 
