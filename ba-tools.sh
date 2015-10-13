@@ -133,17 +133,18 @@ list(){
 }
 
 remove(){
-    local EXECNAME=$1
-    local INSTALLNAME=$EXECNAME
-    read_image_env
+    for EXECNAME in $@ ; do
+	local INSTALLNAME=$EXECNAME
+	read_image_env
 
-    clean $EXECNAME
+	clean $EXECNAME
 
-    # Unlink existing symlink
-    if [ -L $BIN_DIR/$INSTALLNAME ]; then
-        out_info "Unlinking $INSTALLNAME"
-        unlink $BIN_DIR/$INSTALLNAME
-    fi
+	# Unlink existing symlink
+	if [ -L $BIN_DIR/$INSTALLNAME ]; then
+            out_info "Unlinking $INSTALLNAME"
+            unlink $BIN_DIR/$INSTALLNAME
+	fi
+    done
 }
 
 install(){
