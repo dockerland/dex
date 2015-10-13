@@ -29,7 +29,7 @@ error(){
 }
 
 out_info() {
-    colorize Green "[$1]"
+    colorize Green "[$@]"
 }
 
 # Should probably stick this somewhere better
