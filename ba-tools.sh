@@ -132,6 +132,20 @@ list(){
     done
 }
 
+remove(){
+    local EXECNAME=$1
+    local INSTALLNAME=$EXECNAME
+    read_image_env
+
+    clean $EXECNAME
+
+    # Unlink existing symlink
+    if [ -L $BIN_DIR/$INSTALLNAME ]; then
+        out_info "Unlinking $INSTALLNAME"
+        unlink $BIN_DIR/$INSTALLNAME
+    fi
+}
+
 install(){
     for EXECNAME in $@ ; do
 	local SCRIPTNAME="${EXECNAME}.sh"
@@ -236,6 +250,9 @@ else
 	    shift ;;
 	install)
 	    runstr="install"
+	    shift ;;
+	remove|uninstall|rm)
+	    runstr="remove"
 	    shift ;;
 	clean)
 	    runstr="clean"
