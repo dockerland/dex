@@ -7,7 +7,7 @@ FROM alpine:edge
 
 RUN apk add --update \
     git-gitk \
-    font-misc-misc \
+    ttf-droid \
     && rm -rf /var/cache/apk/*
 
 RUN mkdir -p /workspace
