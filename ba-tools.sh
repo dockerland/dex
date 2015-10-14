@@ -87,17 +87,17 @@ clean() {
     local EXECLIST=$(if_all $@)
 
     for EXECNAME in $EXECLIST ; do
-	local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
+        local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
 
-	out_info "Cleaning $DOCKER_IMAGE_NAME"
+        out_info "Cleaning $DOCKER_IMAGE_NAME"
 
-	out_info "Removing containers"
-	for containerid in $(docker ps -a | grep $DOCKER_IMAGE_NAME | cut -f 1 --delimiter=" ") ; do
+        out_info "Removing containers"
+        for containerid in $(docker ps -a | grep $DOCKER_IMAGE_NAME | cut -f 1 --delimiter=" ") ; do
             docker rm -v $containerid
-	done
+        done
 
-	out_info "Removing image"
-	docker rmi -f $(docker images -q $DOCKER_IMAGE_NAME)
+        out_info "Removing image"
+        docker rmi -f $(docker images -q $DOCKER_IMAGE_NAME)
     done
 }
 
@@ -105,11 +105,11 @@ build_image() {
     local EXECLIST=$(if_all $@)
 
     for EXECNAME in $EXECLIST ; do
-	local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
-	local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/."
+        local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
+        local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/."
 
-	out_info "Building image for $EXECNAME"
-	docker build $DOCKER_BUILD_FLAGS -t $DOCKER_IMAGE_NAME $DOCKER_BUILD_DIR
+        out_info "Building image for $EXECNAME"
+        docker build $DOCKER_BUILD_FLAGS -t $DOCKER_IMAGE_NAME $DOCKER_BUILD_DIR
     done
 }
 
@@ -117,31 +117,31 @@ info(){
     local EXECLIST=$(if_all $@)
 
     for EXECNAME in $EXECLIST ; do
-	local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
-	local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/"
+        local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
+        local DOCKER_BUILD_DIR="${SCRIPT_DIR}/images/${EXECNAME}/"
 
-	local FROM_IMAGE=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep FROM | cut -f 2 -d " ")
-	local WORKDIR=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep WORKDIR | cut -f 2 -d " ")
-	local BUILD_STATUS=$(docker inspect $DOCKER_IMAGE_NAME >/dev/null 2>&1 && echo $(colorize Green "Built") || echo $(colorize Red "Not built"))
+        local FROM_IMAGE=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep FROM | cut -f 2 -d " ")
+        local WORKDIR=$(cat ${DOCKER_BUILD_DIR}Dockerfile | grep WORKDIR | cut -f 2 -d " ")
+        local BUILD_STATUS=$(docker inspect $DOCKER_IMAGE_NAME >/dev/null 2>&1 && echo $(colorize Green "Built") || echo $(colorize Red "Not built"))
 
-	echo $(colorize UWhite "Info for '$EXECNAME'")
-	echo "$(colorize BWhite Image:) $DOCKER_IMAGE_NAME"
-	echo "$(colorize BWhite From:) $FROM_IMAGE"
-	echo "$(colorize BWhite "Build status:") $BUILD_STATUS"
-	echo
+        echo $(colorize UWhite "Info for '$EXECNAME'")
+        echo "$(colorize BWhite Image:) $DOCKER_IMAGE_NAME"
+        echo "$(colorize BWhite From:) $FROM_IMAGE"
+        echo "$(colorize BWhite "Build status:") $BUILD_STATUS"
+        echo
     done
 }
 
 print_list(){
     for EXECNAME in $(list) ; do
-	echo $EXECNAME
+        echo $EXECNAME
     done
 }
 
 list(){
     local EXECLIST=""
     for EXECNAME in $(find ${SCRIPT_DIR}/images -maxdepth 1 -mindepth 1 -type d -printf "%f ") ; do
-	EXECLIST+="$EXECNAME "
+        EXECLIST+="$EXECNAME "
     done
 
     echo $EXECLIST
@@ -149,9 +149,9 @@ list(){
 
 if_all(){
     if [ "$1" = "all" ]; then
-	echo $(list)
+        echo $(list)
     else
-	echo $@
+        echo $@
     fi
 }
 
@@ -159,16 +159,16 @@ remove(){
     local EXECLIST=$(if_all $@)
 
     for EXECNAME in $EXECLIST ; do
-	local INSTALLNAME=$EXECNAME
-	read_image_env
+        local INSTALLNAME=$EXECNAME
+        read_image_env
 
-	clean $EXECNAME
+        clean $EXECNAME
 
-	# Unlink existing symlink
-	if [ -L $BIN_DIR/$INSTALLNAME ]; then
+        # Unlink existing symlink
+        if [ -L $BIN_DIR/$INSTALLNAME ]; then
             out_info "Unlinking $INSTALLNAME"
             unlink $BIN_DIR/$INSTALLNAME
-	fi
+        fi
     done
 }
 
@@ -176,33 +176,33 @@ install(){
     local EXECLIST=$(if_all $@)
 
     for EXECNAME in $EXECLIST ; do
-	local SCRIPTNAME="${EXECNAME}.sh"
-	local INSTALLNAME=$EXECNAME
-	local SCRIPT=${BLUEACORN_BOOTSTRAP_DIR}/tools/ba-docker-exec/images/${EXECNAME}/${SCRIPTNAME}
-	read_image_env
+        local SCRIPTNAME="${EXECNAME}.sh"
+        local INSTALLNAME=$EXECNAME
+        local SCRIPT=${BLUEACORN_BOOTSTRAP_DIR}/tools/ba-docker-exec/images/${EXECNAME}/${SCRIPTNAME}
+        read_image_env
 
-	build_image $EXECNAME
+        build_image $EXECNAME
 
-	# Unlink existing symlink
-	if [ -L $BIN_DIR/$INSTALLNAME ]; then
-    	    out_info "Unlinking old $INSTALLNAME"
-    	    unlink $BIN_DIR/$INSTALLNAME
-	fi
+        # Unlink existing symlink
+        if [ -L $BIN_DIR/$INSTALLNAME ]; then
+            out_info "Unlinking old $INSTALLNAME"
+            unlink $BIN_DIR/$INSTALLNAME
+        fi
 
-	# Archive existing file
-	if [ -f $BIN_DIR/$INSTALLNAME ]; then
-    	    current_time=$(date "+%Y.%m.%d-%H.%M.%S")
-    	    out_info "Archiving $INSTALLNAME as ${INSTALLNAME}.$current_time"
-    	    mv $BIN_DIR/$INSTALLNAME $BIN_DIR/${INSTALLNAME}.$current_time
-	fi
+        # Archive existing file
+        if [ -f $BIN_DIR/$INSTALLNAME ]; then
+            current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+            out_info "Archiving $INSTALLNAME as ${INSTALLNAME}.$current_time"
+            mv $BIN_DIR/$INSTALLNAME $BIN_DIR/${INSTALLNAME}.$current_time
+        fi
 
-	# Install new symlink
-	out_info "Linking $INSTALLNAME to $SCRIPT"
-	if [ ! -x $SCRIPT ]; then
-	    out_info "Making $SCRIPT executable"
-	    chmod +x $SCRIPT
-	fi
-	ln -s $SCRIPT $BIN_DIR/${INSTALLNAME}
+        # Install new symlink
+        out_info "Linking $INSTALLNAME to $SCRIPT"
+        if [ ! -x $SCRIPT ]; then
+            out_info "Making $SCRIPT executable"
+            chmod +x $SCRIPT
+        fi
+        ln -s $SCRIPT $BIN_DIR/${INSTALLNAME}
     done
 }
 
@@ -229,15 +229,15 @@ run(){
 
     # Piping to Docker requires interactive
     if !(tty -s); then
-	PIPED=1
-	GENERAL_DOCKER_RUN_FLAGS="$GENERAL_DOCKER_RUN_FLAGS -i"
+        PIPED=1
+        GENERAL_DOCKER_RUN_FLAGS="$GENERAL_DOCKER_RUN_FLAGS -i"
     fi
 
     # Detached mode negates piping
     # It's also incompatible with the --rm flag
     if [ $DETACH ]; then
-	PIPED=0
-	GENERAL_DOCKER_RUN_FLAGS=${GENERAL_DOCKER_RUN_FLAGS//--rm/-d}
+        PIPED=0
+        GENERAL_DOCKER_RUN_FLAGS=${GENERAL_DOCKER_RUN_FLAGS//--rm/-d}
     fi
 
     runline="docker run $GENERAL_DOCKER_RUN_FLAGS \
@@ -251,16 +251,17 @@ run(){
     # This will re-pipe standard input
     if [ !$PIPED ]; then
 
-	if [ $DETACH ]; then
-	    PID=$($runline)
-	    [ -z "$PID" ] && error "Container failed to start!" || (docker wait $PID &>/dev/null && docker rm -v $PID &>/dev/null)&
-	else
-	    ($runline)
-	    # echo $runline
-	fi
+        if [ $DETACH ]; then
+            # echo $runline
+            PID=$($runline)
+            [ -z "$PID" ] && error "Container failed to start!" || (docker wait $PID &>/dev/null && docker rm -v $PID &>/dev/null)&
+        else
+            ($runline)
+            # echo $runline
+        fi
 
     else
-    	cat - | ($runline)
+        cat - | ($runline)
     fi
 }
 
@@ -274,25 +275,25 @@ if [ $# -eq 0 ]; then
     echo ""
 else
     case $1 in
-	build)
-	    runstr="build_image"
-	    shift ;;
-	install|add)
-	    runstr="install"
-	    shift ;;
-	remove|uninstall|rm)
-	    runstr="remove"
-	    shift ;;
-	clean)
-	    runstr="clean"
-	    shift ;;
-	list|ls)
-	    runstr="print_list"
-	    shift ;;
-	info)
-	    runstr="info"
-	    shift ;;
-	*)                runstr="run" ;;
+        build)
+            runstr="build_image"
+            shift ;;
+        install|add)
+            runstr="install"
+            shift ;;
+        remove|uninstall|rm)
+            runstr="remove"
+            shift ;;
+        clean)
+            runstr="clean"
+            shift ;;
+        list|ls)
+            runstr="print_list"
+            shift ;;
+        info)
+            runstr="info"
+            shift ;;
+        *)                runstr="run" ;;
     esac
 
     $runstr $@
