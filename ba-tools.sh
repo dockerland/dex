@@ -216,7 +216,7 @@ read_image_env(){
 run(){
     local EXECNAME=$1
     shift
-    local WORKING_DIRECTORY=$(pwd)
+    local WORKING_DIRECTORY_PATH=$(pwd)
     local DOCKER_IMAGE_NAME=$(normalize_image_name $EXECNAME)
     local PIPED=0
     local DOCKER_USER=$UID
@@ -226,6 +226,9 @@ run(){
     fi
 
     read_image_env
+
+    local WORKING_DIRECTORY_NAME=${WORKING_DIRECTORY_PATH##*/}
+    local DOCKER_WORKING_DIRECTORY_PATH="/workspace/$WORKING_DIRECTORY_NAME"
 
     # Piping to Docker requires interactive
     if !(tty -s); then
@@ -242,7 +245,8 @@ run(){
 
     runline="docker run $GENERAL_DOCKER_RUN_FLAGS \
             $LOCAL_DOCKER_RUN_FLAGS \
-            -v $WORKING_DIRECTORY:/workspace \
+            -v $WORKING_DIRECTORY_PATH:$DOCKER_WORKING_DIRECTORY_PATH \
+            -w $DOCKER_WORKING_DIRECTORY_PATH \
             -u $DOCKER_USER \
             $DOCKER_IMAGE_NAME $@ \
             $LOCAL_COMMAND_FLAGS"
