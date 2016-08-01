@@ -1,6 +1,13 @@
 #
+# dex
+# @author: Brice Burgess @briceburg
+#
 # Makefile reference vars :
 #  https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html#Automatic-Variables
+#
+
+#
+# common
 #
 
 CWD:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -15,13 +22,17 @@ clean:
 	rm -rf $(SCRATCH_PATH)
 	for id in $$(docker images -q dockerbuild-dex-*) ; do docker rmi  $$id ; done
 
-scratch:
+$(SCRATCH_PATH):
 	mkdir -p $(SCRATCH_PATH)
 
-tests: $(SCRATCH_PATH)/dockerbuild-tests
-	docker run -it --rm -v $(CWD)/tests:/tests dockerbuild-$(NAMESPACE)-tests
-
-$(SCRATCH_PATH)/dockerbuild-%: scratch
+$(SCRATCH_PATH)/dockerbuild-%: $(SCRATCH_PATH)
 	echo "--- building Dockerfiles from $*/ ---"
 	docker build --tag dockerbuild-$(NAMESPACE)-$* $*/
 	touch $@
+
+#
+# app
+#
+
+tests: $(SCRATCH_PATH)/dockerbuild-tests
+	docker run -it --rm -v $(CWD)/tests/bats:/tests dockerbuild-$(NAMESPACE)-tests
