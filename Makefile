@@ -1,6 +1,5 @@
 #
-# dex
-# @author: Brice Burgess @briceburg
+# dex makefile
 #
 # Makefile reference vars :
 #  https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html#Automatic-Variables
@@ -14,12 +13,15 @@ CWD:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 SCRATCH_PATH:=$(CWD)/.scratch
 NAMESPACE=dex
 
-.PHONY: tests
+PREFIX:=$(DESTDIR)/usr/local
+BINDIR:=$(PREFIX)/bin
 
-all:
+.PHONY: tests dex
+all: dex
 
 clean:
 	rm -rf $(SCRATCH_PATH)
+	rm -rf $(CWD)/bin/dex
 	for id in $$(docker images -q dockerbuild-dex-*) ; do docker rmi  $$id ; done
 
 $(SCRATCH_PATH):
@@ -30,9 +32,27 @@ $(SCRATCH_PATH)/dockerbuild-%: $(SCRATCH_PATH)
 	docker build --tag dockerbuild-$(NAMESPACE)-$* $*/
 	touch $@
 
+
 #
 # app
 #
+
+dex:
+	#
+	# inline helpers into single shell-script
+	#
+	sed '/\@start/,/\@end/d' $(CWD)/dex.sh > $(CWD)/bin/dex
+	cat $(CWD)/lib.d/*.sh >> $(CWD)/bin/dex
+	echo 'main "$$@"' >> $(CWD)/bin/dex
+	chmod +x $(CWD)/bin/dex
+
+install: dex
+
+  # use mkdir vs. install -D/d (darwin portability)
+	mkdir -p $(DESTDIR)${prefix}/bin
+	install bin/dex $(BINDIR)/dex
+
+	# @TODO man page installation
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
 	docker run -it --rm -v $(CWD)/tests/bats:/tests \
