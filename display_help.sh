@@ -46,4 +46,7 @@ display_help() {
     -p | --publish       Automatically push branch(es) to upstream
 
 EOF
+
+  [ $# -eq 0 ] && exit 0
+  exit $1
 }
