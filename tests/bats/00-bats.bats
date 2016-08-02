@@ -3,5 +3,9 @@
 load helpers
 
 @test "helpers get loaded" {
-  [ $HELPERS_LOADTED ]
+  [ $HELPERS_LOADED ]
+}
+
+@test "writable TMPDIR" {
+  touch $TMPDIR/writable
 }

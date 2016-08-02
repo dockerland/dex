@@ -5,10 +5,13 @@ RUN echo "http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositor
     bash \
     bats \
     fish \
+    git \
+    make \
     mksh \
     zsh \
   && rm -rf /var/cache/apk/*
 
-VOLUME /tests
+VOLUME /dex
+WORKDIR /dex
 
-CMD bats /tests
+CMD bats tests/bats/

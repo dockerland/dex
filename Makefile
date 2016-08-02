@@ -20,8 +20,10 @@ BINDIR:=$(PREFIX)/bin
 all: dex
 
 clean:
-	rm -rf $(SCRATCH_PATH)
 	rm -rf $(CWD)/bin/dex
+	rm -rf $(SCRATCH_PATH)
+
+clean-tests: clean
 	for id in $$(docker images -q dockerbuild-dex-*) ; do docker rmi  $$id ; done
 
 $(SCRATCH_PATH):
@@ -58,5 +60,5 @@ uninstall:
 	rm -rf  $(BINDIR)/dex
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
-	docker run -it --rm -v $(CWD)/tests/bats:/tests \
-	  -u $$(id -u):$$(id -g) dockerbuild-$(NAMESPACE)-tests
+	docker run -it --rm -v $(CWD)/:/dex/ -u $$(id -u):$$(id -g) \
+	  dockerbuild-$(NAMESPACE)-tests
