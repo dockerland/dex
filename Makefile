@@ -49,10 +49,13 @@ dex:
 install: dex
 
   # use mkdir vs. install -D/d (darwin portability)
-	mkdir -p $(DESTDIR)${prefix}/bin
+	mkdir -p $(BINDIR)
 	install bin/dex $(BINDIR)/dex
 
 	# @TODO man page installation
+
+uninstall:
+	rm -rf  $(BINDIR)/dex
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
 	docker run -it --rm -v $(CWD)/tests/bats:/tests \
