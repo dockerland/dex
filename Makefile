@@ -35,4 +35,5 @@ $(SCRATCH_PATH)/dockerbuild-%: $(SCRATCH_PATH)
 #
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
-	docker run -it --rm -v $(CWD)/tests/bats:/tests dockerbuild-$(NAMESPACE)-tests
+	docker run -it --rm -v $(CWD)/tests/bats:/tests \
+	  -u $$(id -u):$$(id -g) dockerbuild-$(NAMESPACE)-tests
