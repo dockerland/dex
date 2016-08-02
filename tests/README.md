@@ -22,3 +22,10 @@ cd /path/to/dex.git
 make clean
 make tests
 ```
+
+### updating the help.txt fixture
+
+```
+cd /path/to/dex.git
+./dex.sh > tests/fixtures/help.txt
+```
