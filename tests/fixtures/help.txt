@@ -1,41 +1,61 @@
 
-  A release utility.
+Piping hot docker executables to your door.
 
-  Release branches are orphaned from -master and include the 'common' directory
-  with 'application-type' merged in.
-    E.g. the result of common/ overlayed with m1/
+"dexecutables" are images built and executed from Dockerfiles and scripts
+hosted in [git] source repositories.
 
-  Skels track releases using git subtree via the downstreamer. This requires
-  non-divergent history in release branches -- e.g. if a project jumps between
-  different releases, git-subtree will fail if it cannot find the previous ref.
+Usage: dex <command> [options]
 
-  As such, the official release branch points to the HEAD of "prerelease" when
-  it's deemed stable.
+  # Run a dexecutable (below examples run sed)
+  dex run sed
+  echo 'foo' | dex run sed s/foo/bar/
+  dex run sed s/foo/bar/ <(echo 'foo')
 
-  If a custom branch is specified and gets tracked by a project, you can merge
-  this branch into the prerelease branch to avoid divergent history issues
-  when downstreaming.
+  # Run a tagged version of a dexecutable (below maps to sed/Dockerfile.darwin)
+  dex run sed:darwin -h
 
-  Usage: release <application-type> [options]
+  # Install a dexecutable (creates 'dsed' and 'dsed-darwin' in /usr/local/bin)
+  dex install sed
+  dex install sed:darwin
 
-         # create and publish a m1 prerelease  (branch name: prerelease/m1)
-         release.sh m1 --publish
+  # Install a dexecutable from a specific source repository
+  dex install extras/sed
 
-         # create a custom prerelease branch (branch name: prerelease/m1-test)
-         release.sh m1 --branch prerelease/m1-test
+  # Globally install a dexecutable (creates 'sed' in /usr/local/bin)
+  dex install --global sed:darwin
 
-         # stage an official release (branch name: release/m1)
-         release.sh m1 --official
+  # Add an additional dexecutable source repository named "extras"
+  #  sources are stored in ~/dex/sources.list
+  dex remote add extras|git@github.com:dockerland/dex-dockerfiles-extra.git
 
 
-  Options:
-    --help               Display help
+Commands:
 
-    -b | --branch        Branch name to build or to base official release on
-                         (defaults to prerelease/<application-type>)
+  run [src/]<image>      Run a dexecutable. Prefixing with src/ will run a
+                         dexecutable from a specific source repository.
 
-    -o | --official      Create an official release. First builds a prerelease,
-                         then points the official branch to it
+  pull [src]             Pull changes from dexecutable source repositories,
+                         or a specific source repository if named.
 
-    -p | --publish       Automatically push branch(es) to upstream
+  install [src/]<image>  Installs a dexecutable to  so it can be
+                         run by name (vs. dex run image).
+  uninstall              Removes a dexecutable from  (and its global
+                         counterpart if installed).
+
+  remote-add [src|url]   Add (and pulls) a dexecutable source repository.
+                         Accepts a source string, or prompts for name and url.
+  remote-rm              Remove a dexecutable source repository
+  remote-ls              List dexecutable source repositories
+
+
+Options:
+  -h|--help|help        Display help
+
+  -t|--target           Target directory for (un)installations
+                        (defaults :-'/usr/local/bin')
+
+  -p|--prefix           Prefix to use when (un)installing dexecutables
+                        (defaults to :-'d')
+
+  -g|--global           Perform a global installation (without a prefix)
 
