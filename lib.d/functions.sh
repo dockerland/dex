@@ -22,3 +22,15 @@ prompt_confirm() {
     esac
   done
 }
+
+unrecognized_arg(){
+
+  if [ $CMD = "main" ]; then
+    printf "\n\n$1 is an unrecognized command\n\n"
+  else
+    printf "\n\n$1 is an unrecognized argument to the $CMD command.\n\n"
+  fi
+
+  display_help 127
+
+}

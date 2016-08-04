@@ -7,24 +7,27 @@
 CWD=$(dirname $0)
 
 main(){
+
+  CMD="main"
+
   local runstr="display_help"
 
   if [ $# -eq 0 ]; then
-    display_help "main" 2
+    display_help 2
   else
     while [ $# -ne 0 ]; do
       case $1 in
-        help)              display_help ${2:-main} ;;
-        -h|--help)         display_help "main" ;;
-        *)                 echo "$1 is an unrecognized argument";
-                           display_help "main" 127 ;;
+        help)             CMD=${2:-$CMD} ; display_help ;;
+        image)            CMD=$1 ; shift ; main_$CMD $@ ;;
+        -h|--help)        display_help ;;
+        *)                unrecognized_arg "$1" ;;
       esac
       shift
     done
-
-    $runstr
-    exit $?
   fi
+
+  $runstr
+  exit $?
 }
 
 #@start dev-mode
