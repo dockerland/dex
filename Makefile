@@ -44,7 +44,7 @@ dex:
 	# inline helpers into single shell-script
 	#
 	sed '/\@start/,/\@end/d' $(CWD)/dex.sh > $(CWD)/bin/dex
-	cat $(CWD)/lib.d/*.sh >> $(CWD)/bin/dex
+	find $(CWD)/lib.d/ -type f -name "*.sh" -exec cat {} >> $(CWD)/bin/dex +
 	echo 'main "$$@"' >> $(CWD)/bin/dex
 	chmod +x $(CWD)/bin/dex
 

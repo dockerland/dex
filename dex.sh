@@ -26,10 +26,10 @@ main(){
 }
 
 #@start dev-mode
-# replaced by make (lib.d/ contents will expanded inline)
-for helper in $CWD/lib.d/*.sh; do
+# replaced by make (lib.d/ shell scripts get expanded inline)
+for helper in $(find $CWD/lib.d/ -type f -name "*.sh"); do
+  #@TODO check for errors when sourcing here
   . $helper
 done
-
 main "$@"
 #@end dev-mode
