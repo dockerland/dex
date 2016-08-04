@@ -6,6 +6,15 @@
 # define path to dex executable
 DEX=$TMPDIR/usr/local/bin/dex
 
+DEX_CMDS="
+image
+install
+remote
+run
+uninstall
+update
+vars"
+
 #
 # runtime fns
 #

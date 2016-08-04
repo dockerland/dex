@@ -17,10 +17,14 @@ main(){
   else
     while [ $# -ne 0 ]; do
       case $1 in
+
+        image|install|remote|run|uninstall|update|vars)
+          CMD=$1 ; shift ; main_$CMD $@ ;;
+
         help)             CMD=${2:-$CMD} ; display_help ;;
-        image)            CMD=$1 ; shift ; main_$CMD $@ ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
+        
       esac
       shift
     done
