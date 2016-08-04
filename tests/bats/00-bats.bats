@@ -2,10 +2,10 @@
 
 load helpers
 
-@test "helpers get loaded" {
+@test "bats helpers get loaded" {
   [ $HELPERS_LOADED ]
 }
 
-@test "writable TMPDIR" {
+@test "bats provides a writable TMPDIR" {
   touch $TMPDIR/writable
 }
