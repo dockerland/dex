@@ -1,4 +1,9 @@
+#
+# lib.d/display_help.sh for dex -*- shell-script -*-
+#
 
+display_help_image(){
+  cat <<-EOF
 Piping hot docker executables to your door.
 
 Installing a dexecutable will build its image and copy its launch script
@@ -33,3 +38,6 @@ Options:
   -g|--global           Globally install the dexecutable
 
   -f|--force            Overwrite target(s) if they already exist.
+
+EOF
+}

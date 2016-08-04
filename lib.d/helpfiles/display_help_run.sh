@@ -1,3 +1,9 @@
+#
+# lib.d/display_help.sh for dex -*- shell-script -*-
+#
+
+display_help_image(){
+  cat <<-EOF
 
 Piping hot docker executables to your door.
 
@@ -32,3 +38,5 @@ Options:
   -h|--help             Display help
   -b|--build            Always build the image before executing
   -p|--persist          Persist the container after it exits
+EOF
+}

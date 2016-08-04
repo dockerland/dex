@@ -1,3 +1,9 @@
+#
+# lib.d/display_help.sh for dex -*- shell-script -*-
+#
+
+display_help_image(){
+  cat <<-EOF
 
 Piping hot docker executables to your door.
 
@@ -28,3 +34,6 @@ Options:
 
   -f|--force            When pulling, discard any working copy changes
                         When adding, first remove any matching name || url
+
+EOF
+}

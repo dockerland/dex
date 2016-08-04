@@ -1,3 +1,9 @@
+#
+# lib.d/display_help.sh for dex -*- shell-script -*-
+#
+
+display_help_image(){
+  cat <<-EOF
 
 Piping hot docker executables to your door.
 
@@ -31,3 +37,5 @@ Options:
 
   -f|--force            When removing, persisted runs will be deleted.
                         When building, ignore API version check.
+EOF
+}

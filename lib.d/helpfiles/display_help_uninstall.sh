@@ -1,4 +1,9 @@
+#
+# lib.d/display_help.sh for dex -*- shell-script -*-
+#
 
+display_help_image(){
+  cat <<-EOF
 Piping hot docker executables to your door.
 
 Leave not a trace
@@ -19,3 +24,6 @@ Options:
                         (defaults to $DEX_PREFIX:-'d')
   -t|--target           Target directory for (un)installations
                         (defaults $DEX_BINDIR:-'/usr/local/bin')
+
+EOF
+}

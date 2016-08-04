@@ -9,13 +9,13 @@ runstr="display_help"
 
 main(){
   if [ $# -eq 0 ]; then
-    display_help 2
+    display_help "main" 2
   else
     while [ $# -ne 0 ]; do
       case $1 in
-        -h|--help|help)    display_help ;;
+        -h|--help|help)    display_help "main" ;;
         *)                 echo "$1 is an unrecognized argument";
-                           display_help 127 ;;
+                           display_help "main" 127 ;;
       esac
       shift
     done
