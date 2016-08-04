@@ -17,7 +17,7 @@ Commands:
 
   help <command>               Display help for a particular command
   image <command>              Build and maintain images
-  install [repository/]<image> Install a dexecutable to $DEX_BINDIR
+  install [repository/]<image> Install a dexecutable to \$DEX_BINDIR
   remote <command>             Manage source repositories
   run [repository/]<image>     Run a dexecutable
   update                       Refreshes ("pulls") all source repositories

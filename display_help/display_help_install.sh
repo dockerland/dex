@@ -7,8 +7,8 @@ display_help_install(){
 Piping hot docker executables to your door.
 
 Installing a dexecutable will build its image and copy its launch script
-to $DEX_BINDIR (typically /usr/local/bin). The script is prefixed using
-$DEX_PREFIX (typically 'd'), so installing 'sed' creates /usr/local/bin/dsed.
+to \$DEX_BINDIR (typically /usr/local/bin). The script is prefixed using
+\$DEX_PREFIX (typically 'd'), so installing 'sed' creates /usr/local/bin/dsed.
 
 You may 'globally' install, which will create a symlink to the dexecutable
 without a prefix, so /usr/local/bin/sed points to /usr/local/bin/dsed.

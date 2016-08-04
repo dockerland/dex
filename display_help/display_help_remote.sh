@@ -10,7 +10,7 @@ Piping hot docker executables to your door.
 "dexecutables" are images built and executed from Dockerfiles and scripts
 contained in git "source repositories" and manged by 'dex remote'.
 
-Source repositories are defined in $DEX_HOME/sources.list
+Source repositories are defined in \$DEX_HOME/sources.list
   (typically ~/.dex/sources.list), one per line, and space delimited (name url).
 
 Removing or adding repositories will not effect built images, allowing

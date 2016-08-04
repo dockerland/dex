@@ -11,7 +11,7 @@ Piping hot docker executables to your door.
 locally installed. We call these images "docker executables" or "dexecutables".
 
 Images are built from Dockerfiles kept in "source repositories" and managed
-by 'dex remote' commands, or by editing the sources.list file in $DEX_HOME.
+by 'dex remote' commands, or by editing the sources.list file in \$DEX_HOME.
 
 Dex searches repository checkouts for <image> and executes the first found.
 Limit the search by slash-passing a repository, e.g. <repo-name>/<image>, or

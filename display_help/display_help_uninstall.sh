@@ -21,9 +21,9 @@ Options:
   -h|--help|help        Display help
   -f|--force            force remove built image and any persisted runs.
   -p|--prefix           Prefix to use when (un)installing dexecutables
-                        (defaults to $DEX_PREFIX:-'d')
+                        (defaults to \$DEX_PREFIX:-'d')
   -t|--target           Target directory for (un)installations
-                        (defaults $DEX_BINDIR:-'/usr/local/bin')
+                        (defaults \$DEX_BINDIR:-'/usr/local/bin')
 
 EOF
 }
