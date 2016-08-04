@@ -21,10 +21,11 @@ main(){
         image|install|remote|run|uninstall|update|vars)
           CMD=$1 ; shift ; main_$CMD $@ ;;
 
+        ping)             dex-ping ;;
         help)             CMD=${2:-$CMD} ; display_help ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
-        
+
       esac
       shift
     done
