@@ -1,5 +1,9 @@
 #!/usr/bin/env bats
 
+#
+# 00 - dependencies
+#
+
 load helpers
 
 setup() {
