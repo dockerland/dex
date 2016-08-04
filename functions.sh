@@ -9,7 +9,7 @@ dex-ping(){
 
 error(){
   printf "\033[31m%s\n\033[0m" "$@" >&2
-  exit 1
+  exit ${ERRCODE:-1}
 }
 
 prompt_confirm() {
