@@ -4,6 +4,7 @@
 
 dex-ping(){
   echo "pong"
+  exit 0
 }
 
 error(){
@@ -33,4 +34,41 @@ unrecognized_arg(){
 
   display_help 127
 
+}
+
+vars_load(){
+  while [ $# -ne 0 ]; do
+    case $1 in
+      DEX_HOME) DEX_HOME=${DEX_HOME:-~/.dex} ;;
+      DEX_BINDIR) DEX_BINDIR=${DEX_BINDIR:-/usr/local/bin} ;;
+      DEX_PREFIX) DEX_PREFIX=${DEX_PREFIX:-'d'} ;;
+      *) error "$1 has no default variable value" ;;
+    esac
+    shift
+  done
+}
+
+vars_reset(){
+  while [ $# -ne 0 ]; do
+    unset $1
+    shift
+  done
+}
+
+vars_print(){
+  while [ $# -ne 0 ]; do
+    eval "printf \"$1=\$$1\n\""
+    shift
+  done
+}
+
+vars_print_export(){
+  # TODO -- shell detection for fish|export
+  while [ $# -ne 0 ]; do
+    eval "printf \"export $1=\$$1\n\""
+    shift
+  done
+
+  printf "# Run this command to configure your shell: \n"
+  printf "# eval \$($ORIG_CMD)\n\n"
 }

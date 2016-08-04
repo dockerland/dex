@@ -9,6 +9,10 @@ CWD=$(dirname $0)
 main(){
 
   CMD="main"
+  ORIG_CMD="$0 $@"
+
+  DEX_VARS=( DEX_HOME DEX_BINDIR DEX_PREFIX )
+  vars_load ${DEX_VARS[@]}
 
   local runstr="display_help"
 
