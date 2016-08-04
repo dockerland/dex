@@ -7,7 +7,7 @@ main_install(){
   local runstr="display_help"
 
   if [ $# -eq 0 ]; then
-    display_help $CMD 2
+    display_help 2
   else
     while [ $# -ne 0 ]; do
       case $1 in
@@ -20,5 +20,5 @@ main_install(){
 
   $runstr
   exit $?
-  
+
 }
