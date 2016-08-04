@@ -2,7 +2,7 @@
 # lib.d/display_help.sh for dex -*- shell-script -*-
 #
 
-display_help_image(){
+display_help_install(){
   cat <<-EOF
 Piping hot docker executables to your door.
 

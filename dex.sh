@@ -5,15 +5,17 @@
 #
 
 CWD=$(dirname $0)
-runstr="display_help"
 
 main(){
+  local runstr="display_help"
+
   if [ $# -eq 0 ]; then
     display_help "main" 2
   else
     while [ $# -ne 0 ]; do
       case $1 in
-        -h|--help|help)    display_help "main" ;;
+        help)              display_help ${2:-main} ;;
+        -h|--help)         display_help "main" ;;
         *)                 echo "$1 is an unrecognized argument";
                            display_help "main" 127 ;;
       esac
