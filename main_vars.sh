@@ -4,21 +4,27 @@
 
 main_vars(){
 
-  local runstr="display_help"
+  local reset=false
+  local vars=()
+
+  local runstr="vars_print"
 
   if [ $# -eq 0 ]; then
-    display_help $CMD 2
+    display_help 2
   else
     while [ $# -ne 0 ]; do
       case $1 in
+        all)               vars=( "${DEX_VARS[@]}" ) ;;
+        -d|--defaults)     runstr="vars_print_export"
+                           vars_reset ${DEX_VARS[@]} ;
+                           vars_load ${DEX_VARS[@]} ;;
         -h|--help)         display_help ;;
-        *)                 unrecognized_arg "$1" ;;
+        *)                 vars+=$1 ;;
       esac
       shift
     done
   fi
 
-  $runstr
+  $runstr ${vars[@]}
   exit $?
-  
 }
