@@ -16,8 +16,7 @@ main_vars(){
       case $1 in
         all)               vars=( "${DEX_VARS[@]}" ) ;;
         -d|--defaults)     runstr="vars_print_export"
-                           vars_reset ${DEX_VARS[@]} ;
-                           vars_load ${DEX_VARS[@]} ;;
+                           vars_reset ${DEX_VARS[@]} ;;
         -h|--help)         display_help ;;
         *)                 vars+=$1 ;;
       esac
@@ -25,6 +24,7 @@ main_vars(){
     done
   fi
 
+  vars_load ${vars[@]}
   $runstr ${vars[@]}
   exit $?
 }

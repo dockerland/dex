@@ -42,7 +42,7 @@ vars_load(){
       DEX_HOME) DEX_HOME=${DEX_HOME:-~/.dex} ;;
       DEX_BINDIR) DEX_BINDIR=${DEX_BINDIR:-/usr/local/bin} ;;
       DEX_PREFIX) DEX_PREFIX=${DEX_PREFIX:-'d'} ;;
-      *) error "$1 has no default variable value" ;;
+      *) ERRCODE=127; error "$1 has no default configuration value" ;;
     esac
     shift
   done
