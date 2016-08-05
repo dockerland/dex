@@ -8,9 +8,6 @@ load dex
 
 setup(){
   [ -e $DEX ] || install_dex
-
-  export DEX_NETWORK=false
-
   OUTFILE=/tmp/dex-google-output
   rm -rf $OUTFILE
 }
@@ -19,39 +16,41 @@ teardown(){
   rm -rf $OUTFILE
 }
 
-@test "network silently refuses to fetch when disabled" {
+@test "network refuses to fetch when disabled" {
   run $DEX runfunc dex-fetch https://google.com/ $OUTFILE
 
-  echo $output
-  $DEX vars DEX_NETWORK
-
-  [ $status -eq 0 ]
-  [ ! -e "$OUTFILE" ]
-}
-
-@test "network exits with status code 0 if disabled and errmessage provided" {
-  run $DEX runfunc dex-fetch https://google.com/ $OUTFILE "error!"
-
   [ $status -eq 1 ]
+  [[ $output == *"refused to fetch"* ]]
   [ ! -e "$OUTFILE" ]
 }
 
-@test "network exits with status code 0 if enabled, has bad URL, and errmessage provided" {
-
+@test "network exits with status code 2 when enabled and missing tools" {
   $SKIP_NETWORK_TEST && skip
+  export DEX_NETWORK=true
+  export CURL_PATH=/bin/not-curl
+  export WGET_PATH=/bin/not-wget
 
-  run $DEX runfunc dex-fetch https://999.999.999.999/ $OUTFILE "error!"
+  run $DEX runfunc dex-fetch https://999.999.999.999/ $OUTFILE
 
-  [ $status -eq 1 ]
+  [ $status -eq 2 ]
+  [ ! -e "$OUTFILE" ]
+}
+
+@test "network exits with status code 126 when enabled fetch fails" {
+  $SKIP_NETWORK_TEST && skip
+  export DEX_NETWORK=true
+
+  run $DEX runfunc dex-fetch https://999.999.999.999/ $OUTFILE
+
+  [ $status -eq 126 ]
   [ ! -e "$OUTFILE" ]
 }
 
 @test "network properly fetches when enabled" {
-
   $SKIP_NETWORK_TEST && skip
-  
   export DEX_NETWORK=true
-  run $DEX runfunc dex-fetch https://google.com/ $OUTFILE "error!"
+
+  run $DEX runfunc dex-fetch https://google.com/ $OUTFILE
 
   echo $output
   echo "STATUS: $status"

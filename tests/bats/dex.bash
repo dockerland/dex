@@ -18,6 +18,8 @@ vars"
 export DEX_HOME=/tmp/dex-home
 export DEX_NETWORK=false
 
+SKIP_NETWORK_TEST=${SKIP_NETWORK_TEST:-false}
+
 #
 # runtime fns
 #
