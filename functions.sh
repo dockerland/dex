@@ -2,11 +2,6 @@
 # lib.d/function.sh for dex -*- shell-script -*-
 #
 
-dex-ping(){
-  echo "${1:-pong}"
-  exit 0
-}
-
 error(){
   printf "\033[31m%s\n\033[0m" "$@" >&2
   exit ${ERRCODE:-1}
@@ -43,6 +38,7 @@ unrecognized_arg(){
 
 }
 
+
 vars_load(){
   while [ $# -ne 0 ]; do
     case $1 in
@@ -78,4 +74,30 @@ vars_print_export(){
 
   printf "# Run this command to configure your shell: \n"
   printf "# eval \$($ORIG_CMD)\n\n"
+}
+
+
+#
+# dex
+#
+
+
+dex-ping(){
+  echo "${1:-pong}"
+  exit 0
+}
+
+# usage: dex-fetch <url> <target-path> [errmessage]
+dex-fetch(){
+  if ( type wget >/dev/null 2>&1 ); then
+    wget $1 -O $2
+  elif ( type curl >/dev/null 2>&1 ); then
+    curl -Lfo $2 $1
+  else
+    true
+  fi
+
+  # if curl or wget exited with non zero, and errmessage provided, error out.
+  [ ! $? -eq 0 ] && [ -z "$3" ] && error "$3"
+
 }
