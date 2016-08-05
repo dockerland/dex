@@ -81,11 +81,9 @@ vars_print_export(){
   printf "# eval \$($ORIG_CMD)\n\n"
 }
 
-
 #
 # dex
 #
-
 
 dex-ping(){
   echo "${1:-pong}"
@@ -119,7 +117,7 @@ dex-fetch(){
   return 126
 }
 
-dex-fetch-sources(){
+dex-sources-fetch(){
 
   dex-fetch "https://raw.githubusercontent.com/dockerland/dex/briceburg/wonky/sources.list" $DEX_HOME/sources.list.fetched
 
@@ -128,11 +126,46 @@ dex-fetch-sources(){
       cat $DEX_HOME/sources.list.fetched > $DEX_HOME/sources.list || error \
         "error writing sources.list from fetched file"
     else
-      dex-cat-sources > $DEX_HOME/sources.list || error \
+      dex-sources-cat > $DEX_HOME/sources.list || error \
         "error creating $DEX_HOME/sources.list"
     fi
   fi
 
+}
+
+dex-sources-cat(){
+  cat <<-EOF
+#
+# dex sources.list
+#
+
+core git@github.com:dockerland/dex-dockerfiles-core.git
+extra git@github.com:dockerland/dex-dockerfiles-extra.git
+
+EOF
+}
+
+# dex-sources-lookup <name|url>
+# @returns 1 if not found
+# @returns 0 if found, and sets DEX_REMOTE=<resolved-name>
+dex-sources-lookup(){
+  [ -e $DEX_HOME/sources.list ] && error "missing $DEX_HOME/sources.list"
+
+  DEX_REMOTE=
+
+  cat $DEX_HOME/sources.list |
+  while read name url junk ; do
+
+    # skip comment lines
+    [[ $name = \#* ]] && continue
+
+    if [ "$name" = "$1" ] ||  [ "$url" = "$1" ]; then
+      DEX_REMOTE=$name
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 dex-setup(){
@@ -144,7 +177,7 @@ dex-setup(){
   [ -d $DEX_HOME/checkouts ] || mkdir -p $DEX_HOME/checkouts || error \
     "could not create checkout directory under \$DEX_HOME"
 
-  [ -e $DEX_HOME/sources.list ] || dex-fetch-sources
+  [ -e $DEX_HOME/sources.list ] || dex-sources-fetch
 
   for path in $DEX_HOME $DEX_HOME/checkouts $DEX_HOME/sources.list; do
     [ -w $path ] || error "$path is not writable"
@@ -152,16 +185,4 @@ dex-setup(){
 
   ERRCODE=1
   return 0
-}
-
-dex-cat-sources(){
-  cat <<-EOF
-#
-# dex sources.list
-#
-
-core git@github.com:dockerland/dex-dockerfiles-core.git
-extra git@github.com:dockerland/dex-dockerfiles-extra.git
-
-EOF
 }
