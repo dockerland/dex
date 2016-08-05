@@ -11,7 +11,12 @@ main(){
   CMD="main"
   ORIG_CMD="$0 $@"
 
-  DEX_VARS=( DEX_HOME DEX_BINDIR DEX_PREFIX )
+  # DEX_HOME: dex workspace : ~/.dex
+  # DEX_BINDIR: location where dex installs : /usr/local/bin
+  # DEX_PREFIX: prefix of dexecutabls : d
+  # DEX_NETWORK: enables network fetching : true
+
+  DEX_VARS=( DEX_HOME DEX_BINDIR DEX_PREFIX DEX_NETWORK )
   vars_load ${DEX_VARS[@]}
 
   if [ $# -eq 0 ]; then

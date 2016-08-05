@@ -16,7 +16,7 @@ setup(){
   diff <(cat_fixture help-vars.txt) <($DEX help vars)
 }
 
-@test "vars DEX_BINDIR prints an evaluable line reflecting DEX_BINDIR default value" {
+@test "vars prints a single variable, reflecting its default value" {
   run $DEX vars DEX_BINDIR
   [ $status -eq 0 ]
   [ $output = "DEX_BINDIR=/usr/local/bin" ]
@@ -27,7 +27,7 @@ setup(){
   [ $status -eq 127 ]
 }
 
-@test "vars prints evaluable lines matching defaults" {
+@test "vars prints evaluable lines matching configuration defaults" {
   run $DEX vars all
   [ $status -eq 0 ]
   for line in "${lines[@]}"; do
@@ -38,12 +38,14 @@ setup(){
   [ "$DEX_HOME" = "//.dex" ]
   [ "$DEX_BINDIR" = "/usr/local/bin" ]
   [ "$DEX_PREFIX" = "d" ]
+  $DEX_NETWORK
 }
 
 @test "vars prints evaluable lines reflecting registration of exported configuration" {
   export DEX_HOME="/myhome"
   export DEX_BINDIR="/mybin"
   export DEX_PREFIX="my"
+  export DEX_NETWORK=false
 
   run $DEX vars all
   [ $status -eq 0 ]
@@ -55,6 +57,7 @@ setup(){
   [ "$DEX_HOME" = "/myhome" ]
   [ "$DEX_BINDIR" = "/mybin" ]
   [ "$DEX_PREFIX" = "my" ]
+  ! $DEX_NETWORK
 }
 
 @test "vars --defaults prints evaluable lines resetting configuration to defaults" {
@@ -69,5 +72,6 @@ setup(){
   [ "$DEX_HOME" = "//.dex" ]
   [ "$DEX_BINDIR" = "/usr/local/bin" ]
   [ "$DEX_PREFIX" = "d" ]
+  [ $DEX_NETWORK ]
 
 }

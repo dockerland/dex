@@ -9,8 +9,9 @@ Piping hot docker executables to your door.
 
 Variable Defaults:
   DEX_HOME: ~/.dex
-  DEX_BINDIR: /usr/local/bin
-  DEX_PREFIX: d
+  DEX_BINDIR: '/usr/local/bin'
+  DEX_PREFIX: 'd'
+  DEX_NETWORK: true
 
 Usage: dex vars [var] [options]
 
