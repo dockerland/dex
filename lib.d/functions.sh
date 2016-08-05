@@ -45,6 +45,7 @@ vars_load(){
       DEX_HOME) DEX_HOME=${DEX_HOME:-~/.dex} ;;
       DEX_BINDIR) DEX_BINDIR=${DEX_BINDIR:-/usr/local/bin} ;;
       DEX_PREFIX) DEX_PREFIX=${DEX_PREFIX:-'d'} ;;
+      DEX_NETWORK) DEX_NETWORK=${DEX_NETWORK:-true} ;;
       *) ERRCODE=127; error "$1 has no default configuration value" ;;
     esac
     shift
@@ -89,6 +90,10 @@ dex-ping(){
 
 # usage: dex-fetch <url> <target-path> [errmessage]
 dex-fetch(){
+
+  # fail if errmessage provided and DEX_NETWORK is disabled
+  ! $DEX_NETWORK && [ -z "$3" ] && error "$3"
+
   if ( type wget >/dev/null 2>&1 ); then
     wget $1 -O $2
   elif ( type curl >/dev/null 2>&1 ); then
