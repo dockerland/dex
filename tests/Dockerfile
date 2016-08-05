@@ -8,6 +8,7 @@ RUN echo "http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositor
     git \
     make \
     mksh \
+    openssl \
     zsh \
   && rm -rf /var/cache/apk/*
 
