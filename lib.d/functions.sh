@@ -108,4 +108,52 @@ dex-fetch(){
   # if curl or wget exited with non zero, and errmessage provided, error out.
   [ ! $? -eq 0 ] && [ ! -z "$3" ] && error "$3"
 
+  return 0
+}
+
+dex-fetch-sources(){
+
+  dex-fetch "https://raw.githubusercontent.com/dockerland/dex/briceburg/wonky/sources.list" $DEX_HOME/sources.list.fetched
+
+  if [ ! -e $DEX_HOME/sources.list ]; then
+    if [ -e $DEX_HOME/sources.list.fetched ]; then
+      cat $DEX_HOME/sources.list.fetched > $DEX_HOME/sources.list || error \
+        "error writing sources.list from fetched file"
+    else
+      dex-cat-sources > $DEX_HOME/sources.list || error \
+        "error creating $DEX_HOME/sources.list"
+    fi
+  fi
+
+}
+
+dex-setup(){
+  ERRCODE=126
+
+  [ -d $DEX_HOME ] || mkdir -p $DEX_HOME || error \
+    "could not create working directory \$DEX_HOME"
+
+  [ -d $DEX_HOME/checkouts ] || mkdir -p $DEX_HOME/checkouts || error \
+    "could not create checkout directory under \$DEX_HOME"
+
+  [ -e $DEX_HOME/sources.list ] || dex-fetch-sources
+
+  for path in $DEX_HOME $DEX_HOME/checkouts $DEX_HOME/sources.list; do
+    [ -w $path ] || error "$path is not writable"
+  done
+
+  ERRCODE=1
+  return 0
+}
+
+dex-cat-sources(){
+  cat <<-EOF
+#
+# dex sources.list
+#
+
+core git@github.com:dockerland/dex-dockerfiles-core.git
+extra git@github.com:dockerland/dex-dockerfiles-extra.git
+
+EOF
 }
