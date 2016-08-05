@@ -10,8 +10,6 @@ setup(){
   [ -e $DEX ] || install_dex
 
   # start with a clean workspace and a disabled network
-  export DEX_HOME=/tmp/dex-home
-  export DEX_NETWORK=false
   rm -rf $DEX_HOME
 }
 

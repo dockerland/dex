@@ -28,28 +28,29 @@ setup(){
 }
 
 @test "help is provided for all dex commands" {
-  for cmd in $DEX_CMDS ; do
+  for cmd in ${DEX_CMDS[@]} ; do
+    echo $cmd
     run $DEX help $cmd
     [ $status -eq 0 ]
   done
 }
 
 @test "help is provided whenever -h or --help flags are passed to a command" {
-  for cmd in $DEX_CMDS ; do
+  for cmd in ${DEX_CMDS[@]} ; do
     diff <($DEX $cmd -h) <($DEX help $cmd)
     diff <($DEX $cmd --help) <($DEX help $cmd)
   done
 }
 
 @test "help exits with status code 2 when no arguments are passed to a command" {
-  for cmd in $DEX_CMDS ; do
+  for cmd in ${DEX_CMDS[@]} ; do
     run $DEX $cmd
     [ $status -eq 2 ]
   done
 }
 
 @test "help exits with status code 127 when invalid arguments are passed to a command" {
-  for cmd in $DEX_CMDS ; do
+  for cmd in ${DEX_CMDS[@]} ; do
     run $DEX $cmd invalid-argument
     [ $status -eq 127 ]
   done

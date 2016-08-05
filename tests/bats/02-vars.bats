@@ -8,6 +8,38 @@ load dex
 
 setup(){
   [ -e $DEX ] || install_dex
+  reset_vars
+}
+
+set_vars(){
+  export DEX_HOME="/myhome"
+  export DEX_BINDIR="/mybin"
+  export DEX_PREFIX="my"
+  export DEX_NETWORK=false
+}
+
+reset_vars(){
+  for var in ${DEX_VARS[@]}; do
+    unset $var
+  done
+}
+
+compare_defaults(){
+  local retval=0
+  for var in ${DEX_VARS[@]}; do
+    eval "local val=\$$var"
+    echo "comparing $var=$val"
+
+    case $var in
+      DEX_HOME) [ $val = "//.dex" ] || retval=1 ;;
+      DEX_BINDIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
+      DEX_PREFIX) [ $val = "d" ] || retval=1 ;;
+      DEX_NETWORK) $val || retval=1 ;;
+      *) echo "unrecognized var: $var" ; retval=1 ;;
+    esac
+
+  done
+  return $retval
 }
 
 @test "vars prints helpful output matching our fixture" {
@@ -29,29 +61,22 @@ setup(){
 
 @test "vars prints evaluable lines matching configuration defaults" {
   run $DEX vars all
+
   [ $status -eq 0 ]
   for line in "${lines[@]}"; do
     eval $line
-    echo $line
   done
-
-  [ "$DEX_HOME" = "//.dex" ]
-  [ "$DEX_BINDIR" = "/usr/local/bin" ]
-  [ "$DEX_PREFIX" = "d" ]
-  $DEX_NETWORK
+  compare_defaults
 }
 
 @test "vars prints evaluable lines reflecting registration of exported configuration" {
-  export DEX_HOME="/myhome"
-  export DEX_BINDIR="/mybin"
-  export DEX_PREFIX="my"
-  export DEX_NETWORK=false
 
+  set_vars
   run $DEX vars all
+
   [ $status -eq 0 ]
   for line in "${lines[@]}"; do
     eval $line
-    echo $line
   done
 
   [ "$DEX_HOME" = "/myhome" ]
@@ -62,16 +87,13 @@ setup(){
 
 @test "vars --defaults prints evaluable lines resetting configuration to defaults" {
 
+  set_vars
   run $DEX vars --defaults all
+
   [ $status -eq 0 ]
   for line in "${lines[@]}"; do
     eval $line
-    echo $line
   done
 
-  [ "$DEX_HOME" = "//.dex" ]
-  [ "$DEX_BINDIR" = "/usr/local/bin" ]
-  [ "$DEX_PREFIX" = "d" ]
-  $DEX_NETWORK
-
+  compare_defaults
 }
