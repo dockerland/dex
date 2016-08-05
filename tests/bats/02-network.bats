@@ -37,6 +37,9 @@ teardown(){
 }
 
 @test "network exits with status code 0 if enabled, has bad URL, and errmessage provided" {
+
+  $SKIP_NETWORK_TEST && skip
+
   run $DEX runfunc dex-fetch https://999.999.999.999/ $OUTFILE "error!"
 
   [ $status -eq 1 ]
@@ -44,6 +47,9 @@ teardown(){
 }
 
 @test "network properly fetches when enabled" {
+
+  $SKIP_NETWORK_TEST && skip
+  
   export DEX_NETWORK=true
   run $DEX runfunc dex-fetch https://google.com/ $OUTFILE "error!"
 

@@ -11,6 +11,16 @@ cd /path/to/dex.git
 make tests
 ```
 
+Some tests make remote network calls. This can slow things down, esp.
+on a system with an unresponsive resolver. You can skip these by setting
+`SKIP_NETWORK_TEST`, e.g.
+
+```
+export SKIP_NETWORK_TEST=true
+make tests
+```
+
+
 ## test development
 
 TBD
