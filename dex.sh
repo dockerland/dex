@@ -30,7 +30,7 @@ main(){
 
         ping)             dex-ping ;;
         help)             CMD=${2:-$CMD} ; display_help ;;
-        runfunc)          shift ; runfunc $@ ;;
+        runfunc)          shift ; runfunc $@ ; exit $? ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
 
