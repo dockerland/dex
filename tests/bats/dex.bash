@@ -15,6 +15,9 @@ uninstall
 update
 vars"
 
+export DEX_HOME=/tmp/dex-home
+export DEX_NETWORK=false
+
 #
 # runtime fns
 #
