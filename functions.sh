@@ -92,27 +92,31 @@ dex-ping(){
   exit 0
 }
 
-# usage: dex-fetch <url> <target-path> [errmessage]
+# usage: dex-fetch <url> <target-path>
 dex-fetch(){
 
-  # fail if errmessage provided and DEX_NETWORK is disabled
-  if ! $DEX_NETWORK; then
-    [ ! -z "$3" ] && error "$3"
-    return 0
-  fi
+  ! $DEX_NETWORK && \
+    log "refused to fetch $2 from $1" "networking disabled" && \
+    return 1
 
-  if ( type wget >/dev/null 2>&1 ); then
-    wget $1 -O $2
-  elif ( type curl >/dev/null 2>&1 ); then
-    curl -Lfo $2 $1
+  local WGET_PATH=${WGET_PATH:-wget}
+  local CURL_PATH=${CURL_PATH:-curl}
+
+  if ( type $WGET_PATH >/dev/null 2>&1 ); then
+    $WGET_PATH $1 -O $2
+  elif ( type $CURL_PATH >/dev/null 2>&1 ); then
+    $CURL_PATH -Lfo $2 $1
   else
-    true
+    log "failed to fetch $2 from $1" "missing curl and wget"
+    return 2
   fi
 
-  # if curl or wget exited with non zero, and errmessage provided, error out.
-  [ ! $? -eq 0 ] && [ ! -z "$3" ] && error "$3"
+  [ $? -eq 0 ] && \
+    log "fetched fetch $2 from $1" && \
+    return 0
 
-  return 0
+  log "failed to fetch $2 from $1"
+  return 126
 }
 
 dex-fetch-sources(){
