@@ -14,8 +14,6 @@ main(){
   DEX_VARS=( DEX_HOME DEX_BINDIR DEX_PREFIX )
   vars_load ${DEX_VARS[@]}
 
-  local runstr="display_help"
-
   if [ $# -eq 0 ]; then
     display_help 2
   else
@@ -27,6 +25,7 @@ main(){
 
         ping)             dex-ping ;;
         help)             CMD=${2:-$CMD} ; display_help ;;
+        runfunc)          shift ; runfunc $@ ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
 
@@ -35,7 +34,6 @@ main(){
     done
   fi
 
-  $runstr
   exit $?
 }
 

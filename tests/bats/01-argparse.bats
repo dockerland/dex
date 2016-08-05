@@ -15,3 +15,9 @@ setup(){
   [ $status -eq 0 ]
   [ "$output" = "pong" ]
 }
+
+@test "argparse recognizes runfunc respecting positional args" {
+  run $DEX runfunc dex-ping "PONG-PONG"
+  [ $status -eq 0 ]
+  [ "$output" = "PONG-PONG" ]
+}

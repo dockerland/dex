@@ -3,7 +3,7 @@
 #
 
 dex-ping(){
-  echo "pong"
+  echo "${1:-pong}"
   exit 0
 }
 
@@ -22,6 +22,13 @@ prompt_confirm() {
       *) printf " \033[31m %s \n\033[0m" "invalid input"
     esac
   done
+}
+
+runfunc(){
+  [ "$(type -t $1)" = "function" ] || error \
+    "$1 is not a valid runfunc target"
+
+  $@
 }
 
 unrecognized_arg(){
