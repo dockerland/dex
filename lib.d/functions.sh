@@ -92,7 +92,10 @@ dex-ping(){
 dex-fetch(){
 
   # fail if errmessage provided and DEX_NETWORK is disabled
-  ! $DEX_NETWORK && [ -z "$3" ] && error "$3"
+  if ! $DEX_NETWORK; then
+    [ ! -z "$3" ] && error "$3"
+    return 0
+  fi
 
   if ( type wget >/dev/null 2>&1 ); then
     wget $1 -O $2
@@ -103,6 +106,6 @@ dex-fetch(){
   fi
 
   # if curl or wget exited with non zero, and errmessage provided, error out.
-  [ ! $? -eq 0 ] && [ -z "$3" ] && error "$3"
+  [ ! $? -eq 0 ] && [ ! -z "$3" ] && error "$3"
 
 }
