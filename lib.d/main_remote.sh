@@ -4,19 +4,19 @@
 
 main_remote(){
 
-  local reset=false
-  local vars=()
-
-  local runstr="vars_print"
+  local runstr="display_help"
 
   if [ $# -eq 0 ]; then
     display_help 2
   else
     while [ $# -ne 0 ]; do
       case $1 in
-        ls)                dex-remote-ls ;;
-        -h|--help)         display_help ;;
-        *)                 unrecognized_arg "$1" ;;
+        add)              REMOTE_NAME="$2"
+                          REMOTE_URL="$3"
+                          shift 2 ; runstr="dex-remote-add" ;;
+        ls)               runstr="dex-remote-ls" ;;
+        -h|--help)        display_help ;;
+        *)                unrecognized_arg "$1" ;;
       esac
       shift
     done
