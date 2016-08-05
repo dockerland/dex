@@ -3,8 +3,12 @@
 #
 
 error(){
-  printf "\033[31m%s\n\033[0m" "$@" >&2
+  printf "\e[31m%s\n\e[0m" "$@" >&2
   exit ${ERRCODE:-1}
+}
+
+log(){
+  printf "\e[33m%s\n\e[0m" "$@" >&2
 }
 
 prompt_confirm() {
