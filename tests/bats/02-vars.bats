@@ -72,6 +72,6 @@ setup(){
   [ "$DEX_HOME" = "//.dex" ]
   [ "$DEX_BINDIR" = "/usr/local/bin" ]
   [ "$DEX_PREFIX" = "d" ]
-  [ $DEX_NETWORK ]
+  $DEX_NETWORK
 
 }
