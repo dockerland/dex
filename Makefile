@@ -61,4 +61,5 @@ uninstall:
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
 	docker run -it --rm -v $(CWD)/:/dex/ -u $$(id -u):$$(id -g) \
+	  -e SKIP_NETWORK_TEST=$(SKIP_NETWORK_TEST) \
 	  dockerbuild-$(NAMESPACE)-tests
