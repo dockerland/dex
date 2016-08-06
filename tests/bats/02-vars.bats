@@ -31,7 +31,7 @@ compare_defaults(){
     echo "comparing $var=$val"
 
     case $var in
-      DEX_HOME) [ $val = "//.dex" ] || retval=1 ;;
+      DEX_HOME) [ $val = "$TMPDIR/home/.dex" ] || retval=1 ;;
       DEX_BINDIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
       DEX_PREFIX) [ $val = "d" ] || retval=1 ;;
       DEX_NETWORK) $val || retval=1 ;;

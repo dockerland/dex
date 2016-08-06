@@ -12,6 +12,9 @@ RUN echo "http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositor
     zsh \
   && rm -rf /var/cache/apk/*
 
+ENV \
+  HOME="/tmp/dex-tests/home"
+
 VOLUME /dex
 WORKDIR /dex
 
