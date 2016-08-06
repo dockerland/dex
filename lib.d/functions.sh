@@ -39,7 +39,17 @@ unrecognized_arg(){
   fi
 
   display_help 127
+}
 
+# usage:  arg_var <arg> <var name>
+# assigns a variable from an argument if a) arg exists,  b) arg is not a flag
+arg_var(){
+  if [ -z "$2" ] || [[  $1 == -* ]]; then
+    return 1
+  else
+    eval "$2=\"$1\""
+    return 0
+  fi
 }
 
 
@@ -149,15 +159,18 @@ EOF
 # @returns 1 if not found
 # @returns 0 if found, and sets DEX_REMOTE=<resolved-name>
 dex-sources-lookup(){
-  [ -e $DEX_HOME/sources.list ] && error "missing $DEX_HOME/sources.list"
+  [ -e $DEX_HOME/sources.list ] && \
+    ERRCODE=127 && error "missing $DEX_HOME/sources.list"
 
   DEX_REMOTE=
 
   cat $DEX_HOME/sources.list |
   while read name url junk ; do
 
-    # skip comment lines
-    [[ $name = \#* ]] && continue
+    # skip blank, malformed, or comment lines
+    if [ -z "$name" ] || [ -z "$url" ] || [[ $name = \#* ]]; then
+      continue
+    fi
 
     if [ "$name" = "$1" ] ||  [ "$url" = "$1" ]; then
       DEX_REMOTE=$name

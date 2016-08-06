@@ -11,10 +11,12 @@ main_remote(){
   else
     while [ $# -ne 0 ]; do
       case $1 in
-        add)              REMOTE_NAME="$2"
-                          REMOTE_URL="$3"
-                          shift 2 ; runstr="dex-remote-add" ;;
-        ls)               runstr="dex-remote-ls" ;;
+        add)              arg_var $2 REMOTE_NAME && shift
+                          arg_var $2 REMOTE_URL && shift
+                          runstr="dex-remote-add" ;;
+        ls)               arg_var $2 REMOTE_NAME && shift
+                          arg_var $2 REMOTE_URL && shift
+                          runstr="dex-remote-ls" ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
       esac
