@@ -15,15 +15,18 @@ teardown(){
 }
 
 @test "remote ls displays sources.list matching our fixture" {
-
+  diff <(cat_fixture remote-ls.txt) <($DEX remote ls)
 }
 
 @test "remote add requires name and url" {
 
 }
 
-@test "remote add errors if missing sources.list" {
-
+@test "remote add|ls|rm errors with 127 if missing sources.list" {
+  for cmd in add ls rm; do
+    run $DEX remote $cmd junk junk
+    [ $status -eq 127 ]
+  done
 }
 
 @test "remote add updates sources.list" {

@@ -24,9 +24,28 @@ main_remote(){
     done
   fi
 
+  dex-setup
   $runstr
   exit $?
 }
+
+dex-remote-ls(){
+  [ ! -e $DEX_HOME/sources.list ] && \
+    ERRCODE=127 && error "missing $DEX_HOME/sources.list"
+
+  cat $DEX_HOME/sources.list |
+  while read name url junk ; do
+
+    # skip blank, malformed, or comment lines
+    if [ -z "$name" ] || [ -z "$url" ] || [[ $name = \#* ]]; then
+      continue
+    fi
+
+    printf "$name\t$url\n"
+  done
+}
+
+
 
 dex-remote-lookup(){
   exit
@@ -37,9 +56,6 @@ dex-remote-add(){
   exit
 }
 
-dex-remote-ls(){
-  exit
-}
 
 
 dex-remote-pull(){
