@@ -4,8 +4,15 @@ HELPERS_LOADED=true
 REPO_ROOT=${REPO_ROOT:-"$(git rev-parse --show-toplevel)"}
 
 # path to writable test target
-TMPDIR=$BATS_TMPDIR/dex-tests
-mkdir -p $TMPDIR
+TMPDIR=/tmp/dex-tests
+mkdir -p $TMPDIR/home
+
+# stub git config if we're in docker container and .git is missing
+if [ $HOME = "$TMPDIR/home" ] && [ ! -d $TMPDIR/home/.git ]; then
+  git config --global user.email "dex@dex-tests.com"
+  git config --global user.name "Dex"
+fi
+
 
 #
 # runtime fns
