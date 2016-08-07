@@ -16,7 +16,7 @@ main(){
   # DEX_PREFIX: prefix of dexecutabls : d
   # DEX_NETWORK: enables network fetching : true
 
-  DEX_VARS=( DEX_HOME DEX_BINDIR DEX_PREFIX DEX_NETWORK )
+  DEX_VARS=( DEX_HOME DEX_BINDIR DEX_PREFIX DEX_NETWORK DEX_API )
   vars_load ${DEX_VARS[@]}
 
   if [ $# -eq 0 ]; then
