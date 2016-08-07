@@ -22,3 +22,18 @@ install_dex(){
   (>&2 cd $REPO_ROOT ; make DESTDIR=$TMPDIR install ; )
   [ -x $DEX ] || error "failed installing dex"
 }
+
+
+mk-repo(){
+  MK_REPO=$TMPDIR/local-repo
+  [ -e $MK_REPO/.git ] && return 0
+  git init $MK_REPO || return 1
+  (
+    cd $MK_REPO
+    echo "content" > file
+    git add file || exit 1
+    git commit -m "initial commit" || exit 1
+  )
+
+  return $?
+}

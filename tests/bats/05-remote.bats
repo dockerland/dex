@@ -10,20 +10,6 @@ setup(){
   [ -e $DEX ] || install_dex
 }
 
-mk-repo(){
-  MK_REPO=$TMPDIR/local-repo
-  [ -e $MK_REPO/.git ] && return 0
-  git init $MK_REPO || return 1
-  (
-    cd $MK_REPO
-    echo "content" > file
-    git add file || exit 1
-    git commit -m "initial commit" || exit 1
-  )
-
-  return $?
-}
-
 @test "remote ls displays sources.list matching our fixture" {
   diff <(cat_fixture remote-ls.txt) <($DEX remote ls)
 }

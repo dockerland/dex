@@ -31,3 +31,12 @@ cat_fixture(){
   cat $fixture
   return 0
 }
+
+cp_fixture(){
+  local fixture=$BATS_TEST_DIRNAME/fixtures/$1
+  [ -e $fixture ] || fixture=$BATS_TEST_DIRNAME/../fixtures/$1
+  [ -e $fixture ] || error "unable to resolve fixture $1"
+
+  cp -R $fixture $2
+  return $?
+}
