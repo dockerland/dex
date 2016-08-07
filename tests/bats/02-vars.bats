@@ -13,8 +13,8 @@ setup(){
 
 set_vars(){
   export DEX_HOME="/myhome"
-  export DEX_BINDIR="/mybin"
-  export DEX_PREFIX="my"
+  export DEX_BIN_DIR="/mybin"
+  export DEX_BIN_PREFIX="my"
   export DEX_NETWORK=false
   export DEX_API=v9000
 }
@@ -38,10 +38,11 @@ compare_defaults(){
     echo "comparing $var=$val"
     case $var in
       DEX_HOME) [ $val = "$TMPDIR/home/.dex" ] || retval=1 ;;
-      DEX_BINDIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
-      DEX_PREFIX) [ $val = "d" ] || retval=1 ;;
+      DEX_BIN_DIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
+      DEX_BIN_PREFIX) [ $val = "d" ] || retval=1 ;;
       DEX_NETWORK) $val || retval=1 ;;
       DEX_API) [ $val = 'v1' ] || retval=1 ;;
+      DEX_TAG_PREFIX) [ $val = 'dex/v1' ] ;;
       *) echo "unrecognized var: $var" ; retval=1 ;;
     esac
   done
@@ -56,9 +57,9 @@ compare_defaults(){
 }
 
 @test "vars prints a single variable, reflecting its default value" {
-  run $DEX vars DEX_BINDIR
+  run $DEX vars DEX_BIN_DIR
   [ $status -eq 0 ]
-  [ $output = "DEX_BINDIR=/usr/local/bin" ]
+  [ $output = "DEX_BIN_DIR=/usr/local/bin" ]
 }
 
 @test "vars exits with status code 127 on invalid configuration variable lookups" {
@@ -87,8 +88,8 @@ compare_defaults(){
   done
 
   [ "$DEX_HOME" = "/myhome" ]
-  [ "$DEX_BINDIR" = "/mybin" ]
-  [ "$DEX_PREFIX" = "my" ]
+  [ "$DEX_BIN_DIR" = "/mybin" ]
+  [ "$DEX_BIN_PREFIX" = "my" ]
   ! $DEX_NETWORK
 }
 

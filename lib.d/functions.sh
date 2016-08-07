@@ -147,10 +147,11 @@ vars_load(){
   while [ $# -ne 0 ]; do
     case $1 in
       DEX_HOME) DEX_HOME=${DEX_HOME:-~/.dex} ;;
-      DEX_BINDIR) DEX_BINDIR=${DEX_BINDIR:-/usr/local/bin} ;;
-      DEX_PREFIX) DEX_PREFIX=${DEX_PREFIX:-'d'} ;;
+      DEX_BIN_DIR) DEX_BIN_DIR=${DEX_BIN_DIR:-/usr/local/bin} ;;
+      DEX_BIN_PREFIX) DEX_BIN_PREFIX=${DEX_BIN_PREFIX:-'d'} ;;
       DEX_NETWORK) DEX_NETWORK=${DEX_NETWORK:-true} ;;
       DEX_API) DEX_API=${DEX_API:-'v1'} ;;
+      DEX_TAG_PREFIX) DEX_TAG_PREFIX=${DEX_TAG_PREFIX:-"dex/$DEX_API"} ;;
       *) ERRCODE=127; error "$1 has no default configuration value" ;;
     esac
     shift

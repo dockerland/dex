@@ -7,7 +7,7 @@
 DEX=$TMPDIR/usr/local/bin/dex
 
 DEX_CMDS=( image install remote run uninstall update vars )
-DEX_VARS=( DEX_HOME DEX_BINDIR DEX_PREFIX DEX_NETWORK DEX_API )
+DEX_VARS=( DEX_HOME DEX_BIN_DIR DEX_BIN_PREFIX DEX_NETWORK DEX_API DEX_TAG_PREFIX )
 
 export DEX_HOME=/tmp/dex-home
 export DEX_NETWORK=false

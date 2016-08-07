@@ -12,11 +12,11 @@ main(){
   ORIG_CMD="$0 $@"
 
   # DEX_HOME: dex workspace : ~/.dex
-  # DEX_BINDIR: location where dex installs : /usr/local/bin
-  # DEX_PREFIX: prefix of dexecutabls : d
+  # DEX_BIN_DIR: location where dex installs : /usr/local/bin
+  # DEX_BIN_PREFIX: prefix of dexecutabls : d
   # DEX_NETWORK: enables network fetching : true
 
-  DEX_VARS=( DEX_HOME DEX_BINDIR DEX_PREFIX DEX_NETWORK DEX_API )
+  DEX_VARS=( DEX_API DEX_BIN_DIR DEX_BIN_PREFIX DEX_HOME DEX_NETWORK DEX_TAG_PREFIX )
   vars_load ${DEX_VARS[@]}
 
   if [ $# -eq 0 ]; then
