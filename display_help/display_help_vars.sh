@@ -8,10 +8,12 @@ display_help_vars(){
 Piping hot docker executables to your door.
 
 Variable Defaults:
+  DEX_API: v1
   DEX_HOME: ~/.dex
-  DEX_BINDIR: '/usr/local/bin'
-  DEX_PREFIX: 'd'
+  DEX_BIN_DIR: '/usr/local/bin'
+  DEX_BIN_PREFIX: 'd'
   DEX_NETWORK: true
+  DEX_TAG_PREFIX: dex/$DEX_API
 
 Usage: dex vars [var] [options]
 
@@ -19,7 +21,7 @@ Usage: dex vars [var] [options]
   dex vars all
 
   # print specific vars
-  dex vars DEX_BINDIR DEX_PREFIX
+  dex vars DEX_BIN_DIR DEX_BIN_PREFIX
 
   # print variable defaults (evalute output to restore)
   dex vars -d all
