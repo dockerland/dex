@@ -16,6 +16,7 @@ set_vars(){
   export DEX_BINDIR="/mybin"
   export DEX_PREFIX="my"
   export DEX_NETWORK=false
+  export DEX_API=v9000
 }
 
 reset_vars(){
@@ -25,20 +26,26 @@ reset_vars(){
 }
 
 compare_defaults(){
-  local retval=0
-  for var in ${DEX_VARS[@]}; do
-    eval "local val=\$$var"
-    echo "comparing $var=$val"
 
+  if [ $# -eq 0 ]; then
+    echo "no lines passed to compare_defaults"
+    return 1
+  fi
+
+  for line in $@; do
+    IFS='='
+    read -r var val <<< "$line"
+    echo "comparing $var=$val"
     case $var in
       DEX_HOME) [ $val = "$TMPDIR/home/.dex" ] || retval=1 ;;
       DEX_BINDIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
       DEX_PREFIX) [ $val = "d" ] || retval=1 ;;
       DEX_NETWORK) $val || retval=1 ;;
+      DEX_API) [ $val = 'v1' ] || retval=1 ;;
       *) echo "unrecognized var: $var" ; retval=1 ;;
     esac
-
   done
+
   return $retval
 }
 
@@ -66,7 +73,7 @@ compare_defaults(){
   for line in "${lines[@]}"; do
     eval $line
   done
-  compare_defaults
+  compare_defaults "${lines[@]}"
 }
 
 @test "vars prints evaluable lines reflecting registration of exported configuration" {
@@ -95,5 +102,6 @@ compare_defaults(){
     eval $line
   done
 
-  compare_defaults
+  run $DEX vars all
+  compare_defaults "${lines[@]}"
 }
