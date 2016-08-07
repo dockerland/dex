@@ -1,1 +1,0 @@
-FROM jess/chrome
