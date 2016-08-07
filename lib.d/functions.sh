@@ -264,6 +264,7 @@ dex-sources-lookup(){
 
     if [ "$name" = "$1" ] ||  [ "$url" = "$1" ]; then
       DEX_REMOTE="$name"
+      DEX_REMOTE_URL=$url
       return 0
     fi
   done < $DEX_HOME/sources.list
