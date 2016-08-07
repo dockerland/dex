@@ -150,6 +150,7 @@ vars_load(){
       DEX_BINDIR) DEX_BINDIR=${DEX_BINDIR:-/usr/local/bin} ;;
       DEX_PREFIX) DEX_PREFIX=${DEX_PREFIX:-'d'} ;;
       DEX_NETWORK) DEX_NETWORK=${DEX_NETWORK:-true} ;;
+      DEX_API) DEX_API=${DEX_API:-'v1'} ;;
       *) ERRCODE=127; error "$1 has no default configuration value" ;;
     esac
     shift
