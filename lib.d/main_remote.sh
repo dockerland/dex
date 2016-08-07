@@ -16,10 +16,10 @@ main_remote(){
       case $1 in
         add|ls|pull|rm)   runstr="dex-remote-$1"
                           if [ $1 = "add" ]; then
-                            arg_var $2 REMOTE_NAME && shift
-                            arg_var $2 REMOTE_URL && shift
+                            arg_var "$2" REMOTE_NAME && shift
+                            arg_var "$2" REMOTE_URL && shift
                           else
-                            arg_var $2 REMOTE_LOOKUP && shift
+                            arg_var "$2" REMOTE_LOOKUP && shift
                           fi
                           ;;
         -f|--force)       FORCE_FLAG=true ;;
