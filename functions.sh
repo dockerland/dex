@@ -69,6 +69,12 @@ clone_or_pull(){
 }
 
 is-dirty(){
+
+  [ -d $1/.git ] || {
+    log "$1 is not a git repository. continuing..."
+    return 0
+  }
+
   (
     set -e
     cd $1
@@ -105,6 +111,32 @@ unrecognized_arg(){
   fi
 
   display_help 127
+}
+
+
+# sed_inplace : in place file substitution
+############################################
+#
+# usage: sed_inplace "file" "sed substitution"
+#    ex: sed_inplace "/tmp/file" "s/CLIENT_CODE/BA/g"
+#
+
+sed_inplace(){
+  # linux
+  local SED_CMD="sed"
+
+  if [[ $OSTYPE == darwin* ]]; then
+    if $(type gsed >/dev/null 2>&1); then
+      local SED_CMD="gsed"
+    elif $(type /usr/local/bin/sed >/dev/null 2>&1); then
+      local SED_CMD="/usr/local/bin/sed"
+    else
+      sed -i '' -E "$2" $1
+      return
+    fi
+  fi
+
+  $SED_CMD -r -i "$2" $1
 }
 
 
