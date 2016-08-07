@@ -96,6 +96,7 @@ runfunc(){
 # assigns a variable from an argument if a) arg exists,  b) arg is not a flag
 arg_var(){
   if [ -z "$2" ] || [[  $1 == -* ]]; then
+    eval "$2="
     return 1
   else
     eval "$2=\"$1\""
