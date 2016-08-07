@@ -23,22 +23,56 @@ prompt_confirm() {
   done
 }
 
+# usage: clone_or_pull <repo-path-or-url> <destination> <force boolean>
+# @TODO: respect DEX_NETWORK setting?
+clone_or_pull(){
+  if [ -d $2 ]; then
+    # pull
+    (
+      cd $2
+      $3 && git reset --hard HEAD
+      git pull
+    ) || {
+      log "error pulling changes from git"
+      return 1
+    }
+
+  else
+    # clone
+
+    #@TODO support reference repository
+    #  [detect if local repo is a bare repo -- but how to find remote?]
+
+    local SHARED_FLAG=
+
+    [ -w $(dirname $2) ] || {
+      log "destination directory not writable"
+      return 126
+    }
+
+    if [[ $1 == /* ]]; then
+      # perform a shared clone (URL is a local path starting with '/...' )
+      [ -d $1/.git ] || {
+        log "$1 is not a path to a local git repository"
+        return 1
+      }
+      SHARED_FLAG="--shared"
+    fi
+
+    git clone $SHARED_FLAG $1 $2 || {
+      log "error cloning $1 to $2"
+      return 1
+    }
+  fi
+
+  return 0
+}
+
 runfunc(){
   [ "$(type -t $1)" = "function" ] || error \
     "$1 is not a valid runfunc target"
 
   $@
-}
-
-unrecognized_arg(){
-
-  if [ $CMD = "main" ]; then
-    printf "\n\n$1 is an unrecognized command\n\n"
-  else
-    printf "\n\n$1 is an unrecognized argument to the $CMD command.\n\n"
-  fi
-
-  display_help 127
 }
 
 # usage:  arg_var <arg> <var name>
@@ -50,6 +84,18 @@ arg_var(){
     eval "$2=\"$1\""
     return 0
   fi
+}
+
+
+unrecognized_arg(){
+
+  if [ $CMD = "main" ]; then
+    printf "\n\n$1 is an unrecognized command\n\n"
+  else
+    printf "\n\n$1 is an unrecognized argument to the $CMD command.\n\n"
+  fi
+
+  display_help 127
 }
 
 
@@ -159,12 +205,13 @@ EOF
 # @returns 1 if not found
 # @returns 0 if found, and sets DEX_REMOTE=<resolved-name>
 dex-sources-lookup(){
-  [ -e $DEX_HOME/sources.list ] && \
-    ERRCODE=127 && error "missing $DEX_HOME/sources.list"
+  [ -e $DEX_HOME/sources.list ] || {
+    ERRCODE=127
+    error "missing $DEX_HOME/sources.list"
+  }
 
   DEX_REMOTE=
 
-  cat $DEX_HOME/sources.list |
   while read name url junk ; do
 
     # skip blank, malformed, or comment lines
@@ -173,11 +220,11 @@ dex-sources-lookup(){
     fi
 
     if [ "$name" = "$1" ] ||  [ "$url" = "$1" ]; then
-      DEX_REMOTE=$name
+      DEX_REMOTE="$name"
       return 0
     fi
-  done
-
+  done < $DEX_HOME/sources.list
+  
   return 1
 }
 
