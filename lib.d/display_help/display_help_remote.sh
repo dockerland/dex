@@ -39,7 +39,7 @@ Options:
 
   -h|--help|help        Display help
 
-  -f|--force            When pulling, discard any working copy changes
+  -f|--force            When removing or pulling, discard working copy changes
                         When adding, first remove any matching name
 
 EOF

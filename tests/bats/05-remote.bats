@@ -40,9 +40,11 @@ mk-repo(){
 
 @test "remote add requires name and url, exits with code 2" {
   run $DEX remote add
+  [[ $output == *requires* ]]
   [ $status -eq 2 ]
 
   run $DEX remote add abc
+  [[ $output == *requires* ]]
   [ $status -eq 2 ]
 }
 
@@ -140,14 +142,50 @@ mk-repo(){
 
 }
 
-@test "remote rm errors if it is passed an invalid <name|url>" {
 
+@test "remote rm requires a <name|url>" {
+  run $DEX remote rm
+  [[ $output == *requires* ]]
+  [ $status -eq 2 ]
 }
+
+
+@test "remote rm errors if it cannot find the passed <name|url>" {
+  run $DEX remote rm highly-unlikely
+  [ $status -eq 1 ]
+}
+
+
+@test "remote rm fails to remove sources with a dirty checkout" {
+  (
+    cd $DEX_HOME/checkouts/local
+    echo "more content" >> file
+  )
+
+  run $DEX remote rm local
+  [[ $output == *changes* ]]
+  [ $status -eq 1 ]
+}
+
 
 @test "remote rm errors with status code 126 if it encounters unwritable checkouts" {
-
+  chmod 000 $DEX_HOME/checkouts/local
+  run $DEX remote rm local
+  [ $status -eq 126 ]
 }
 
-@test "remote rm removes entry from sources.list and its associated checkout" {
 
+@test "remote rm removes entry from sources.list and its associated checkout" {
+  (
+    chmod 755 $DEX_HOME/checkouts/local
+    cd $DEX_HOME/checkouts/local
+    git reset --hard
+  )
+
+  run $DEX remote rm local
+  [ $status -eq 0 ]
+  [ ! -d "$DEX_HOME/checkouts/local" ]
+
+  run grep -q -e "^local " sources.list
+  [ $status -eq 1 ]
 }

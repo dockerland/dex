@@ -15,8 +15,13 @@ main_remote(){
       #@TODO migrate to argparsing (getopts?) to supports add --force
       case $1 in
         add|ls|rm)        runstr="dex-remote-$1"
-                          arg_var $2 REMOTE_NAME && shift
-                          arg_var $2 REMOTE_URL && shift ;;
+                          if [ $1 = "add" ]; then
+                            arg_var $2 REMOTE_NAME && shift
+                            arg_var $2 REMOTE_URL && shift
+                          else
+                            arg_var $2 REMOTE_LOOKUP && shift
+                          fi
+                          ;;
         -f|--force)       FORCE_FLAG=true ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
@@ -37,8 +42,7 @@ dex-remote-add(){
   fi
 
   if $FORCE_FLAG; then
-    dex-remote-rm
-    rm -rf $DEX_HOME/checkouts/$REMOTE_NAME 2>/dev/null
+    dex-remote-rm $REMOTE_NAME
   elif dex-sources-lookup $REMOTE_NAME || dex-sources-lookup $REMOTE_URL ; then
     ERRCODE=2
     error "refusing to add $REMOTE_NAME" "$DEX_REMOTE is a duplicate name|url"
@@ -79,5 +83,36 @@ dex-remote-pull(){
 
 
 dex-remote-rm(){
-  error "rm not implemented"
+  if [ -z "$REMOTE_LOOKUP" ] && [ -z "$1" ]; then
+    ERRCODE=2
+    error "remote-rm requires a repository name or URL"
+  fi
+
+  if [ -z "$1" ]; then
+    dex-sources-lookup $REMOTE_LOOKUP || error \
+      "no match for $REMOTE_LOOKUP in sources.list"
+  else
+    DEX_REMOTE=$1
+  fi
+
+  if $FORCE_FLAG; then
+    rm -rf $DEX_HOME/checkouts/$DEX_REMOTE 2>/dev/null
+  else
+    is-dirty $DEX_HOME/checkouts/$DEX_REMOTE ] || error \
+      "$DEX_HOME/checkouts/$DEX_REMOTE has local changes" \
+      "pass --force to force removal, or reset/upstream your changes"
+
+    if [ -d $DEX_HOME/checkouts/$DEX_REMOTE ]; then
+      [ ! -w $DEX_HOME/checkouts/$DEX_REMOTE  ] && {
+        ERRCODE=126
+        error "$DEX_HOME/checkouts/$DEX_REMOTE" is not writable
+      }
+      rm -rf $DEX_HOME/checkouts/$DEX_REMOTE
+    fi
+
+  fi
+
+  sed_inplace $DEX_HOME/sources.list "/$DEX_REMOTE /d"
+
+  log "removed $DEX_REMOTE"
 }
