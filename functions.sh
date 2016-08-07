@@ -284,6 +284,9 @@ dex-setup(){
   [ -d $DEX_HOME/checkouts ] || mkdir -p $DEX_HOME/checkouts || error \
     "could not create checkout directory under \$DEX_HOME"
 
+  ( type docker >/dev/null 2>&1 ) || error \
+    "dex requires docker"
+
   [ -e $DEX_HOME/sources.list ] || dex-sources-fetch
 
   for path in $DEX_HOME $DEX_HOME/checkouts $DEX_HOME/sources.list; do
