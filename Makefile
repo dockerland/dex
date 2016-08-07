@@ -60,6 +60,8 @@ uninstall:
 	rm -rf  $(BINDIR)/dex
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
-	docker run -it --rm -v $(CWD)/:/dex/ -u $$(id -u):$$(id -g) \
+	docker run -it --rm -u $$(id -u):$$(getent group docker | cut -d: -f3) \
+	  -v $(CWD)/:/dex/ \
+		-v /var/run/docker.sock:/var/run/docker.sock \
 	  -e SKIP_NETWORK_TEST=$(SKIP_NETWORK_TEST) \
 	  dockerbuild-$(NAMESPACE)-tests
