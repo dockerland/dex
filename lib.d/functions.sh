@@ -293,3 +293,45 @@ dex-setup(){
   ERRCODE=1
   return 0
 }
+
+dex-set-lookup(){
+  DEX_REMOTE=
+  DEX_REMOTE_IMAGESTR=
+
+  [ -z "$1" ] && return 1
+
+  local remote
+  local imagestr
+  local tag
+
+  IFS='/'
+  read -r remote imagestr <<< "$1"
+  unset IFS
+
+  if [ -z "$imagestr" ]; then
+    DEX_REMOTE="*"
+    DEX_REMOTE_IMAGESTR="$1"
+  else
+    DEX_REMOTE="$remote"
+    DEX_REMOTE_IMAGESTR="$imagestr"
+
+    if [ ! -d $DEX_HOME/checkouts/$DEX_REMOTE ]; then
+      log "warning, $remote is not checked out" \
+      "  has it been added with dex remote?"
+    fi
+  fi
+
+  IFS=':'
+  read -r image tag <<< "$DEX_REMOTE_IMAGESTR"
+  unset IFS
+
+  if [ -z "$tag" ]; then
+    DEX_REMOTE_IMAGETAG="latest"
+  else
+    DEX_REMOTE_IMAGESTR="$image"
+    DEX_REMOTE_IMAGETAG="$tag"
+  fi
+
+  # if $2 is true, echo lines for evaluation
+  $2 && printf "DEX_REMOTE=$DEX_REMOTE\nDEX_REMOTE_IMAGESTR=$DEX_REMOTE_IMAGESTR\nDEX_REMOTE_IMAGETAG=$DEX_REMOTE_IMAGETAG\n"
+}
