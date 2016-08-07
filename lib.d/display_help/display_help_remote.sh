@@ -17,6 +17,9 @@ must be the repository URL (remote or a local path). E.g.
   reponame git@github.com:User/reponame.git
   reponame /path/to/reponame
 
+Repositories are cloned under \$DEX_HOME/checkouts. If a local path is used,
+a shared clone will be performed.
+
 Removing or adding repositories will not effect built images, allowing
 installed dexecutables to function as normal.
 
@@ -37,7 +40,7 @@ Options:
   -h|--help|help        Display help
 
   -f|--force            When pulling, discard any working copy changes
-                        When adding, first remove any matching name || url
+                        When adding, first remove any matching name
 
 EOF
 }

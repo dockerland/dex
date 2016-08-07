@@ -10,54 +10,105 @@ setup(){
   [ -e $DEX ] || install_dex
 }
 
-teardown(){
-  rm -rf $DEX_HOME
+mk-repo(){
+  MK_REPO=$TMPDIR/local-repo
+  [ -e $MK_REPO/.git ] && return 0
+  git init $MK_REPO || return 1
+  (
+    cd $MK_REPO
+    echo "content" > file
+    git add file || exit 1
+    git commit -m "initial commit" || exit 1
+  )
+
+  return $?
 }
 
 @test "remote ls displays sources.list matching our fixture" {
   diff <(cat_fixture remote-ls.txt) <($DEX remote ls)
 }
 
-@test "remote add requires name and url" {
-
-}
-
 @test "remote add|ls|rm errors with 127 if missing sources.list" {
+  # skipping -- currently unable to remove sources.list,
+  #   as it's created by dex-setup routine which fires before command execution
+  skip
   for cmd in add ls rm; do
     run $DEX remote $cmd junk junk
     [ $status -eq 127 ]
   done
 }
 
-@test "remote add updates sources.list" {
+@test "remote add requires name and url, exits with code 2" {
+  run $DEX remote add
+  [ $status -eq 2 ]
 
+  run $DEX remote add abc
+  [ $status -eq 2 ]
 }
 
-@test "remote add supports local reference repository checkouts" {
+@test "remote add tests arg_var handling of flag arguments" {
+  run $DEX remote add aaa --a-flag-not-an-argument
+  [ $status -eq 127 ]
 
+  run $DEX remote add -h
+  [ $status -eq 0 ]
 }
 
-@test "remote add refuses to duplicate existing names" {
+@test "remote add supports local repository checkouts" {
 
+  mk-repo
+  run $DEX remote add local $MK_REPO
+  [ $status -eq 0 ]
+
+  run $DEX remote ls
+  [ $status -eq 0 ]
+  [ "${lines[2]}" = $(printf "local\t$MK_REPO") ]
 }
 
-@test "remote add refuses to duplicate existing URLs" {
-
+@test "remote add fails to add sources it cannot clone" {
+  run $DEX remote add unique fake-url.git
+  [ $status -eq 1 ]
 }
 
-@test "remote add refuses to add sources it cannot clone" {
+@test "remote add refuses to duplicate existing names and urls" {
+  run $DEX remote ls
+  [ $status -eq 0 ]
 
-}
+  IFS=$'\t'
+  while read known_name known_url; do
+    run $DEX remote add $known_name fake-url.git
+    [[ $output == *refusing* ]]
+    [ $status -eq 2 ]
 
-@test "remote add refuses to add sources it cannot clone by reference" {
-
+    run $DEX remote add unique $known_url
+    [[ $output == *refusing* ]]
+    [ $status -eq 2 ]
+  done <<< "${lines[0]}"
 }
 
 @test "remote add refuses to add sources if a named checkout already exists" {
+  mkdir $DEX_HOME/checkouts/unique
 
+  run $DEX remote add unique fake-url.git
+  [[ $output == *refusing* ]]
+  [ $status -eq 2 ]
 }
 
+
 @test "remote add --force overwrites existing names" {
+  mk-repo
+
+  run $DEX remote --force add core $MK_REPO
+  [ $status -eq 0 ]
+
+  run $DEX remote ls
+
+  IFS=$'\t'
+  while read name url; do
+    if [ $name = "core" ]; then
+      [ $url = $MK_REPO ]
+    fi
+  done <<< "${lines[@]}"
 
 }
 
