@@ -83,36 +83,35 @@ dex-remote-pull(){
 
 
 dex-remote-rm(){
-  if [ -z "$REMOTE_LOOKUP" ] && [ -z "$1" ]; then
+  [ -z "$1" ] || REMOTE_LOOKUP=$1
+
+  if [ -z "$REMOTE_LOOKUP" ]; then
     ERRCODE=2
     error "remote-rm requires a repository name or URL"
   fi
 
-  if [ -z "$1" ]; then
-    dex-sources-lookup $REMOTE_LOOKUP || error \
-      "no match for $REMOTE_LOOKUP in sources.list"
-  else
-    DEX_REMOTE=$1
-  fi
+  dex-sources-lookup $REMOTE_LOOKUP || {
+    [ -z "$1" ] && error "no match for $REMOTE_LOOKUP in sources.list"
+    log "$REMOTE_LOOKUP not found, skipping removal..."
+    return 1
+  }
 
   if $FORCE_FLAG; then
     rm -rf $DEX_HOME/checkouts/$DEX_REMOTE 2>/dev/null
-  else
-    is-dirty $DEX_HOME/checkouts/$DEX_REMOTE ] || error \
+  elif [ -d $DEX_HOME/checkouts/$DEX_REMOTE ]; then
+
+    [ ! -w $DEX_HOME/checkouts/$DEX_REMOTE  ] && {
+      ERRCODE=126
+      error "$DEX_HOME/checkouts/$DEX_REMOTE" is not writable
+    }
+
+    is-dirty $DEX_HOME/checkouts/$DEX_REMOTE ] && error \
       "$DEX_HOME/checkouts/$DEX_REMOTE has local changes" \
       "pass --force to force removal, or reset/upstream your changes"
 
-    if [ -d $DEX_HOME/checkouts/$DEX_REMOTE ]; then
-      [ ! -w $DEX_HOME/checkouts/$DEX_REMOTE  ] && {
-        ERRCODE=126
-        error "$DEX_HOME/checkouts/$DEX_REMOTE" is not writable
-      }
-      rm -rf $DEX_HOME/checkouts/$DEX_REMOTE
-    fi
-
+    rm -rf $DEX_HOME/checkouts/$DEX_REMOTE
   fi
 
   sed_inplace $DEX_HOME/sources.list "/$DEX_REMOTE /d"
-
   log "removed $DEX_REMOTE"
 }

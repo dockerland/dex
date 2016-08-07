@@ -68,17 +68,19 @@ clone_or_pull(){
   return 0
 }
 
+# checks git working copy.
+# return 1 if clean (not dirty), 0 if dirty (changes exist)
 is-dirty(){
 
   [ -d $1/.git ] || {
     log "$1 is not a git repository. continuing..."
-    return 0
+    return 1
   }
 
   (
     set -e
     cd $1
-    [ -z "$(git status -uno --porcelain)" ]
+    [ ! -z "$(git status -uno --porcelain)" ]
   )
   return $?
 }
