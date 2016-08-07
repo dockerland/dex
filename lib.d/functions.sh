@@ -68,6 +68,15 @@ clone_or_pull(){
   return 0
 }
 
+is-dirty(){
+  (
+    set -e
+    cd $1
+    [ -z "$(git status -uno --porcelain)" ]
+  )
+  return $?
+}
+
 runfunc(){
   [ "$(type -t $1)" = "function" ] || error \
     "$1 is not a valid runfunc target"
@@ -224,7 +233,7 @@ dex-sources-lookup(){
       return 0
     fi
   done < $DEX_HOME/sources.list
-  
+
   return 1
 }
 
