@@ -2,6 +2,9 @@
 
 dex manages docker executables
 
+dex is also a freaking **bashlicaton**(tm) -- and all contributions veer
+towards getting shell shebang tattoos and such...
+
 ## what are docker executables
 
 docker executables look and behave like normal executables supporting
@@ -19,13 +22,6 @@ docker executables look and behave like normal executables supporting
 ## WIP
 
 dex is coming soon to a theatre near you.
-
-### design ideas
-
-* prefix executables with 'd', similar to homebrew prefixing `coreutils` with a 'g'.
-* support docker tag convention when publishing/installing. e.g. `dex install sed`, `dex install sed:latest`, `dex install sed:darwin`, `dex install sed:darwin-sierra`
-* support dex api versioning, e.g. v1 executable, v2, &c
-
 
 ## running docker executables
 

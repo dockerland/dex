@@ -1,18 +1,1 @@
-FROM alpine:3.4
-
-#
-# v1 dex-api
-#
-ENV \
-  DEX_API="v1" \
-  HOME="/dex/home" \
-  WORKSPACE="/dex/workspace"
-
-RUN mkdir -p $HOME $WORKSPACE
-VOLUME /dex
-
-#
-# alpine image
-#
-
-CMD echo "ALPINE_RELEASE=$(cat /etc/alpine-release)" ; printenv
+Dockerfile-3.4
