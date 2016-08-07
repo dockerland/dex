@@ -57,7 +57,6 @@ mk-repo(){
 }
 
 @test "remote add supports local repository checkouts" {
-
   mk-repo
   run $DEX remote add local $MK_REPO
   [ $status -eq 0 ]
@@ -157,35 +156,40 @@ mk-repo(){
 
 
 @test "remote rm fails to remove sources with a dirty checkout" {
+
+  mk-repo
+  run $DEX remote --force add rmtest $MK_REPO
+  [ $status -eq 0 ]
+
   (
-    cd $DEX_HOME/checkouts/local
+    cd $DEX_HOME/checkouts/rmtest
     echo "more content" >> file
   )
 
-  run $DEX remote rm local
+  run $DEX remote rm rmtest
   [[ $output == *changes* ]]
   [ $status -eq 1 ]
 }
 
 
 @test "remote rm errors with status code 126 if it encounters unwritable checkouts" {
-  chmod 000 $DEX_HOME/checkouts/local
-  run $DEX remote rm local
+  chmod 000 $DEX_HOME/checkouts/rmtest
+  run $DEX remote rm rmtest
   [ $status -eq 126 ]
 }
 
 
 @test "remote rm removes entry from sources.list and its associated checkout" {
   (
-    chmod 755 $DEX_HOME/checkouts/local
-    cd $DEX_HOME/checkouts/local
+    chmod 755 $DEX_HOME/checkouts/rmtest
+    cd $DEX_HOME/checkouts/rmtest
     git reset --hard
   )
 
-  run $DEX remote rm local
+  run $DEX remote rm rmtest
   [ $status -eq 0 ]
-  [ ! -d "$DEX_HOME/checkouts/local" ]
+  [ ! -d "$DEX_HOME/checkouts/rmtest" ]
 
-  run grep -q -e "^local " sources.list
+  run grep -q -e "^rmtest " sources.list
   [ $status -eq 1 ]
 }

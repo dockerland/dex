@@ -59,6 +59,8 @@ dex-remote-add(){
 
   echo "$REMOTE_NAME $REMOTE_URL" >> $DEX_HOME/sources.list || error \
     "unable to update sources.list"
+
+  log "$REMOTE_NAME added"
 }
 
 dex-remote-ls(){
