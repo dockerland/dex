@@ -113,32 +113,58 @@ mk-repo(){
 
 }
 
-@test "remote add --force overwrites existing URLs" {
-
+@test "remote pull requires a <name|url>" {
+  run $DEX remote pull
+  [[ $output == *requires* ]]
+  [ $status -eq 2 ]
 }
 
-@test "remote add --force overwrites existing checkouts" {
-
-}
-
-@test "remote pull errors if it is passed an invalid <name|url>" {
-
-}
 
 @test "remote pull creates a new checkout if it is non-existant" {
+  mk-repo
+  run $DEX remote --force add pulltest $MK_REPO
+  [ $status -eq 0 ]
 
+  rm -rf $DEX_HOME/checkouts/pulltest
+
+  run $DEX remote pull pulltest
+  [ $status -eq 0 ]
+  [ -d $DEX_HOME/checkouts/pulltest ]
 }
 
-@test "remote pull updates a checkout if it already exists" {
-
+@test "remote pull pulls updates into a clean checkout" {
+  mk-repo
+  (
+    cd $MK_REPO
+    echo "more content" >> file
+    git add file && git commit -m "more content"
+  )
+  run $DEX remote pull pulltest
+  [ $status -eq 0 ]
+  diff $MK_REPO/file $DEX_HOME/checkouts/pulltest/file
 }
 
-@test "remote pull exits with status code 126 if it encounters unwritable checkouts" {
+@test "remote pull fails to pull into a dirty checkout" {
+  (
+    cd $DEX_HOME/checkouts/pulltest
+    echo "even more content" >> file
+  )
 
+  run $DEX remote pull pulltest
+  [[ $output == *changes* ]]
+  [ $status -eq 1 ]
 }
 
-@test "remote pull errors if it is unable to update a local checkout" {
+@test "remote pull --force pulls into a dirty checkout" {
+  mk-repo
+  (
+    cd $DEX_HOME/checkouts/pulltest
+    echo "even more content" >> file
+  )
 
+  run $DEX remote --force pull pulltest
+  [ $status -eq 0 ]
+  diff $MK_REPO/file $DEX_HOME/checkouts/pulltest/file
 }
 
 

@@ -14,7 +14,7 @@ main_remote(){
 
       #@TODO migrate to argparsing (getopts?) to supports add --force
       case $1 in
-        add|ls|rm)        runstr="dex-remote-$1"
+        add|ls|pull|rm)   runstr="dex-remote-$1"
                           if [ $1 = "add" ]; then
                             arg_var $2 REMOTE_NAME && shift
                             arg_var $2 REMOTE_URL && shift
@@ -80,7 +80,28 @@ dex-remote-ls(){
 }
 
 dex-remote-pull(){
-  error "pull not implemented"
+  [ -z "$1" ] || REMOTE_LOOKUP=$1
+
+  if [ -z "$REMOTE_LOOKUP" ]; then
+    ERRCODE=2
+    error "remote-pull requires a repository name or URL"
+  fi
+
+  dex-sources-lookup $REMOTE_LOOKUP || {
+    [ -z "$1" ] && error "no match for $REMOTE_LOOKUP in sources.list"
+    log "$REMOTE_LOOKUP not found, skipping pull..."
+    return 1
+  }
+
+  if ! $FORCE_FLAG && is-dirty $DEX_HOME/checkouts/$DEX_REMOTE ]; then
+    error "$DEX_HOME/checkouts/$DEX_REMOTE has local changes" \
+    "pass --force to force update, or reset/upstream your changes"
+  fi
+
+  clone_or_pull $DEX_REMOTE_URL $DEX_HOME/checkouts/$DEX_REMOTE $FORCE_FLAG || \
+    error "error pulling $DEX_REMOTE"
+
+  log "$DEX_REMOTE updated"
 }
 
 
