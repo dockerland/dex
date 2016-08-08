@@ -92,8 +92,8 @@ runfunc(){
   $@
 }
 
-# usage:  arg_var <arg> <var name>
-# assigns a variable from an argument if a) arg exists,  b) arg is not a flag
+# usage:  arg_var <arg> <variiable>
+# assigns a variable from an argument if <arg> is not a flag, else clears it
 arg_var(){
   if [[  $1 == -* ]]; then
     eval "$2="
@@ -146,12 +146,12 @@ sed_inplace(){
 vars_load(){
   while [ $# -ne 0 ]; do
     case $1 in
-      DEX_HOME) DEX_HOME=${DEX_HOME:-~/.dex} ;;
-      DEX_BIN_DIR) DEX_BIN_DIR=${DEX_BIN_DIR:-/usr/local/bin} ;;
-      DEX_BIN_PREFIX) DEX_BIN_PREFIX=${DEX_BIN_PREFIX:-'d'} ;;
-      DEX_NETWORK) DEX_NETWORK=${DEX_NETWORK:-true} ;;
-      DEX_API) DEX_API=${DEX_API:-'v1'} ;;
-      DEX_TAG_PREFIX) DEX_TAG_PREFIX=${DEX_TAG_PREFIX:-"dex/$DEX_API"} ;;
+      DEX_HOME) eval "$1=\${$1:-~/.dex}" ;;
+      DEX_BIN_DIR) eval "$1=\${$1:-~/usr/local/bin}" ;;
+      DEX_BIN_PREFIX) eval "$1=\${$1:-d}" ;;
+      DEX_NETWORK) eval "$1=\${$1:-true}" ;;
+      DEX_API) eval "$1=\${$1:-v1}" ;;
+      DEX_TAG_PREFIX) eval "$1=\${$1:-dex/\$DEX_API}" ;;
       *) ERRCODE=127; error "$1 has no default configuration value" ;;
     esac
     shift
