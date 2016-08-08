@@ -306,6 +306,7 @@ dex-set-lookup(){
   local remote
   local imagestr
   local tag
+  local debug=${2:-false}
 
   IFS='/'
   read -r remote imagestr <<< "$1"
@@ -336,5 +337,5 @@ dex-set-lookup(){
   fi
 
   # if $2 is true, echo lines for evaluation
-  $2 && printf "DEX_REMOTE=$DEX_REMOTE\nDEX_REMOTE_IMAGESTR=$DEX_REMOTE_IMAGESTR\nDEX_REMOTE_IMAGETAG=$DEX_REMOTE_IMAGETAG\n"
+  $debug && printf "DEX_REMOTE=$DEX_REMOTE\nDEX_REMOTE_IMAGESTR=$DEX_REMOTE_IMAGESTR\nDEX_REMOTE_IMAGETAG=$DEX_REMOTE_IMAGETAG\n"
 }

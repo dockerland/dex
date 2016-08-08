@@ -79,3 +79,41 @@ dex-image-build(){
 
   error "failed to find $DEX_REMOTE/$DEX_REMOTE_IMAGESTR"
 }
+
+
+dex-image-rm(){
+  if [ -z "$LOOKUP" ]; then
+    ERRCODE=2
+    error "image-rm requires an image name, package name, or wildcard match to install"
+  fi
+
+  dex-set-lookup $LOOKUP
+
+  local removed_image=false
+  local tag_prefix=${1:-$DEX_TAG_PREFIX}
+  local filters="--filter=label=dex-tag-prefix=$DEX_TAG_PREFIX"
+  local force_flag=
+  $FORCE_FLAG && force_flag="--force"
+
+
+  [ ! "$DEX_REMOTE" = "*" ] && \
+    filters="$filters --filter=label=dex-remote=$DEX_REMOTE"
+
+  [ ! "$DEX_REMOTE_IMAGESTR" = "*" ] && \
+    filters="$filters --filter=label=dex-image=$DEX_REMOTE_IMAGESTR"
+
+  [ ! "$DEX_REMOTE_IMAGETAG" = "latest" ] && \
+    filters="$filters --filter=label=dex-tag=$DEX_REMOTE_IMAGETAG"
+
+  for image in $(docker images -q $filters); do
+    #@TODO stop running containers?
+    docker rmi $force_flag $image && removed_image=true
+  done
+
+  $removed_image && {
+    log "removed $DEX_REMOTE/$DEX_REMOTE_IMAGESTR"
+    exit 0
+  }
+
+  error "failed to remove any images matching $DEX_REMOTE/$DEX_REMOTE_IMAGESTR"
+}
