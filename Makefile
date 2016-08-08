@@ -10,12 +10,14 @@
 #
 
 CWD:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-SCRATCH_PATH:=$(CWD)/.scratch
-DOCKER_PATH:=$(shell ${DOCKER_PATH:-/usr/bin/docker})
 NAMESPACE:=dex
 
 PREFIX:=$(DESTDIR)/usr/local
 BINDIR:=$(PREFIX)/bin
+
+SCRATCH_PATH:=$(CWD)/.scratch
+DOCKER_PATH:=$(shell ${DOCKER_PATH:-$(which docker)})
+DOCKER_GID:=$(shell ${DOCKER_GID:-$(getent group docker | cut -d: -f3)} )
 
 .PHONY: tests dex
 all: dex
@@ -61,7 +63,7 @@ uninstall:
 	rm -rf  $(BINDIR)/dex
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
-	docker run -it --rm -u $$(id -u):$$(getent group docker | cut -d: -f3) \
+	docker run -it --rm -u $$(id -u):$(DOCKER_GID) \
 	  -v $(CWD)/:/dex/ \
 		-v $(DOCKER_PATH):/usr/bin/docker \
 		-v /var/run/docker.sock:/var/run/docker.sock \
