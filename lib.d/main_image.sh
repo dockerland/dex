@@ -39,49 +39,39 @@ main_image(){
 
 
 dex-image-build(){
+  # when installing, we prefix with "dex/$DEX_API-install"
   local tag_prefix=${1:-$DEX_TAG_PREFIX}
+  local built_image=false
 
   if [ -z "$LOOKUP" ]; then
     ERRCODE=2
     error "image-add requires an image name, package name, or wildcard match to install"
   fi
 
-  dex-set-lookup $LOOKUP
-
-  # when installing, we prefix with "dex/$DEX_API-install"
-  local built_image=false
-
-  for repo_dir in $(ls -d $DEX_HOME/checkouts/$DEX_REMOTE 2>/dev/null); do
-
-    for image_dir in $(ls -d $repo_dir/images/$DEX_REMOTE_IMAGESTR 2>/dev/null); do
-      (
-        cd $image_dir
-        if [ "$DEX_REMOTE_IMAGETAG" = "latest" ]; then
-          dockerfile="Dockerfile"
-        else
-          dockerfile="Dockerfile-$DEX_REMOTE_IMAGETAG"
-        fi
-
-        [ -e $dockerfile ] || exit 1
-
-        docker build \
-          -t $tag_prefix/$(basename $image_dir):$DEX_REMOTE_IMAGETAG \
-          --label=dex-api=$DEX_API \
-          --label=dex-tag-prefix=$tag_prefix \
-          --label=dex-image=$(basename $image_dir) \
-          --label=dex-tag=$DEX_REMOTE_IMAGETAG \
-          --label=dex-remote=$DEX_REMOTE \
-          -f $dockerfile .
-      ) && built_image=true
-    done
-
-    $built_image && {
-      log "built $DEX_REMOTE/$DEX_REMOTE_IMAGESTR"
-      exit 0
-    }
+  dex-lookup-parse $LOOKUP || error "lookup failed to parse $1" 
+  for dockerfile in $(dex-lookup-dockerfiles); do
+    local image=$(basename $(dirname $dockerfile))
+    local tag="$tag_prefix/$image:$DEX_REMOTE_IMAGETAG"
+    log "building $tag ..."
+    (
+      set -e
+      cd $(dirname $dockerfile)
+      docker build -t $tag \
+        --label=dex-api=$DEX_API \
+        --label=dex-tag-prefix=$tag_prefix \
+        --label=dex-image=$image \
+        --label=dex-tag=$DEX_REMOTE_IMAGETAG \
+        --label=dex-remote=$DEX_REMOTE \
+        -f $(basename $dockerfile) .
+    ) && built_image=true
   done
 
-  error "failed to find $DEX_REMOTE/$DEX_REMOTE_IMAGESTR"
+  $built_image && {
+    log "built $DEX_REMOTE/$DEX_REMOTE_IMAGESTR"
+    exit 0
+  }
+
+  error "failed to find images matching $DEX_REMOTE/$DEX_REMOTE_IMAGESTR"
 }
 
 
@@ -90,7 +80,7 @@ dex-image-ls(){
   local filters="--filter=label=dex-tag-prefix=$tag_prefix"
 
   if [ ! -z "$LOOKUP" ]; then
-    dex-set-lookup $LOOKUP
+    dex-lookup-parse $LOOKUP
 
     [ ! "$DEX_REMOTE" = "*" ] && \
       filters="$filters --filter=label=dex-remote=$DEX_REMOTE"
@@ -115,7 +105,7 @@ dex-image-rm(){
     error "image-rm requires an image name, package name, or wildcard match to install"
   fi
 
-  dex-set-lookup $LOOKUP
+  dex-lookup-parse $LOOKUP
 
   local removed_image=false
   local filters="--filter=label=dex-tag-prefix=$tag_prefix"

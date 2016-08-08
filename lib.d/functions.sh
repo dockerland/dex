@@ -297,7 +297,28 @@ dex-setup(){
   return 0
 }
 
-dex-set-lookup(){
+# dex-lookup-parse outputs paths to matching dockerfiles
+#  optionally accepts <[repo/]image|*> lookup to set DEX_REMOTE_*
+dex-lookup-dockerfiles(){
+  [ -z "$1" ] || { dex-lookup-parse $1 || error "lookup failed to parse $1" ; }
+
+  for repo_dir in $(ls -d $DEX_HOME/checkouts/$DEX_REMOTE 2>/dev/null); do
+    for image_dir in $(ls -d $repo_dir/images/$DEX_REMOTE_IMAGESTR 2>/dev/null); do
+      if [ "$DEX_REMOTE_IMAGETAG" = "latest" ]; then
+        dockerfile="Dockerfile"
+      else
+        dockerfile="Dockerfile-$DEX_REMOTE_IMAGETAG"
+      fi
+      [ -e $image_dir/$dockerfile ] && echo $image_dir/$dockerfile
+    done
+  done
+}
+
+# dex-lookup-parse accepts <[repo/]image|*> and sets
+#  DEX_REMOTE (checkout source, e.g. 'core')
+#  DEX_IMAGESTR (image name, e.g. 'alpine')
+#  DEX_REMOTE_IMAGETAG (image tag, e.g. 'latest')
+dex-lookup-parse(){
   DEX_REMOTE=
   DEX_REMOTE_IMAGESTR=
 
@@ -338,4 +359,6 @@ dex-set-lookup(){
 
   # if $2 is true, echo lines for evaluation
   $debug && printf "DEX_REMOTE=$DEX_REMOTE\nDEX_REMOTE_IMAGESTR=$DEX_REMOTE_IMAGESTR\nDEX_REMOTE_IMAGETAG=$DEX_REMOTE_IMAGETAG\n"
+
+  return 0
 }

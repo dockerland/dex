@@ -11,7 +11,7 @@ setup(){
 }
 
 lookup(){
-  for line in $($DEX runfunc dex-set-lookup $1 true); do
+  for line in $($DEX runfunc dex-lookup-parse $1 true); do
     eval $line
   done
 }
