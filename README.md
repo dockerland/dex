@@ -2,8 +2,8 @@
 
 dex manages docker executables
 
-dex is also a freaking **bashlicaton**(tm) -- and all contributions veer
-towards getting shell shebang tattoos and such...
+dex is also a **bashlicaton**(tm) -- all contributions veer towards
+shell shebang tattoos and such...
 
 ## what are docker executables
 

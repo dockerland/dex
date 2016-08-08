@@ -69,3 +69,21 @@ teardown(){
   run docker images -q --filter=label=dex-tag-prefix=$DEX_TAG_PREFIX
   [ ${#lines[@]} -eq $image_count ]
 }
+
+@test "image rm errors if it cannot find images to remove" {
+
+  run $DEX image rm imgtest/zzz
+  [ $status -eq 1 ]
+
+  run $DEX image rm imgtest/*
+  [ $status -eq 1 ]
+}
+
+@test "image rm respects repo wildcards" {
+  $DEX image build imgtest/*
+  run $DEX image rm imgtest/*
+  [ $status -eq 0 ]
+
+  run docker images -q --filter=label=dex-tag-prefix=$DEX_TAG_PREFIX
+  [ ${#lines[@]} -eq 0 ]
+}

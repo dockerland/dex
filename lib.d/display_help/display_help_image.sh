@@ -20,14 +20,11 @@ Usage: dex image <command> [options]
   # build all images from the "extras" repository
   dex image build extras/*
 
-  # build all images from all repositories
-  dex image build *
-
 Commands:
 
-  build <image|*>        Builds an image. Optionally slash-pass repository.
-  rm <image|*>           Remove an image. Optionally slash-pass repository.
-  ls                     Lists built images using the 'docker images' command
+  build <[repo/]image|*> Builds an image. Optionally slash-pass repository.
+  rm <[repo/]image|*>    Remove an image. Optionally slash-pass repository.
+  ls                     Lists images dex has built.
 
 Options:
 
