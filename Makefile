@@ -11,7 +11,8 @@
 
 CWD:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 SCRATCH_PATH:=$(CWD)/.scratch
-NAMESPACE=dex
+DOCKER_PATH:=$(shell ${DOCKER_PATH:-/usr/bin/docker})
+NAMESPACE:=dex
 
 PREFIX:=$(DESTDIR)/usr/local
 BINDIR:=$(PREFIX)/bin
@@ -62,6 +63,7 @@ uninstall:
 tests: $(SCRATCH_PATH)/dockerbuild-tests
 	docker run -it --rm -u $$(id -u):$$(getent group docker | cut -d: -f3) \
 	  -v $(CWD)/:/dex/ \
+		-v $(DOCKER_PATH):/usr/bin/docker \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 	  -e SKIP_NETWORK_TEST=$(SKIP_NETWORK_TEST) \
 	  dockerbuild-$(NAMESPACE)-tests
