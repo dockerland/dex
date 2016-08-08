@@ -10,6 +10,7 @@ main_image(){
 
   local runstr="display_help"
   FORCE_FLAG=false
+  QUIET_FLAG=
 
   if [ $# -eq 0 ]; then
     display_help 2
@@ -17,11 +18,13 @@ main_image(){
     while [ $# -ne 0 ]; do
 
       case $1 in
-        build|rm)         runstr="dex-image-$1"
+        build|rm|ls)      runstr="dex-image-$1"
                           arg_var "$2" LOOKUP && shift
                           ;;
         -f|--force)       FORCE_FLAG=true ;;
         -h|--help)        display_help ;;
+        -q|--quiet)       QUIET_FLAG="-q" ;;
+        --api-version)    arg_var "$2" DEX_API && shift ;;
         *)                unrecognized_arg "$1" ;;
       esac
       shift
@@ -36,6 +39,8 @@ main_image(){
 
 
 dex-image-build(){
+  local tag_prefix=${1:-$DEX_TAG_PREFIX}
+
   if [ -z "$LOOKUP" ]; then
     ERRCODE=2
     error "image-add requires an image name, package name, or wildcard match to install"
@@ -45,7 +50,6 @@ dex-image-build(){
 
   # when installing, we prefix with "dex/$DEX_API-install"
   local built_image=false
-  local tag_prefix=${1:-$DEX_TAG_PREFIX}
 
   for repo_dir in $(ls -d $DEX_HOME/checkouts/$DEX_REMOTE 2>/dev/null); do
 
@@ -81,7 +85,31 @@ dex-image-build(){
 }
 
 
+dex-image-ls(){
+  local tag_prefix=${1:-$DEX_TAG_PREFIX}
+  local filters="--filter=label=dex-tag-prefix=$tag_prefix"
+
+  if [ ! -z "$LOOKUP" ]; then
+    dex-set-lookup $LOOKUP
+
+    [ ! "$DEX_REMOTE" = "*" ] && \
+      filters="$filters --filter=label=dex-remote=$DEX_REMOTE"
+
+    [ ! "$DEX_REMOTE_IMAGESTR" = "*" ] && \
+      filters="$filters --filter=label=dex-image=$DEX_REMOTE_IMAGESTR"
+
+    [ ! "$DEX_REMOTE_IMAGETAG" = "latest" ] && \
+      filters="$filters --filter=label=dex-tag=$DEX_REMOTE_IMAGETAG"
+  fi
+
+
+  docker images $QUIET_FLAG $filters
+}
+
+
 dex-image-rm(){
+  local tag_prefix=${1:-$DEX_TAG_PREFIX}
+
   if [ -z "$LOOKUP" ]; then
     ERRCODE=2
     error "image-rm requires an image name, package name, or wildcard match to install"
@@ -90,8 +118,7 @@ dex-image-rm(){
   dex-set-lookup $LOOKUP
 
   local removed_image=false
-  local tag_prefix=${1:-$DEX_TAG_PREFIX}
-  local filters="--filter=label=dex-tag-prefix=$DEX_TAG_PREFIX"
+  local filters="--filter=label=dex-tag-prefix=$tag_prefix"
   local force_flag=
   $FORCE_FLAG && force_flag="--force"
 
