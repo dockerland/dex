@@ -147,7 +147,7 @@ vars_load(){
   while [ $# -ne 0 ]; do
     case $1 in
       DEX_HOME) eval "$1=\${$1:-~/.dex}" ;;
-      DEX_BIN_DIR) eval "$1=\${$1:-~/usr/local/bin}" ;;
+      DEX_BIN_DIR) eval "$1=\${$1:-/usr/local/bin}" ;;
       DEX_BIN_PREFIX) eval "$1=\${$1:-d}" ;;
       DEX_NETWORK) eval "$1=\${$1:-true}" ;;
       DEX_API) eval "$1=\${$1:-v1}" ;;

@@ -37,11 +37,11 @@ compare_defaults(){
     read -r var val <<< "$line"
     echo "comparing $var=$val"
     case $var in
-      DEX_HOME) [ $val = "$TMPDIR/home/.dex" ] || retval=1 ;;
+      DEX_API) [ $val = 'v1' ] || retval=1 ;;
       DEX_BIN_DIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
       DEX_BIN_PREFIX) [ $val = "d" ] || retval=1 ;;
+      DEX_HOME) [ $val = "$TMPDIR/home/.dex" ] || retval=1 ;;
       DEX_NETWORK) $val || retval=1 ;;
-      DEX_API) [ $val = 'v1' ] || retval=1 ;;
       DEX_TAG_PREFIX) [ $val = 'dex/v1' ] ;;
       *) echo "unrecognized var: $var" ; retval=1 ;;
     esac
