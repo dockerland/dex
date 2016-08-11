@@ -10,31 +10,11 @@
 
 load dex
 
-export KEEP_IMAGES=false
 export DEX_NAMESPACE="dex/v1-tests"
-export IMAGES_FILTER="--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
 
 setup(){
   [ -e $DEX ] || install_dex
-
-  if [ ! -d $DEX_HOME/checkouts/imgtest ]; then
-    (
-      set -e
-      mk-repo
-      cp_fixture images/ $MK_REPO
-      cd $MK_REPO
-      git add images
-      git commit -m "adding image fixtures"
-      $DEX remote --force add imgtest $MK_REPO
-    ) || error "failed stubbing imgtest"
-
-  fi
-}
-
-rm-images(){
-  for image in $(docker images -q $IMAGES_FILTER); do
-    docker rmi --force $image
-  done
+  mk-images
 }
 
 @test "image build creates an image from checkouts" {

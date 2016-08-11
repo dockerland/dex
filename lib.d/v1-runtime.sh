@@ -46,7 +46,7 @@ v1-runtime(){
   [ -z "$DEX_DOCKER_ENTRYPOINT"] && \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --entrypoint=$DEX_DOCKER_ENTRYPOINT"
 
-  if tty -s; then
+  if tty -s >/dev/null 2>&1; then
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS -e DEX_PIPED=false"
     __pipe=
   else
