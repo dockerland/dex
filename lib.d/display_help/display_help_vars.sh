@@ -13,7 +13,7 @@ Variable Defaults:
   DEX_BIN_DIR: '/usr/local/bin'
   DEX_BIN_PREFIX: 'd'
   DEX_NETWORK: true
-  DEX_TAG_PREFIX: dex/$DEX_API
+  : dex/$DEX_API
 
 Usage: dex vars [var] [options]
 

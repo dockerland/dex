@@ -51,6 +51,7 @@ setup(){
 
 @test "help exits with status code 127 when invalid arguments are passed to a command" {
   for cmd in ${DEX_CMDS[@]} ; do
+    [ "$cmd" = "run" ] && continue
     run $DEX $cmd invalid-argument
     [ $status -eq 127 ]
   done

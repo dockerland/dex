@@ -16,7 +16,7 @@ setup(){
 
 @test "remote add|ls|rm errors with 127 if missing sources.list" {
   # skipping -- currently unable to remove sources.list,
-  #   as it's created by dex-setup routine which fires before command execution
+  #   as it's created by dex-init routine which fires before command execution
   skip
   for cmd in add ls rm; do
     run $DEX remote $cmd junk junk

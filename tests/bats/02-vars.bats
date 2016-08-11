@@ -41,8 +41,8 @@ compare_defaults(){
       DEX_BIN_DIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
       DEX_BIN_PREFIX) [ $val = "d" ] || retval=1 ;;
       DEX_HOME) [ $val = "$TMPDIR/home/.dex" ] || retval=1 ;;
+      DEX_NAMESPACE) [ $val = 'dex/v1' ] || retval=1 ;;
       DEX_NETWORK) $val || retval=1 ;;
-      DEX_TAG_PREFIX) [ $val = 'dex/v1' ] ;;
       *) echo "unrecognized var: $var" ; retval=1 ;;
     esac
   done
@@ -87,9 +87,11 @@ compare_defaults(){
     eval $line
   done
 
+  [ "$DEX_API" = "v9000" ]
   [ "$DEX_HOME" = "/myhome" ]
   [ "$DEX_BIN_DIR" = "/mybin" ]
   [ "$DEX_BIN_PREFIX" = "my" ]
+  [ "$DEX_NAMESPACE" = "dex/v9000" ]
   ! $DEX_NETWORK
 }
 

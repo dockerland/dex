@@ -30,12 +30,14 @@ Options:
 
   -h|--help|help        Display help
 
+  -a|--all              Return images from all namespaces (all api versions,
+                        all installed states) when searching for images
+
   -f|--force            When removing, persisted runs will be deleted.
                         When building, ignore API version check.
 
   -q|--quiet            When listing images, only show numeric IDS
 
-  --api-version         When building, explicitly pass the API version
 
 EOF
 }

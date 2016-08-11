@@ -15,11 +15,11 @@ main(){
   # DEX_BIN_DIR: location where dex installs : /usr/local/bin
   # DEX_BIN_PREFIX: prefix of dexecutabls : d
   # DEX_HOME: dex workspace : ~/.dex
+  # DEX_NAMESPACE: prefix used when tagging image builds : dex/<DEX_API>, dex/v1
   # DEX_NETWORK: enables network fetching : true
-  # DEX_TAG_PREFIX: tag used when running/building images : dex/v1
 
-  DEX_VARS=( DEX_API DEX_BIN_DIR DEX_BIN_PREFIX DEX_HOME DEX_NETWORK DEX_TAG_PREFIX )
-  vars_load ${DEX_VARS[@]}
+  DEX_VARS=( DEX_API DEX_BIN_DIR DEX_BIN_PREFIX DEX_HOME DEX_NAMESPACE DEX_NETWORK )
+  dex-vars-init ${DEX_VARS[@]}
 
   if [ $# -eq 0 ]; then
     display_help 2

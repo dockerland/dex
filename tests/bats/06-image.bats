@@ -11,8 +11,8 @@
 load dex
 
 export KEEP_IMAGES=false
-export DEX_TAG_PREFIX="dex/v1-tests"
-export IMAGES_FILTER="--filter=label=dex-tag-prefix=$DEX_TAG_PREFIX"
+export DEX_NAMESPACE="dex/v1-tests"
+export IMAGES_FILTER="--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
 
 setup(){
   [ -e $DEX ] || install_dex
@@ -45,7 +45,7 @@ rm-images(){
   [ $status -eq 0 ]
 
 
-  run docker images -q $DEX_TAG_PREFIX/alpine:latest
+  run docker images -q $DEX_NAMESPACE/alpine:latest
   [ $status -eq 0 ]
   [ ${#lines[@]} -eq 1 ]
 }
@@ -57,7 +57,7 @@ rm-images(){
   $DEX image build imgtest/alpine:3.2
   $DEX image build imgtest/alpine:edge
 
-  run docker images -q $IMAGES_FILTER --filter=label=dex-image=alpine
+  run docker images -q $IMAGES_FILTER --filter=label=org.dockerland.dex.image=alpine
   echo $output
   [ ${#lines[@]} -eq 2 ]
 }
