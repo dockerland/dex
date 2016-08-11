@@ -50,6 +50,32 @@ rm-images(){
   [ ${#lines[@]} -eq 1 ]
 }
 
+@test "image build labels images according to the current DEX_API" {
+
+  local img=$(docker images -q $DEX_NAMESPACE/alpine:latest)
+  local api_version=$($DEX vars DEX_API | sed 's/DEX_API=//')
+
+  [ ! -z "$img" ]
+  [ ! -z "$api_version" ]
+
+  echo "IMAGE: $img"
+
+  for label in api build-api build-imgstr build-tag image namespace remote; do
+
+    val=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $img)
+    echo "$label=$val"
+
+    case $label in
+      api) [ "$val" = "$api_version" ];;
+      build-*) [ -z "$val" ] && echo "$label is not set" && false ;;
+      image) [ "$val" = "alpine" ] ;;
+      namespace) [ "$val" = "$DEX_NAMESPACE" ] ;;
+      remote) [ "$val" = "imgtest" ] ;;
+      *) echo "unknown label - $label" && false ;;
+    esac
+  done
+}
+
 @test "image build respects tags" {
   [ -d $DEX_HOME/checkouts/imgtest/images ]
 

@@ -3,13 +3,15 @@ FROM alpine:3.2
 #
 # v1 dex-api
 #
-ENV \
-  DEX_API="v1" \
-  HOME="/dex/home" \
-  WORKSPACE="/dex/workspace"
 
-RUN mkdir -p $HOME $WORKSPACE
-VOLUME /dex
+LABEL org.dockerland.dex.api="v1"
+
+# defaults you may override, see <@TODO URL>
+# LABEL org.dockerland.dex.home="~"
+# LABEL org.dockerland.dex.workspace="\$(pwd)"
+# LABEL org.dockerland.dex.docker-flags="-i \$dex-x11-flags"
+# LABEL org.dockerland.dex.docker-entrypoint=""
+# LABEL org.dockerland.dex.docker-entrypoint="=""
 
 #
 # alpine image
