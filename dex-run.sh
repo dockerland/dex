@@ -16,17 +16,19 @@ dex-run(){
 
   # build image if it is missing
   image_api=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $__image)
-  { [ $? -ne 0 ] || $BUILD_FLAG ; } && { dex-image-build || error "error building $__image" ; }
+  if [ $? -ne 0 ] || $BUILD_FLAG ; then
+    dex-image-build || error "error building $__image"
+  else
+    [ -z "$image_api" ] && error \
+      "the $__image image is missing a org.dockerland.dex.api label" \
+      "please ensure you're up to date, rebuild it, or consult image maintainer"
 
-  [ -z "$image_api" ] && error \
-    "the $__image image is missing a org.dockerland.dex.api label" \
-    "please ensure you're up to date, rebuild it, or consult image maintainer"
-
-  [ "$image_api" = "$DEX_API" ] || log \
-    "warning, the $__image image is labeled for a different api." \
-    "please ensure you're up to date, rebuild it, or consult image maintainer" \
-    "current api: $DEX_API" \
-    "$__image api: $image_api"
+    [ "$image_api" = "$DEX_API" ] || log \
+      "warning, the $__image image is labeled for a different api." \
+      "please ensure you're up to date, rebuild it, or consult image maintainer" \
+      "current api: $DEX_API" \
+      "$__image api: $image_api"
+  fi
 
   # __image is built and ready
   v1-runtime $@
