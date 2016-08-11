@@ -24,11 +24,13 @@ __docker_cmd=
 DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
 
 v1-runtime(){
+  [ -z "$__image" ] && echo "missing runtime image" && exit 1
+
   # augment defaults with image meta
   local prefix="org.dockerland.dex"
   for label in home workspace docker_flags docker_entrypoint docker_cmd; do
     # @TODO reduce this to a single docker inspect command
-    val=$(docker inspect --format "{{ index .Config.Labels \"$prefix.$label\" }}" $__dex_image)
+    val=$(docker inspect --format "{{ index .Config.Labels \"$prefix.$label\" }}" $__image)
     [ -z "$val" ] && continue
     eval "__$label=$val"
   done
@@ -49,7 +51,7 @@ v1-runtime(){
     -v $DEX_WORKSPACE:/dex/workspace \
     -e HOME=/dex/home \
     --rm --workdir=/dex/workspace -u $(id -u):$(id -g) \
-    $__dex_image $DEX_DOCKER_CMD
+    $__image $DEX_DOCKER_CMD
 
   return $?
 }
