@@ -6,7 +6,7 @@
 
 __home=~
 __workspace=$(pwd)
-__docker_flags="-i"
+__docker_flags=
 __docker_entypoint=
 __docker_cmd=
 
@@ -36,7 +36,7 @@ v1-runtime(){
   done
 
   DEX_HOME=${DEX_HOME:-$__home}
-  DEX_WORKSPACE=${DEX_HOME:-$__workspace}
+  DEX_WORKSPACE=${DEX_WORKSPACE:-$__workspace}
   DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
   DEX_DOCKER_ENTRYPOINT=${DEX_DOCKER_ENTRYPOINT:-$__docker_entypoint}
   DEX_DOCKER_CMD=${DEX_DOCKER_CMD:-$__docker_cmd}
@@ -46,10 +46,20 @@ v1-runtime(){
   [ -z "$DEX_DOCKER_ENTRYPOINT"] && \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --entrypoint=$DEX_DOCKER_ENTRYPOINT"
 
-  docker run $DEX_DOCKER_FLAGS \
+  if tty -s; then
+    DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS -e DEX_PIPED=false"
+    __pipe=
+  else
+    # piping into a container requires interactive
+    DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --interactive -e DEX_PIPED=true"
+    __pipe="cat - |"
+  fi
+
+  eval $__pipe docker run $DEX_DOCKER_FLAGS \
     -v $DEX_HOME:/dex/home \
     -v $DEX_WORKSPACE:/dex/workspace \
     -e HOME=/dex/home \
+    -e DEX_API=$DEX_API \
     --rm --workdir=/dex/workspace -u $(id -u):$(id -g) --log-driver=none \
     $__image $DEX_DOCKER_CMD $@
 
