@@ -9,10 +9,13 @@ Piping hot docker executables to your door.
 
 To live is to iterate.
 
-Usage: dex update [options]
+Usage: dex update <name|url>
 
   # refresh checkout of all source repositories
-  dex update
+  dex update all
+
+  # refresh checkout of the core repository
+  dex update core
 
 Options:
 
