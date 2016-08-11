@@ -4,16 +4,20 @@
 ## test execution
 
 Tests are executed in a docker container with bats, git, and some common shells.
-Use the Makefile in our repository root to execute, e.g.
+Use the Makefile in our repository root to execute. The following runs all tests
 
 ```
 cd /path/to/dex.git
 make tests
 ```
 
+Limit which tests to run by exporting or passing `TEST`, e.g.
+```
+make TEST=07-run.bats tests
+```
+
 Some tests make remote network calls. This can slow things down, esp.
-on a system with an unresponsive resolver. You can skip these by setting
-`SKIP_NETWORK_TEST`, e.g.
+on a system with an unresponsive resolver. Skip these by exporting or passing `SKIP_NETWORK_TEST`, e.g.
 
 ```
 export SKIP_NETWORK_TEST=true

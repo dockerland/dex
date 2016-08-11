@@ -18,6 +18,9 @@ BINDIR:=$(PREFIX)/bin
 SCRATCH_PATH:=$(CWD)/.scratch
 DOCKER_GID ?= $(shell getent group docker | cut -d: -f3)
 
+TEST ?=
+SKIP_NETWORK_TEST ?=
+
 .PHONY: tests dex
 all: dex
 
@@ -66,4 +69,4 @@ tests: $(SCRATCH_PATH)/dockerbuild-tests
 	  -v $(CWD)/:/dex/ \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 	  -e SKIP_NETWORK_TEST=$(SKIP_NETWORK_TEST) \
-	  dockerbuild-$(NAMESPACE)-tests
+	  dockerbuild-$(NAMESPACE)-tests bats tests/bats/$(TEST)
