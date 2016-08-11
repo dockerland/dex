@@ -9,9 +9,9 @@ LABEL org.dockerland.dex.api="v1"
 # defaults you may override, see <@TODO URL>
 # LABEL org.dockerland.dex.home="~"
 # LABEL org.dockerland.dex.workspace="\$(pwd)"
-# LABEL org.dockerland.dex.docker-flags="-i \$dex-x11-flags"
-# LABEL org.dockerland.dex.docker-entrypoint=""
-# LABEL org.dockerland.dex.docker-entrypoint="=""
+# LABEL org.dockerland.dex.docker_flags="-i \$DEX_X11_FLAGS"
+# LABEL org.dockerland.dex.docker_entrypoint=""
+# LABEL org.dockerland.dex.docker_cmd=""
 
 #
 # alpine image
