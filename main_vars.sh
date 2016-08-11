@@ -7,7 +7,7 @@ main_vars(){
   local reset=false
   local vars=()
 
-  local runstr="vars_print"
+  local runstr="dex-vars-print"
 
   if [ $# -eq 0 ]; then
     display_help 2
@@ -15,8 +15,8 @@ main_vars(){
     while [ $# -ne 0 ]; do
       case $1 in
         all)               vars=( "${DEX_VARS[@]}" ) ;;
-        -d|--defaults)     runstr="vars_print_export"
-                           vars_reset ${DEX_VARS[@]} ;;
+        -d|--defaults)     runstr="dex-vars-shellprint"
+                           dex-vars-reset ;;
         -h|--help)         display_help ;;
         *)                 vars+=$1 ;;
       esac
@@ -24,7 +24,7 @@ main_vars(){
     done
   fi
 
-  vars_load ${vars[@]}
+  dex-vars-init ${vars[@]}
   $runstr ${vars[@]}
   exit $?
 }
