@@ -50,8 +50,8 @@ v1-runtime(){
     -v $DEX_HOME:/dex/home \
     -v $DEX_WORKSPACE:/dex/workspace \
     -e HOME=/dex/home \
-    --rm --workdir=/dex/workspace -u $(id -u):$(id -g) \
-    $__image $DEX_DOCKER_CMD
+    --rm --workdir=/dex/workspace -u $(id -u):$(id -g) --log-driver=none \
+    $__image $DEX_DOCKER_CMD $@
 
   return $?
 }
