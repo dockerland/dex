@@ -16,7 +16,11 @@ main_run(){
       case $1 in
         -b|--build)       BUILD_FLAG=true ;;
         -h|--help)        display_help ;;
-        *)                arg_var "$1" LOOKUP && runstr="dex-run" ;;
+        *)                arg_var "$1" LOOKUP && {
+                            shift
+                            dex-run $@
+                            exit $?
+                          } ;;
       esac
       shift
     done
