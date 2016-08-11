@@ -18,6 +18,7 @@ main_run(){
         -h|--help)        display_help ;;
         *)                arg_var "$1" LOOKUP && {
                             shift
+                            dex-init
                             dex-run $@
                             exit $?
                           } ;;
