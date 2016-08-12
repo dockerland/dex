@@ -30,6 +30,9 @@ dex-vars-init(){
     esac
     shift
   done
+
+  # bootstrap internal vars
+  __checkouts=$DEX_HOME/checkouts
 }
 
 
