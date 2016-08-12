@@ -108,3 +108,20 @@ compare_defaults(){
   run $DEX vars all
   compare_defaults "${lines[@]}"
 }
+
+@test "internal vars get properly initialized" {
+
+  local ivars=( __checkouts )
+
+  for var in $ivars; do
+    run $DEX runfunc dex-vars-print $var
+
+    IFS='='
+    read -r var val <<< "$output"
+
+    case $var in
+      __checkouts) [ $val = "$TMPDIR/home/.dex/checkouts" ] || return 1 ;;
+      *) echo "unrecognized var: $var" ; return 1 ;;
+    esac
+  done
+}
