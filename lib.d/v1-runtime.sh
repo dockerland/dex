@@ -2,7 +2,10 @@
 
 # runtime defaults,
 #  images may provide a org.dockerland.dex.<var> label supplying a value
-#  that overrides these default values.
+#  that overrides these default values, examples are:
+#  org.dockerland.dex.home
+#  org.dockerland.dex.workspace
+#  org.dockerland.dex.docker_flags
 
 __home=~
 __workspace=$(pwd)
@@ -18,7 +21,7 @@ __docker_cmd=
 # DEX_DOCKER_ENTRYPOINT - alternative entrypoint passed to docker run
 # DEX_DOCKER_CMD - alternative command passed to docker run
 #
-# DEX_X11_FLAGS - typically appended to _DEX_DOCKER_FLAGS in the .env file of
+# DEX_X11_FLAGS - typically appended to org.dockerland.dex. in the .env file of
 #                S images providing X11 applications
 
 DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
@@ -28,7 +31,7 @@ v1-runtime(){
 
   # augment defaults with image meta
   local prefix="org.dockerland.dex"
-  for label in home workspace docker_flags docker_entrypoint docker_cmd; do
+  for label in home workspace docker_flags; do
     # @TODO reduce this to a single docker inspect command
     val=$(docker inspect --format "{{ index .Config.Labels \"$prefix.$label\" }}" $__image)
     [ -z "$val" ] && continue
