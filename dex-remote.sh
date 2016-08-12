@@ -33,7 +33,7 @@ dex-remote-add(){
 
 dex-remote-init(){
 
-  dex-fetch "https://raw.githubusercontent.com/dockerland/dex/briceburg/wonky/sources.list" $DEX_HOME/sources.list.fetched
+  dex-fetch "https://raw.githubusercontent.com/dockerland/dex/master/sources.list" $DEX_HOME/sources.list.fetched
 
   if [ ! -e $DEX_HOME/sources.list ]; then
     if [ -e $DEX_HOME/sources.list.fetched ]; then
