@@ -13,18 +13,31 @@ __docker_flags=
 __docker_entypoint=
 __docker_cmd=
 
+__docker_persist=false
+__docker_uid=$(id -u)
+__docker_gid=$(id -g)
+__docker_log_driver="none"
+
 # You may override these by exporting the following vars:
 #
-# DEX_DOCKER_HOME - directory that will be mounted to the container's $HOME
-# DEX_DOCKER_WORKSPACE - directory that be mounted as container's CWD
+# DEX_DOCKER_HOME - docker host directory mounted as the container's $HOME
+# DEX_DOCKER_WORKSPACE - docker host directory mounted as the container's CWD
 # DEX_DOCKER_FLAGS - flags passed to docker run
 # DEX_DOCKER_ENTRYPOINT - alternative entrypoint passed to docker run
 # DEX_DOCKER_CMD - alternative command passed to docker run
 #
+# DEX_DOCKER_UID - uid to run the container under
+# DEX_DOCKER_GID - gid to run the container under
+#
+# DEX_DOCKER_LOG_DRIVER - logging driver to use for container
+# DEX_DOCKER_PERSIST - when false, container is removed after it exits
+#
 # DEX_X11_FLAGS - typically appended to org.dockerland.dex. in the .env file of
 #                S images providing X11 applications
 
+
 DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
+DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
 
 v1-runtime(){
   [ -z "$__image" ] && echo "missing runtime image" && exit 1
@@ -38,16 +51,11 @@ v1-runtime(){
     eval "__$label=$val"
   done
 
-  DEX_DOCKER_HOME=${DEX_DOCKER_HOME:-$__docker_home}
-  DEX_DOCKER_WORKSPACE=${DEX_DOCKER_WORKSPACE:-$__docker_workspace}
-  DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
-  DEX_DOCKER_ENTRYPOINT=${DEX_DOCKER_ENTRYPOINT:-$__docker_entypoint}
-  DEX_DOCKER_CMD=${DEX_DOCKER_CMD:-$__docker_cmd}
-
-  #@TODO implement piping & redirection detection
-
-  [ -z "$DEX_DOCKER_ENTRYPOINT"] && \
+  [ -z "${DEX_DOCKER_ENTRYPOINT:=$__docker_entypoint}"] && \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --entrypoint=$DEX_DOCKER_ENTRYPOINT"
+
+  ! ${DEX_DOCKER_PERSIST:=$__docker_persist} && \
+    DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --rm"
 
   if tty -s >/dev/null 2>&1; then
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS -e DEX_PIPED=false"
@@ -59,12 +67,14 @@ v1-runtime(){
   fi
 
   eval $__pipe docker run $DEX_DOCKER_FLAGS \
-    -v $DEX_DOCKER_HOME:/dex/home \
-    -v $DEX_DOCKER_WORKSPACE:/dex/workspace \
+    -v ${DEX_DOCKER_HOME:-$__docker_home}:/dex/home \
+    -v ${DEX_DOCKER_WORKSPACE:-$__docker_workspace}:/dex/workspace \
     -e HOME=/dex/home \
     -e DEX_API=$DEX_API \
-    --rm --workdir=/dex/workspace -u $(id -u):$(id -g) --log-driver=none \
-    $__image $DEX_DOCKER_CMD $@
+    -u ${DEX_DOCKER_UID:-$__docker_uid}:${DEX_DOCKER_GID:-$__docker_gid} \
+    --log-driver=${DEX_DOCKER_LOG_DRIVER:-$__docker_log_driver}
+    --workdir=/dex/workspace \
+    $__image ${DEX_DOCKER_CMD:-$__docker_cmd} $@
 
   return $?
 }
