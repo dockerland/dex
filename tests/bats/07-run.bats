@@ -13,6 +13,10 @@ setup(){
   mk-images
 }
 
+teardown(){
+  rm -rf $TMPDIR/docker-test
+}
+
 @test "run errors if it cannot find an image" {
   run $DEX run imgtest/certainly-missing
   [ $status -eq 1 ]
@@ -37,24 +41,22 @@ setup(){
   run $DEX run imgtest/debian printenv HOME
   [ $output = "/dex/home" ]
 
-  export DEX_HOST_HOME=$TMPDIR/home/runtest
+  export DEX_DOCKER_HOME=$TMPDIR/docker-test
+  mkdir -p $DEX_DOCKER_HOME/ping-pong
 
-  rm -rf $DEX_HOST_HOME
-  mkdir -p $DEX_HOST_HOME/zzz
-
-  diff <($DEX run imgtest/debian ls /dex/home/) <(ls $DEX_HOST_HOME)
+  run $DEX run imgtest/debian ls /dex/home/
+  [ "$output" = "ping-pong" ]
 }
 
 @test "run properly sets cwd as /dex/workspace" {
   run $DEX run imgtest/debian pwd
   [ $output = "/dex/workspace" ]
 
-  export DEX_HOST_WORKSPACE=$TMPDIR/home/runtest
+  export DEX_DOCKER_WORKSPACE=$TMPDIR/docker-test
+  mkdir -p $DEX_DOCKER_WORKSPACE/ping-pong
 
-  rm -rf $DEX_HOST_WORKSPACE
-  mkdir -p $DEX_HOST_WORKSPACE/zzz
-
-  diff <($DEX run imgtest/debian ls) <(ls $DEX_HOST_WORKSPACE)
+  run $DEX run imgtest/debian ls
+  [ "$output" = "ping-pong" ]
 }
 
 @test "run supports piping of stdin" {

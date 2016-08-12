@@ -3,7 +3,7 @@
 HELPERS_LOADED=true
 REPO_ROOT=${REPO_ROOT:-"$(git rev-parse --show-toplevel)"}
 
-# path to writable test target
+# path to writable test targets
 TMPDIR=/tmp/dex-tests
 mkdir -p $TMPDIR/home
 
