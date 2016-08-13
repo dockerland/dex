@@ -15,8 +15,8 @@ main_run(){
 
       case $1 in
         -b|--build)       __build_flag=true ;;
-        -u|--update)      __build_flag=true ; __pull_flag=true ;;
-        -p|--persist)     DEX_DOCKER_PERSIST=true ;;
+        -p|--pull)        __build_flag=true ; __pull_flag=true ;;
+        --persist)        DEX_DOCKER_PERSIST=true ;;
         -h|--help)        display_help ;;
         *)                arg_var "$1" LOOKUP && {
                             shift

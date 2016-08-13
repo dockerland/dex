@@ -25,10 +25,20 @@ teardown(){
 @test "run automatically builds (and runs) image" {
   run $DEX image --force rm imgtest/*
   run $DEX run imgtest/debian
-  echo $output
   [ $status -eq 0 ]
   [[ $output == *"built imgtest/debian"* ]]
   [[ $output == *"DEBIAN_RELEASE"* ]]
+}
+
+@test "run supports pulling from source(s)" {
+  rm -rf $DEX_HOME/checkouts/
+  [ ! -d $DEX_HOME/checkouts/imgtest ]
+
+  run $DEX run --pull imgtest/debian
+  [ $status -eq 0 ]
+  [ -d $DEX_HOME/checkouts/imgtest ]
+  [[ $output == *"DEBIAN_RELEASE"* ]]
+  [[ $output == *"imgtest updated" ]]
 }
 
 @test "run supports passing of arguments to container's command" {
