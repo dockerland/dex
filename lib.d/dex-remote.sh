@@ -3,76 +3,32 @@
 #
 
 dex-remote-add(){
-  if [ -z "$REMOTE_NAME" ] || [ -z "$REMOTE_URL" ]; then
+  if [ -z "$__remote_name" ] || [ -z "$__remote_url" ]; then
     ERRCODE=2
     error "remote-add requires NAME and URL"
   fi
 
   if $FORCE_FLAG; then
-    dex-remote-rm $REMOTE_NAME
-  elif dex-remote-lookup $REMOTE_NAME || dex-remote-lookup $REMOTE_URL ; then
+    dex-remote-rm "$__remote_name"
+  elif dex-detect-sourcestr "$__remote_name" || dex-detect-sourcestr "$__remote_url" ; then
     ERRCODE=2
-    error "refusing to add $REMOTE_NAME" "$DEX_REMOTE is a duplicate name|url"
+    error "refusing to add $__remote_name" "${__sources[@]} is a duplicate name|url"
   fi
 
-  [ -e $DEX_HOME/checkouts/$REMOTE_NAME ] && {
+  [ -e $DEX_HOME/checkouts/$__remote_name ] && {
     ERRCODE=2
-    error "refusing to add $REMOTE_NAME" \
-      "$DEX_HOME/checkouts/$REMOTE_NAME exists"
+    error "refusing to add $__remote_name" \
+      "checkout $DEX_HOME/checkouts/$__remote_name already exists" \
+      "use --force flag to overwrite"
   }
 
-  clone_or_pull $REMOTE_URL $DEX_HOME/checkouts/$REMOTE_NAME || error \
+  clone_or_pull "$__remote_url" "$DEX_HOME/checkouts/$__remote_name" || error \
     "unable to add respository"
 
-  echo "$REMOTE_NAME $REMOTE_URL" >> $DEX_HOME/sources.list || error \
+  echo "$__remote_name $__remote_url" >> $DEX_HOME/sources.list || error \
     "unable to update sources.list"
 
-  log "$REMOTE_NAME added"
-}
-
-
-dex-remote-init(){
-
-  dex-fetch "https://raw.githubusercontent.com/dockerland/dex/master/sources.list" $DEX_HOME/sources.list.fetched
-
-  if [ ! -e $DEX_HOME/sources.list ]; then
-    if [ -e $DEX_HOME/sources.list.fetched ]; then
-      cat $DEX_HOME/sources.list.fetched > $DEX_HOME/sources.list || error \
-        "error writing sources.list from fetched file"
-    else
-      dex-sources-cat > $DEX_HOME/sources.list || error \
-        "error creating $DEX_HOME/sources.list"
-    fi
-  fi
-
-}
-
-# dex-remote-lookup <name|url>
-# @returns 1 if not found
-# @returns 0 if found, and sets DEX_REMOTE=<resolved-name>
-dex-remote-lookup(){
-  [ -e $DEX_HOME/sources.list ] || {
-    ERRCODE=127
-    error "missing $DEX_HOME/sources.list"
-  }
-
-  DEX_REMOTE=
-
-  while read name url junk ; do
-
-    # skip blank, malformed, or comment lines
-    if [ -z "$name" ] || [ -z "$url" ] || [[ $name = \#* ]]; then
-      continue
-    fi
-
-    if [ "$name" = "$1" ] ||  [ "$url" = "$1" ]; then
-      DEX_REMOTE="$name"
-      DEX_REMOTE_URL=$url
-      return 0
-    fi
-  done < $DEX_HOME/sources.list
-
-  return 1
+  log "$__remote_name added"
 }
 
 dex-remote-ls(){
