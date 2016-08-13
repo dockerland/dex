@@ -19,7 +19,7 @@ main_remote(){
                             arg_var "$2" REMOTE_NAME && shift
                             arg_var "$2" REMOTE_URL && shift
                           else
-                            arg_var "$2" REMOTE_LOOKUP && shift
+                            arg_var "$2" __sourcestr && shift
                           fi
                           ;;
         -f|--force)       FORCE_FLAG=true ;;
