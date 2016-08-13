@@ -17,10 +17,10 @@ main_update(){
 
       #@TODO migrate to argparsing (getopts?) to supports add --force
       case $1 in
-        add|ls|pull|rm)   runstr="dex-remote-$1"
+        add|ls|pull|rm)   runstr="dex-source-$1"
                           if [ $1 = "add" ]; then
-                            arg_var "$2" __remote_name && shift
-                            arg_var "$2" __remote_url && shift
+                            arg_var "$2" __source_name && shift
+                            arg_var "$2" __source_url && shift
                           else
                             arg_var "$2" __sourcestr && shift
                           fi
@@ -39,4 +39,4 @@ main_update(){
 
 }
 
-#dex-remote-ls
+#dex-source-ls

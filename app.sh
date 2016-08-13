@@ -37,10 +37,8 @@ dex-init(){
 
 dex-init-sources(){
 
-  dex-fetch "https://raw.githubusercontent.com/dockerland/dex/master/sources.list" $DEX_HOME/sources.list.fetched
-
   if [ ! -e $DEX_HOME/sources.list ]; then
-    if [ -e $DEX_HOME/sources.list.fetched ]; then
+    if dex-fetch "https://raw.githubusercontent.com/dockerland/dex/master/sources.list" $DEX_HOME/sources.list.fetched ; then
       cat $DEX_HOME/sources.list.fetched > $DEX_HOME/sources.list || error \
         "error writing sources.list from fetched file"
     else
@@ -48,7 +46,8 @@ dex-init-sources(){
         "error creating $DEX_HOME/sources.list"
     fi
   fi
-
+  
+  rm -rf $DEX_HOME/sources.list.fetched >/dev/null 2>&1
 }
 
 dex-sources-cat(){

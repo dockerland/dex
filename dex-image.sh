@@ -11,7 +11,7 @@ dex-image-build(){
 
   dex-detect-imgstr $LOOKUP || error "lookup failed to parse $LOOKUP"
 
-  for repo_dir in $(ls -d $DEX_HOME/checkouts/$__repo_match 2>/dev/null); do
+  for repo_dir in $(ls -d $DEX_HOME/checkouts/$__source_match 2>/dev/null); do
     for image_dir in $(ls -d $repo_dir/images/$__image_match 2>/dev/null); do
       if [ "$__image_tag" = "latest" ]; then
         dockerfile="Dockerfile"
@@ -21,7 +21,7 @@ dex-image-build(){
       [ -e $image_dir/$dockerfile ] || continue
 
       local image=$(basename $image_dir)
-      local remote=$(basename $repo_dir)
+      local source=$(basename $repo_dir)
       local tag="$namespace/$image:$__image_tag"
 
       log "building $tag ..."
@@ -34,18 +34,18 @@ dex-image-build(){
           --label=org.dockerland.dex.build-tag="$__image_tag" \
           --label=org.dockerland.dex.image=$image \
           --label=org.dockerland.dex.namespace=$namespace \
-          --label=org.dockerland.dex.remote=$remote \
+          --label=org.dockerland.dex.source=$source \
           -f $dockerfile .
       ) && built_image=true
     done
   done
 
   $built_image && {
-    log "built $__repo_match/$__image_match"
+    log "built $__source_match/$__image_match"
     return 0
   }
 
-  error "failed to find images matching $__repo_match/$__image_match"
+  error "failed to find images matching $__source_match/$__image_match"
 }
 
 
@@ -60,8 +60,8 @@ dex-image-ls(){
   if [ ! -z "$LOOKUP" ]; then
     dex-detect-imgstr $LOOKUP
 
-    [ ! "$__repo_match" = "*" ] && \
-      filters="$filters --filter=label=org.dockerland.dex.remote=$__repo_match"
+    [ ! "$__source_match" = "*" ] && \
+      filters="$filters --filter=label=org.dockerland.dex.source=$__source_match"
 
     #@TODO support wildcards in image_match by switching to repository:tag form
     [ ! "$__image_match" = "*" ] && \
@@ -92,7 +92,7 @@ dex-image-rm(){
   done
 
   $removed_image && {
-    log "removed $__repo_match/$__image_match"
+    log "removed $__source_match/$__image_match"
     exit 0
   }
 

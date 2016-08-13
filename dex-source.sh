@@ -2,36 +2,37 @@
 # lib.d/dex-remote.sh for dex -*- shell-script -*-
 #
 
-dex-remote-add(){
-  if [ -z "$__remote_name" ] || [ -z "$__remote_url" ]; then
+dex-source-add(){
+  if [ -z "$__lookup_name" ] || [ -z "$__lookup_url" ]; then
     ERRCODE=2
-    error "remote-add requires NAME and URL"
+    error "source-add requires NAME and URL"
   fi
 
   if $FORCE_FLAG; then
-    dex-remote-rm "$__remote_name"
-  elif dex-detect-sourcestr "$__remote_name" || dex-detect-sourcestr "$__remote_url" ; then
+    dex-source-rm "$__lookup_name"
+    dex-source-rm "$__lookup_url"
+  elif dex-detect-sourcestr "$__lookup_name" || dex-detect-sourcestr "$__lookup_url" ; then
     ERRCODE=2
-    error "refusing to add $__remote_name" "${__sources[@]} is a duplicate name|url"
+    error "refusing to add $__lookup_name -- duplicate name or url"
   fi
 
-  [ -e $DEX_HOME/checkouts/$__remote_name ] && {
+  [ -e $DEX_HOME/checkouts/$__lookup_name ] && {
     ERRCODE=2
-    error "refusing to add $__remote_name" \
-      "checkout $DEX_HOME/checkouts/$__remote_name already exists" \
+    error "refusing to add $__lookup_name" \
+      "checkout $DEX_HOME/checkouts/$__lookup_name already exists" \
       "use --force flag to overwrite"
   }
 
-  clone_or_pull "$__remote_url" "$DEX_HOME/checkouts/$__remote_name" || error \
+  clone_or_pull "$__lookup_url" "$DEX_HOME/checkouts/$__lookup_name" || error \
     "unable to add respository"
 
-  echo "$__remote_name $__remote_url" >> $DEX_HOME/sources.list || error \
+  echo "$__lookup_name $__lookup_url" >> $DEX_HOME/sources.list || error \
     "unable to update sources.list"
 
-  log "$__remote_name added"
+  log "$__lookup_name added"
 }
 
-dex-remote-ls(){
+dex-source-ls(){
   [ ! -e $DEX_HOME/sources.list ] && \
     ERRCODE=127 && error "missing $DEX_HOME/sources.list"
 
@@ -47,17 +48,17 @@ dex-remote-ls(){
   done
 }
 
-# dex-remote-pull updates a source checkout. updates all sources if * is passed.
-# usage: dex-remote-pull <repostr|*>
-#    ex: dex-remote-pull core
-#    ex: dex-remote-pull git@github.com:dockerland/dex-dockerfiles-core.git
+# dex-source-pull updates a source checkout. updates all sources if * is passed.
+# usage: dex-source-pull <repostr|*>
+#    ex: dex-source-pull core
+#    ex: dex-source-pull git@github.com:dockerland/dex-dockerfiles-core.git
 #    ex: dex-remote pull *
-dex-remote-pull(){
+dex-source-pull(){
   [ -z "$1" ] || __sourcestr="$1"
 
   if [ -z "$__sourcestr" ]; then
     ERRCODE=2
-    error "remote-pull requires a repository name or URL"
+    error "source-pull requires a repository name or URL"
   fi
 
   dex-detect-sourcestr "$__sourcestr" || {
@@ -88,12 +89,12 @@ dex-remote-pull(){
 }
 
 
-dex-remote-rm(){
+dex-source-rm(){
   [ -z "$1" ] || __sourcestr=$1
 
   if [ -z "$__sourcestr" ]; then
     ERRCODE=2
-    error "remote-rm requires a repository name or URL"
+    error "source-rm requires a repository name or URL"
   fi
 
   dex-detect-sourcestr "$__sourcestr" || {

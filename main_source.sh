@@ -1,8 +1,8 @@
 #
-# lib.d/main_remote.sh for dex -*- shell-script -*-
+# lib.d/main_source.sh for dex -*- shell-script -*-
 #
 
-main_remote(){
+main_source(){
 
   local runstr="display_help"
   FORCE_FLAG=false
@@ -14,10 +14,10 @@ main_remote(){
 
       #@TODO migrate to argparsing (getopts?) to supports add --force
       case $1 in
-        add|ls|pull|rm)   runstr="dex-remote-$1"
+        add|ls|pull|rm)   runstr="dex-source-$1"
                           if [ $1 = "add" ]; then
-                            arg_var "$2" __remote_name && shift
-                            arg_var "$2" __remote_url && shift
+                            arg_var "$2" __lookup_name && shift
+                            arg_var "$2" __lookup_url && shift
                           else
                             arg_var "$2" __sourcestr && shift
                           fi
