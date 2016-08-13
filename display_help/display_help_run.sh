@@ -37,6 +37,8 @@ Options:
 
   -h|--help             Display help
   -b|--build            Always build the image before executing
+  -u|--update           Refresh checkout(s) before executing, implies --build
   -p|--persist          Persist the container after it exits
+  
 EOF
 }

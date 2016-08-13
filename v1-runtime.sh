@@ -54,7 +54,7 @@ v1-runtime(){
   [ -z "${DEX_DOCKER_ENTRYPOINT:=$__docker_entypoint}"] && \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --entrypoint=$DEX_DOCKER_ENTRYPOINT"
 
-  ! ${DEX_DOCKER_PERSIST:=$__docker_persist} && \
+  ${DEX_DOCKER_PERSIST:=$__docker_persist} || \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --rm"
 
   if tty -s >/dev/null 2>&1; then
