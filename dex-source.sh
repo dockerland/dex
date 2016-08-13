@@ -8,7 +8,7 @@ dex-source-add(){
     error "source-add requires NAME and URL"
   fi
 
-  if $FORCE_FLAG; then
+  if $__force_flag; then
     dex-source-rm "$__lookup_name"
     dex-source-rm "$__lookup_url"
   elif dex-detect-sourcestr "$__lookup_name" || dex-detect-sourcestr "$__lookup_url" ; then
@@ -70,7 +70,7 @@ dex-source-pull(){
   for __source in "${__sources[@]}"; do
     read -r __source_name __source_url <<< "$__source"
 
-    if ! $FORCE_FLAG && is_dirty $__checkouts/$__source_name ]; then
+    if ! $__force_flag && is_dirty $__checkouts/$__source_name ]; then
       error "$DEX_HOME/checkouts/$__source_name has local changes" \
       "pass --force to force update, or reset/upstream your changes"
     fi
@@ -81,7 +81,7 @@ dex-source-pull(){
     }
 
 
-    clone_or_pull $__source_url $__checkouts/$__source_name $FORCE_FLAG || \
+    clone_or_pull $__source_url $__checkouts/$__source_name $__force_flag || \
       error "error pulling $__source_name"
 
     log "$__source_name updated"
@@ -106,7 +106,7 @@ dex-source-rm(){
   for __source in "${__sources[@]}"; do
     read -r __source_name __source_url <<< "$__source"
 
-    if $FORCE_FLAG; then
+    if $__force_flag; then
       rm -rf $DEX_HOME/checkouts/$__source_name 2>/dev/null
     elif [ -d $DEX_HOME/checkouts/$__source_name ]; then
 

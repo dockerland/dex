@@ -16,10 +16,10 @@ arg_var(){
 
 unrecognized_arg(){
 
-  if [ $CMD = "main" ]; then
+  if [ $__cmd = "main" ]; then
     printf "\n\n$1 is an unrecognized command\n\n"
   else
-    printf "\n\n$1 is an unrecognized argument to the $CMD command.\n\n"
+    printf "\n\n$1 is an unrecognized argument to the $__cmd command.\n\n"
   fi
 
   display_help 127

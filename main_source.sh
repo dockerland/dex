@@ -5,7 +5,7 @@
 main_source(){
 
   local runstr="display_help"
-  FORCE_FLAG=false
+  __force_flag=false
 
   if [ $# -eq 0 ]; then
     display_help 2
@@ -22,7 +22,7 @@ main_source(){
                             arg_var "$2" __sourcestr && shift
                           fi
                           ;;
-        -f|--force)       FORCE_FLAG=true ;;
+        -f|--force)       __force_flag=true ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
       esac

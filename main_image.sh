@@ -9,8 +9,8 @@
 main_image(){
 
   local runstr="display_help"
-  FORCE_FLAG=false
-  SKIP_NAMESPACE=false
+  __force_flag=false
+  __skip_namespace=false
   QUIET_FLAG=
 
   if [ $# -eq 0 ]; then
@@ -22,10 +22,10 @@ main_image(){
         build|rm|ls)      runstr="dex-image-$1"
                           arg_var "$2" LOOKUP && shift
                           ;;
-        -f|--force)       FORCE_FLAG=true ;;
+        -f|--force)       __force_flag=true ;;
         -h|--help)        display_help ;;
         -q|--quiet)       QUIET_FLAG="-q" ;;
-        -a|--all)         SKIP_NAMESPACE=true ;;
+        -a|--all)         __skip_namespace=true ;;
         *)                unrecognized_arg "$1" ;;
       esac
       shift

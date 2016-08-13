@@ -31,18 +31,18 @@ prompt_confirm() {
 #
 sed_inplace(){
   # linux
-  local SED_CMD="sed"
+  local __sed="sed"
 
   if [[ $OSTYPE == darwin* ]]; then
     if $(type gsed >/dev/null 2>&1); then
-      local SED_CMD="gsed"
+      local __sed="gsed"
     elif $(type /usr/local/bin/sed >/dev/null 2>&1); then
-      local SED_CMD="/usr/local/bin/sed"
+      local __sed="/usr/local/bin/sed"
     else
       sed -i '' -E "$2" $1
       return
     fi
   fi
 
-  $SED_CMD -r -i "$2" $1
+  $__sed -r -i "$2" $1
 }
