@@ -80,14 +80,14 @@ dex-remote-ls(){
     ERRCODE=127 && error "missing $DEX_HOME/sources.list"
 
   cat $DEX_HOME/sources.list |
-  while read name url junk ; do
+  while read __source_name __source_url junk ; do
 
     # skip blank, malformed, or comment lines
-    if [ -z "$name" ] || [ -z "$url" ] || [[ $name = \#* ]]; then
+    if [ -z "$__source_name" ] || [ -z "$__source_url" ] || [[ $__source_name = \#* ]]; then
       continue
     fi
 
-    printf "$name\t$url\n"
+    printf "$__source_name $__source_url\n"
   done
 }
 

@@ -49,7 +49,7 @@ setup(){
 
   run $DEX remote ls
   [ $status -eq 0 ]
-  [ "${lines[2]}" = $(printf "local\t$MK_REPO") ]
+  [ "${lines[2]}" = "local $MK_REPO" ]
 }
 
 @test "remote add fails to add sources it cannot clone" {
@@ -61,16 +61,18 @@ setup(){
   run $DEX remote ls
   [ $status -eq 0 ]
 
-  IFS=$'\t'
-  while read known_name known_url; do
-    run $DEX remote add $known_name fake-url.git
-    [[ $output == *refusing* ]]
-    [ $status -eq 2 ]
+  IFS=" "
+  read -r known_name known_url <<< "${lines[0]}"
+  run $DEX remote add $known_name fake-url.git
 
-    run $DEX remote add unique $known_url
-    [[ $output == *refusing* ]]
-    [ $status -eq 2 ]
-  done <<< "${lines[0]}"
+  echo $output
+  [[ $output == *refusing* ]]
+  [ $status -eq 2 ]
+
+  run $DEX remote add unique $known_url
+  [[ $output == *refusing* ]]
+  [ $status -eq 2 ]
+
 }
 
 @test "remote add refuses to add sources if a named checkout already exists" {
