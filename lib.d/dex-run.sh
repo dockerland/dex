@@ -16,7 +16,8 @@ dex-run(){
 
   # build image if it is missing
   image_api=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $__image)
-  if [ $? -ne 0 ] || $BUILD_FLAG ; then
+  if [ $? -ne 0 ] || $__build_flag ; then
+    $__pull_flag && dex-remote-pull $__repo_match
     dex-image-build || error "error building $__image"
   else
     [ -z "$image_api" ] && error \
