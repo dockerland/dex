@@ -25,7 +25,7 @@ dex-init(){
   ( type docker >/dev/null 2>&1 ) || error \
     "dex requires docker"
 
-  [ -e $DEX_HOME/sources.list ] || dex-remote-init
+  [ -e $DEX_HOME/sources.list ] || dex-init-sources
 
   for path in $DEX_HOME $DEX_HOME/checkouts $DEX_HOME/sources.list; do
     [ -w $path ] || error "$path is not writable"
@@ -35,6 +35,21 @@ dex-init(){
   return 0
 }
 
+dex-init-sources(){
+
+  dex-fetch "https://raw.githubusercontent.com/dockerland/dex/master/sources.list" $DEX_HOME/sources.list.fetched
+
+  if [ ! -e $DEX_HOME/sources.list ]; then
+    if [ -e $DEX_HOME/sources.list.fetched ]; then
+      cat $DEX_HOME/sources.list.fetched > $DEX_HOME/sources.list || error \
+        "error writing sources.list from fetched file"
+    else
+      dex-sources-cat > $DEX_HOME/sources.list || error \
+        "error creating $DEX_HOME/sources.list"
+    fi
+  fi
+
+}
 
 dex-sources-cat(){
   cat <<-EOF
