@@ -91,62 +91,82 @@ dex-remote-ls(){
   done
 }
 
+# dex-remote-pull updates a source checkout. updates all sources if * is passed.
+# usage: dex-remote-pull <repostr|*>
+#    ex: dex-remote-pull core
+#    ex: dex-remote-pull git@github.com:dockerland/dex-dockerfiles-core.git
+#    ex: dex-remote pull *
 dex-remote-pull(){
-  [ -z "$1" ] || REMOTE_LOOKUP=$1
+  [ -z "$1" ] || __sourcestr="$1"
 
-  if [ -z "$REMOTE_LOOKUP" ]; then
+  if [ -z "$__sourcestr" ]; then
     ERRCODE=2
     error "remote-pull requires a repository name or URL"
   fi
 
-  dex-remote-lookup $REMOTE_LOOKUP || {
-    [ -z "$1" ] && error "no match for $REMOTE_LOOKUP in sources.list"
-    log "$REMOTE_LOOKUP not found, skipping pull..."
+  dex-detect-sourcestr "$__sourcestr" || {
+    [ -z "$1" ] && error "no match for $__sourcestr in sources.list"
+    log "$__sourcestr not found, skipping pull..."
     return 1
   }
 
-  if ! $FORCE_FLAG && is_dirty $DEX_HOME/checkouts/$DEX_REMOTE ]; then
-    error "$DEX_HOME/checkouts/$DEX_REMOTE has local changes" \
-    "pass --force to force update, or reset/upstream your changes"
-  fi
+  for __source in "${__sources[@]}"; do
+    read -r __source_name __source_url <<< "$__source"
 
-  clone_or_pull $DEX_REMOTE_URL $DEX_HOME/checkouts/$DEX_REMOTE $FORCE_FLAG || \
-    error "error pulling $DEX_REMOTE"
+    if ! $FORCE_FLAG && is_dirty $__checkouts/$__source_name ]; then
+      error "$DEX_HOME/checkouts/$__source_name has local changes" \
+      "pass --force to force update, or reset/upstream your changes"
+    fi
 
-  log "$DEX_REMOTE updated"
+    ! $DEX_NETWORK && [[ ! "$__source_url" == /* ]] && {
+      log "skipping $__source_name -- networking disabled"
+      continue
+    }
+
+
+    clone_or_pull $__source_url $__checkouts/$__source_name $FORCE_FLAG || \
+      error "error pulling $__source_name"
+
+    log "$__source_name updated"
+  done
 }
 
 
 dex-remote-rm(){
-  [ -z "$1" ] || REMOTE_LOOKUP=$1
+  [ -z "$1" ] || __sourcestr=$1
 
-  if [ -z "$REMOTE_LOOKUP" ]; then
+  if [ -z "$__sourcestr" ]; then
     ERRCODE=2
     error "remote-rm requires a repository name or URL"
   fi
 
-  dex-remote-lookup $REMOTE_LOOKUP || {
-    [ -z "$1" ] && error "no match for $REMOTE_LOOKUP in sources.list"
-    log "$REMOTE_LOOKUP not found, skipping removal..."
+  dex-detect-sourcestr "$__sourcestr" || {
+    [ -z "$1" ] && error "no match for $__sourcestr in sources.list"
+    log "$__sourcestr not found, skipping removal..."
     return 1
   }
 
-  if $FORCE_FLAG; then
-    rm -rf $DEX_HOME/checkouts/$DEX_REMOTE 2>/dev/null
-  elif [ -d $DEX_HOME/checkouts/$DEX_REMOTE ]; then
+  for __source in "${__sources[@]}"; do
+    read -r __source_name __source_url <<< "$__source"
 
-    [ ! -w $DEX_HOME/checkouts/$DEX_REMOTE  ] && {
-      ERRCODE=126
-      error "$DEX_HOME/checkouts/$DEX_REMOTE" is not writable
-    }
+    if $FORCE_FLAG; then
+      rm -rf $DEX_HOME/checkouts/$__source_name 2>/dev/null
+    elif [ -d $DEX_HOME/checkouts/$__source_name ]; then
 
-    is_dirty $DEX_HOME/checkouts/$DEX_REMOTE ] && error \
-      "$DEX_HOME/checkouts/$DEX_REMOTE has local changes" \
-      "pass --force to force removal, or reset/upstream your changes"
+      [ ! -w $DEX_HOME/checkouts/$__source_name  ] && {
+        ERRCODE=126
+        error "$DEX_HOME/checkouts/$__source_name" is not writable
+      }
 
-    rm -rf $DEX_HOME/checkouts/$DEX_REMOTE
-  fi
+      is_dirty $DEX_HOME/checkouts/$__source_name ] && error \
+        "$DEX_HOME/checkouts/$__source_name has local changes" \
+        "pass --force to force removal, or reset/upstream your changes"
 
-  sed_inplace $DEX_HOME/sources.list "/$DEX_REMOTE /d"
-  log "removed $DEX_REMOTE"
+      rm -rf $DEX_HOME/checkouts/$__source_name
+    fi
+
+    sed_inplace $DEX_HOME/sources.list "/$__source_name /d"
+    log "removed $__source_name"
+
+  done
 }

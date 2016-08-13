@@ -45,3 +45,35 @@ dex-detect-imgstr(){
   $debug && dex-vars-print ${vars[@]}
   return 0
 }
+
+
+# dex-detect-sourcestr sets __sources (array of sources.list matches in "name url" format)
+# usage: dex-detect-sourcestr <sourcestr|*>
+#    ex: dex-detect-sourcestr core => 0: __sources=( "core git@github.com:dockerland/dex-dockerfiles-core.git" )
+#    ex: dex-detect-sourcestr git@github.com:dockerland/dex-dockerfiles-core.git => 0: __sources=( "core git@github.com:dockerland/dex-dockerfiles-core.git" )
+#    ex: dex-detect-sourcestr * => 0: __sources=( "core git@github.com:dockerland/dex-dockerfiles-core.git" "extra:git@github.com dockerland/dex-dockerfiles-extra.git" )
+#    ex: dex-detect-sourcestr * => 1: __sources=( )
+dex-detect-sourcestr(){
+  __sources=()
+  local retval=1
+
+  [ -e $DEX_HOME/sources.list ] || {
+    ERRCODE=127
+    error "missing $DEX_HOME/sources.list"
+  }
+
+  while read name url junk ; do
+
+    # skip blank, malformed, or comment lines
+    if [ -z "$name" ] || [ -z "$url" ] || [[ $name = \#* ]]; then
+      continue
+    fi
+
+    if [ "$1" = "*" ] || [ "$name" = "$1" ] ||  [ "$url" = "$1" ]; then
+      __sources+=( "$name $url" )
+      retval=0
+    fi
+  done < $DEX_HOME/sources.list
+
+  return $retval
+}

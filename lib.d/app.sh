@@ -52,5 +52,5 @@ runfunc(){
   [ "$(type -t $1)" = "function" ] || error \
     "$1 is not a valid runfunc target"
 
-  $@
+  eval "$@"
 }

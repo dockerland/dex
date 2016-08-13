@@ -92,23 +92,21 @@ setup(){
 
   run $DEX remote ls
 
-  IFS=$'\t'
   while read name url; do
     if [ $name = "core" ]; then
       [ $url = $MK_REPO ]
     fi
   done <<< "${lines[@]}"
-
 }
 
-@test "remote pull requires a <name|url>" {
+@test "remote pull requires <sourcestr|*>" {
   run $DEX remote pull
   [[ $output == *requires* ]]
   [ $status -eq 2 ]
 }
 
 
-@test "remote pull creates a new checkout if it is non-existant" {
+@test "remote pull creates (clones) a new checkout" {
   mk-repo
   run $DEX remote --force add pulltest $MK_REPO
   [ $status -eq 0 ]
@@ -116,11 +114,12 @@ setup(){
   rm -rf $DEX_HOME/checkouts/pulltest
 
   run $DEX remote pull pulltest
+  echo "$output"
   [ $status -eq 0 ]
   [ -d $DEX_HOME/checkouts/pulltest ]
 }
 
-@test "remote pull pulls updates into a clean checkout" {
+@test "remote pull updates (fetch+merge) clean checkouts" {
   mk-repo
   (
     cd $MK_REPO
@@ -155,15 +154,25 @@ setup(){
   diff $MK_REPO/file $DEX_HOME/checkouts/pulltest/file
 }
 
+@test "remote pull supports a wildcard sourcestr" {
+  export DEX_NETWORK=false
+  run $DEX remote pull "*"
+  [[ $output == *extra* ]]
+  [[ $output == *core* ]]
+  [[ $output == *local* ]]
+  [[ $output == *pulltest* ]]
+  echo $output
+}
 
-@test "remote rm requires a <name|url>" {
+
+@test "remote rm requires a <sourcestr|*>" {
   run $DEX remote rm
   [[ $output == *requires* ]]
   [ $status -eq 2 ]
 }
 
 
-@test "remote rm errors if it cannot find the passed <name|url>" {
+@test "remote rm errors if it cannot find the passed <sourcestr|*>" {
   run $DEX remote rm highly-unlikely
   [ $status -eq 1 ]
 }

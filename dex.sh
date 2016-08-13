@@ -28,11 +28,11 @@ main(){
       case $1 in
 
         image|install|remote|run|uninstall|update|vars)
-          CMD=$1 ; shift ; main_$CMD $@ ;;
+          CMD=$1 ; shift ; main_$CMD "$@" ;;
 
         ping)             dex-ping ;;
         help)             CMD=${2:-$CMD} ; display_help ;;
-        runfunc)          shift ; runfunc $@ ; exit $? ;;
+        runfunc)          shift ; runfunc "$@" ; exit $? ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
 
