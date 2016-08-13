@@ -51,7 +51,7 @@ dex-image-build(){
 
 dex-image-ls(){
   local namespace=${1:-$DEX_NAMESPACE}
-  if $SKIP_NAMESPACE; then
+  if $__skip_namespace; then
     local filters="--filter=label=org.dockerland.dex.namespace"
   else
     local filters="--filter=label=org.dockerland.dex.namespace=$namespace"
@@ -79,7 +79,7 @@ dex-image-rm(){
   local namespace=${1:-$DEX_NAMESPACE}
   local removed_image=false
   local force_flag=
-  $FORCE_FLAG && force_flag="--force"
+  $__force_flag && force_flag="--force"
 
   if [ -z "$LOOKUP" ]; then
     ERRCODE=2

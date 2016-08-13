@@ -3,10 +3,10 @@
 #
 
 display_help() {
-  [ "$(type -t display_help_$CMD)" = "function" ] || error \
-    "missing helpfile for $CMD" "is $CMD a valid command?"
+  [ "$(type -t display_help_$__cmd)" = "function" ] || error \
+    "missing helpfile for $__cmd" "is $__cmd a valid command?"
 
-  display_help_$CMD
+  display_help_$__cmd
   [ -z "$1" ] && exit 0
   exit $1
 }

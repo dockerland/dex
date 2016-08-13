@@ -44,5 +44,5 @@ dex-vars-shellprint(){
   done
 
   printf "# Run this command to configure your shell: \n"
-  printf "# eval \$($ORIG_CMD)\n\n"
+  printf "# eval \$($__entrypoint)\n\n"
 }

@@ -4,12 +4,10 @@
 # dex
 #
 
-CWD=$(dirname $0)
-
 main(){
 
-  CMD="main"
-  ORIG_CMD="$0 $@"
+  __cmd="main"
+  __entrypoint="$0 $@"
 
   # DEX_API: api version: v1
   # DEX_BIN_DIR: location where dex installs : /usr/local/bin
@@ -28,10 +26,10 @@ main(){
       case $1 in
 
         image|install|source|run|uninstall|update|vars)
-          CMD=$1 ; shift ; main_$CMD "$@" ;;
+          __cmd=$1 ; shift ; main_$__cmd "$@" ;;
 
         ping)             dex-ping ;;
-        help)             CMD=${2:-$CMD} ; display_help ;;
+        help)             __cmd=${2:-$__cmd} ; display_help ;;
         runfunc)          shift ; runfunc "$@" ; exit $? ;;
         -h|--help)        display_help ;;
         *)                unrecognized_arg "$1" ;;
@@ -46,7 +44,8 @@ main(){
 
 #@start dev-mode
 # replaced by make (lib.d/ shell scripts get expanded inline)
-for helper in $(find $CWD/lib.d/ -type f -name "*.sh"); do
+__cwd=$(dirname $0)
+for helper in $(find $__cwd/lib.d/ -type f -name "*.sh"); do
   #@TODO check for errors when sourcing here
   . $helper
 done
