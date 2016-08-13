@@ -22,9 +22,12 @@ Usage: dex image <command> [options]
 
 Commands:
 
-  build <[repo/]image|*> Builds an image. Optionally slash-pass repository.
-  rm <[repo/]image|*>    Remove an image. Optionally slash-pass repository.
+  build <imgstr>*        Builds an image. Optionally slash-pass repository.
+  rm <imgstr>*           Remove an image. Optionally slash-pass repository.
   ls                     Lists images dex has built.
+
+* <imgstr> is a multi-form string defined as "[source/]<image[*]>[:tag]" and is
+  used to lookup image(s), optionally filtering by source name and/or tag
 
 Options:
 
