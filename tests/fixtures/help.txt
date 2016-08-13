@@ -13,12 +13,12 @@ Commands:
   image <command> [options]     Build and maintain images
   install <imgstr>* [options]   Install a dexecutable to $DEX_BIN_DIR
   source <command> [options]    Manage source repositories
-  run <imgstr*> [options]       Execute an image
+  run <imgstr>* [options]       Execute an image
   uninstall <imgstr>* [options] Uninstall a dexecutable
   vars [options]                print configuration variables (and/or defaults)
 
-* <imgstr> is a multi-form string written as [source/]<image[*]>[:tag] and is
-  used to lookup image(s), optionally filtering by source name and tag
+* <imgstr> is a multi-form string defined as "[source/]<image[*]>[:tag]" and is
+  used to lookup image(s), optionally filtering by source name and/or tag
 
 Options:
 

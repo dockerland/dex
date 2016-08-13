@@ -6,7 +6,7 @@
 # define path to dex executable
 DEX=$TMPDIR/usr/local/bin/dex
 
-DEX_CMDS=( image install "source" run uninstall update vars )
+DEX_CMDS=( image install "source" run uninstall vars )
 DEX_VARS=( DEX_HOME DEX_BIN_DIR DEX_BIN_PREFIX DEX_NETWORK DEX_API  )
 
 export DEX_HOME=/tmp/dex-home
