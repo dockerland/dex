@@ -72,7 +72,7 @@ v1-runtime(){
     -e HOME=/dex/home \
     -e DEX_API=$DEX_API \
     -u ${DEX_DOCKER_UID:-$__docker_uid}:${DEX_DOCKER_GID:-$__docker_gid} \
-    --log-driver=${DEX_DOCKER_LOG_DRIVER:-$__docker_log_driver}
+    --log-driver=${DEX_DOCKER_LOG_DRIVER:-$__docker_log_driver} \
     --workdir=/dex/workspace \
     $__image ${DEX_DOCKER_CMD:-$__docker_cmd} $@
 
