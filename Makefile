@@ -65,6 +65,7 @@ uninstall:
 	rm -rf  $(BINDIR)/dex
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
+	rm -rf /tmp/dex-tests 
 	mkdir -p /tmp/dex-tests
 
 	docker run -it --rm -u $$(id -u):$(DOCKER_GID) \

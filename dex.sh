@@ -27,7 +27,7 @@ main(){
     while [ $# -ne 0 ]; do
       case $1 in
 
-        image|install|remote|run|uninstall|update|vars)
+        image|install|source|run|uninstall|update|vars)
           CMD=$1 ; shift ; main_$CMD "$@" ;;
 
         ping)             dex-ping ;;

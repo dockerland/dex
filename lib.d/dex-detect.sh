@@ -1,10 +1,10 @@
 
 # dex-detect-imgstr accepts <[repo/]image|*> and sets
-#  __repo_match (remote checkout, e.g. 'core', '*')
-#  __image_match (remote checkout image name, e.g. 'alpine', '*')
-#  __image_tag (remote checkout image tag, e.g. 'latest')
+#  __source_match (source checkout, e.g. 'core', '*')
+#  __image_match (source checkout image name, e.g. 'alpine', '*')
+#  __image_tag (source checkout image tag, e.g. 'latest')
 dex-detect-imgstr(){
-  local vars=( __repo_match __image_match __image_tag )
+  local vars=( __source_match __image_match __image_tag )
   local debug=${2:-false}
 
   for var in ${vars[@]}; do
@@ -18,13 +18,13 @@ dex-detect-imgstr(){
   unset IFS
 
   if [ -z "$imagestr" ]; then
-    __repo_match="*"
+    __source_match="*"
     __image_match="$1"
   else
-    __repo_match="$remote"
+    __source_match="$remote"
     __image_match="$imagestr"
 
-    if [ ! -d $DEX_HOME/checkouts/$__repo_match ]; then
+    if [ ! -d $DEX_HOME/checkouts/$__source_match ]; then
       log "warning, $remote is not checked out" \
       "  has it been added with dex remote?"
     fi

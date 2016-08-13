@@ -40,7 +40,7 @@ setup(){
 
   echo "IMAGE: $img"
 
-  for label in api build-api build-imgstr build-tag image namespace remote; do
+  for label in api build-api build-imgstr build-tag image namespace source; do
 
     val=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $img)
     echo "$label=$val"
@@ -50,7 +50,7 @@ setup(){
       build-*) [ -z "$val" ] && echo "$label is not set" && false ;;
       image) [ "$val" = "alpine" ] ;;
       namespace) [ "$val" = "$DEX_NAMESPACE" ] ;;
-      remote) [ "$val" = "imgtest" ] ;;
+      source) [ "$val" = "imgtest" ] ;;
       *) echo "unknown label - $label" && false ;;
     esac
   done

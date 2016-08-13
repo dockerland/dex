@@ -6,7 +6,7 @@
 # define path to dex executable
 DEX=$TMPDIR/usr/local/bin/dex
 
-DEX_CMDS=( image install remote run uninstall update vars )
+DEX_CMDS=( image install "source" run uninstall update vars )
 DEX_VARS=( DEX_HOME DEX_BIN_DIR DEX_BIN_PREFIX DEX_NETWORK DEX_API  )
 
 export DEX_HOME=/tmp/dex-home
@@ -44,11 +44,12 @@ mk-images(){
     (
       set -e
       mk-repo
+      rm -rf $MK_REPO/images
       cp_fixture images/ $MK_REPO
       cd $MK_REPO
       git add images
       git commit -m "adding image fixtures"
-      $DEX remote --force add imgtest $MK_REPO
+      $DEX source --force add imgtest $MK_REPO
     ) || error "failed stubbing imgtest"
 
   fi
