@@ -51,7 +51,7 @@ v1-runtime(){
     eval "__$label=$val"
   done
 
-  [ -z "${DEX_DOCKER_ENTRYPOINT:=$__docker_entypoint}"] && \
+  [ -z "${DEX_DOCKER_ENTRYPOINT:=$__docker_entypoint}" ] || \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --entrypoint=$DEX_DOCKER_ENTRYPOINT"
 
   ${DEX_DOCKER_PERSIST:=$__docker_persist} || \
