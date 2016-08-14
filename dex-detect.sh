@@ -14,19 +14,18 @@ dex-detect-imgstr(){
   [ -z "$1" ] && return 1
 
   IFS='/'
-  read -r remote imagestr <<< "$1"
+  read -r source imagestr <<< "$1"
   unset IFS
 
   if [ -z "$imagestr" ]; then
     __source_match="*"
     __image_match="$1"
   else
-    __source_match="$remote"
+    __source_match="$source"
     __image_match="$imagestr"
 
     if [ ! -d $DEX_HOME/checkouts/$__source_match ]; then
-      log "warning, $remote is not checked out" \
-      "  has it been added with dex remote?"
+      log "warning, $source is not checked out."
     fi
   fi
 
