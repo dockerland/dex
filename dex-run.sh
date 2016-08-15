@@ -3,12 +3,12 @@
 #
 
 dex-run(){
-  if [ -z "$LOOKUP" ]; then
+  if [ -z "$__imgstr" ]; then
     ERRCODE=2
     error "dex-run requires an [repository/]<image>[:tag] imgstr"
   fi
 
-  dex-detect-imgstr $LOOKUP || error "lookup failed to parse $LOOKUP"
+  dex-detect-imgstr $__imgstr || error "lookup failed to parse $__imgstr"
   __image="$DEX_NAMESPACE/$__image_match:$__image_tag"
 
   #@TODO test special errcode for wildcard handling
