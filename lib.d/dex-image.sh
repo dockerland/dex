@@ -1,8 +1,17 @@
 
+
+# dex-image-build expects __imsgstr and builds images(s) from detected sources.
+#  accepts [optional] namespace, sets __built_images array.
+#
+# usage: dex-image-build [namespace]
+#    ex: __imgstr="alpine" ; dex-image-build => 1: __built_images=( "dex/v1/alpine:latest" )
+#    ex: __imgstr="alpine" ; dex-image-build dex/v1-install => 1: __built_images=( "dex/v1-install/alpine:latest" )
+#    ex: __imgstr="invalid-image-name" ; dex-image-build => 1: __built_images=( )
+
 dex-image-build(){
   # when installing, we prefix with "dex/$DEX_API-install"
   local namespace=${1:-$DEX_NAMESPACE}
-  local built_image=false
+  local __built_images=()
 
   if [ -z "$__imgstr" ]; then
     ERRCODE=2
@@ -36,16 +45,16 @@ dex-image-build(){
           --label=org.dockerland.dex.namespace=$namespace \
           --label=org.dockerland.dex.source=$source \
           -f $dockerfile .
-      ) && built_image=true
+      ) && __built_images+=( "$tag" )
     done
   done
 
-  $built_image && {
+  if [ ${#__built_images[@]} -gt 0 ]; then
     log "built $__source_match/$__image_match"
     return 0
-  }
-
-  error "failed to find images matching $__source_match/$__image_match"
+  else
+    return 1
+  fi
 }
 
 
