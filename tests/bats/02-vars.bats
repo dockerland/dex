@@ -21,7 +21,11 @@ set_vars(){
 
 reset_vars(){
   for var in ${DEX_VARS[@]}; do
-    unset $var
+    if [ $var = "DEX_HOME" ]; then
+      export DEX_HOME=$TMPDIR/home/.dex
+    else
+      unset $var
+    fi
   done
 }
 
@@ -40,9 +44,9 @@ compare_defaults(){
       DEX_API) [ $val = 'v1' ] || retval=1 ;;
       DEX_BIN_DIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
       DEX_BIN_PREFIX) [ $val = "d" ] || retval=1 ;;
-      DEX_HOME) [ $val = "$TMPDIR/home/.dex" ] || retval=1 ;;
+      DEX_HOME) ( [ $val = "$TMPDIR/home/.dex" ] || [ $val = "$HOME/.dex" ] ) || retval=1 ;;
       DEX_NAMESPACE) [ $val = 'dex/v1' ] || retval=1 ;;
-      DEX_NETWORK) $val || retval=1 ;;
+      DEX_NETWORK) $val ;;
       *) echo "unrecognized var: $var" ; retval=1 ;;
     esac
   done
@@ -64,6 +68,7 @@ compare_defaults(){
 
 @test "vars exits with status code 127 on invalid configuration variable lookups" {
   run $DEX vars INVALID_VAR
+  echo $DEX
   [ $status -eq 127 ]
 }
 
