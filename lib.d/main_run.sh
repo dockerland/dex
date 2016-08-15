@@ -18,7 +18,7 @@ main_run(){
         -p|--pull)        __build_flag=true ; __pull_flag=true ;;
         --persist)        DEX_DOCKER_PERSIST=true ;;
         -h|--help)        display_help ;;
-        *)                arg_var "$1" LOOKUP && {
+        *)                arg_var "$1" __imgstr && {
                             shift
                             dex-init
                             dex-run $@
