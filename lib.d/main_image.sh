@@ -20,7 +20,7 @@ main_image(){
 
       case $1 in
         build|rm|ls)      runstr="dex-image-$1"
-                          arg_var "$2" LOOKUP && shift
+                          arg_var "$2" __imgstr && shift
                           ;;
         -f|--force)       __force_flag=true ;;
         -h|--help)        display_help ;;
