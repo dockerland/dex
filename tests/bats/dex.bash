@@ -9,7 +9,7 @@ DEX=$TMPDIR/usr/local/bin/dex
 DEX_CMDS=( image install "source" run uninstall vars )
 DEX_VARS=( DEX_HOME DEX_BIN_DIR DEX_BIN_PREFIX DEX_NETWORK DEX_API  )
 
-export DEX_HOME=/tmp/dex-home
+export DEX_HOME=$TMPDIR/home/.dex
 export DEX_NETWORK=false
 export IMAGES_FILTER="--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
 

@@ -65,7 +65,7 @@ uninstall:
 	rm -rf  $(BINDIR)/dex
 
 tests: $(SCRATCH_PATH)/dockerbuild-tests
-	rm -rf /tmp/dex-tests 
+	rm -rf /tmp/dex-tests
 	mkdir -p /tmp/dex-tests
 
 	docker run -it --rm -u $$(id -u):$(DOCKER_GID) \
@@ -73,4 +73,5 @@ tests: $(SCRATCH_PATH)/dockerbuild-tests
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v /tmp/dex-tests:/tmp/dex-tests \
 	  -e SKIP_NETWORK_TEST=$(SKIP_NETWORK_TEST) \
+		-e IN_TEST_CONTAINER=true \
 	  dockerbuild-$(NAMESPACE)-tests bats tests/bats/$(TEST)
