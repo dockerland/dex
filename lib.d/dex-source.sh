@@ -3,25 +3,21 @@
 #
 
 dex-source-add(){
-  if [ -z "$__lookup_name" ] || [ -z "$__lookup_url" ]; then
-    ERRCODE=2
+
+  { [ -z "$__lookup_name" ] || [ -z "$__lookup_url" ]; } && error_exception \
     error "source-add requires NAME and URL"
-  fi
 
   if $__force_flag; then
     dex-source-rm "$__lookup_name"
     dex-source-rm "$__lookup_url"
   elif dex-detect-sourcestr "$__lookup_name" || dex-detect-sourcestr "$__lookup_url" ; then
-    ERRCODE=2
-    error "refusing to add $__lookup_name -- duplicate name or url"
+    error_exception "refusing to add $__lookup_name -- duplicate name or url"
   fi
 
-  [ -e $DEX_HOME/checkouts/$__lookup_name ] && {
-    ERRCODE=2
-    error "refusing to add $__lookup_name" \
-      "checkout $DEX_HOME/checkouts/$__lookup_name already exists" \
-      "use --force flag to overwrite"
-  }
+  [ -e $DEX_HOME/checkouts/$__lookup_name ] && error_exception \
+    "refusing to add $__lookup_name" \
+    "checkout $DEX_HOME/checkouts/$__lookup_name already exists" \
+    "use --force flag to overwrite"
 
   clone_or_pull "$__lookup_url" "$DEX_HOME/checkouts/$__lookup_name" || error \
     "unable to add respository"
@@ -33,8 +29,8 @@ dex-source-add(){
 }
 
 dex-source-ls(){
-  [ ! -e $DEX_HOME/sources.list ] && \
-    ERRCODE=127 && error "missing $DEX_HOME/sources.list"
+  [ ! -e $DEX_HOME/sources.list ] && error_noent \
+    "missing $DEX_HOME/sources.list"
 
   cat $DEX_HOME/sources.list |
   while read __source_name __source_url junk ; do
@@ -56,10 +52,8 @@ dex-source-ls(){
 dex-source-pull(){
   [ -z "$1" ] || __sourcestr="$1"
 
-  if [ -z "$__sourcestr" ]; then
-    ERRCODE=2
-    error "source-pull requires a repository name or URL"
-  fi
+  [ -z "$__sourcestr" ] && error_exception \
+    "source-pull requires a repository name or URL"
 
   dex-detect-sourcestr "$__sourcestr" || {
     [ -z "$1" ] && error "no match for $__sourcestr in sources.list"
@@ -92,10 +86,8 @@ dex-source-pull(){
 dex-source-rm(){
   [ -z "$1" ] || __sourcestr=$1
 
-  if [ -z "$__sourcestr" ]; then
-    ERRCODE=2
-    error "source-rm requires a repository name or URL"
-  fi
+  [ -z "$__sourcestr" ] && error_exception \
+    "source-rm requires a repository name or URL"
 
   dex-detect-sourcestr "$__sourcestr" || {
     [ -z "$1" ] && error "no match for $__sourcestr in sources.list"
@@ -110,10 +102,8 @@ dex-source-rm(){
       rm -rf $DEX_HOME/checkouts/$__source_name 2>/dev/null
     elif [ -d $DEX_HOME/checkouts/$__source_name ]; then
 
-      [ ! -w $DEX_HOME/checkouts/$__source_name  ] && {
-        ERRCODE=126
-        error "$DEX_HOME/checkouts/$__source_name" is not writable
-      }
+      [ ! -w $DEX_HOME/checkouts/$__source_name  ] && error_perms \
+        "$DEX_HOME/checkouts/$__source_name" is not writable
 
       is_dirty $DEX_HOME/checkouts/$__source_name ] && error \
         "$DEX_HOME/checkouts/$__source_name has local changes" \

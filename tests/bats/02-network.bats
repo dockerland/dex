@@ -42,6 +42,9 @@ teardown(){
 
   run $DEX runfunc dex-fetch https://999.999.999.999/ $OUTFILE
 
+  echo $output
+  echo "status $status"
+
   [ $status -eq 126 ]
   [ ! -e "$OUTFILE" ]
 }

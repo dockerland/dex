@@ -8,7 +8,7 @@ fetch-url(){
   local CURL_PATH=${CURL_PATH:-curl}
 
   if ( type $WGET_PATH >/dev/null 2>&1 ); then
-    $WGET_PATH $1 -O $2
+    $WGET_PATH $1 -O $2 || ( rm -rf $2 ; exit 1 ) 
   elif ( type $CURL_PATH >/dev/null 2>&1 ); then
     $CURL_PATH -Lfo $2 $1
   else

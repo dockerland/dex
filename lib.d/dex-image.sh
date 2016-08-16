@@ -1,15 +1,22 @@
 
+
+# dex-image-build expects __imsgstr and builds images(s) from detected sources.
+#  accepts [optional] namespace, sets __built_images array.
+#
+# usage: dex-image-build [namespace]
+#    ex: __imgstr="alpine" ; dex-image-build => 1: __built_images=( "dex/v1/alpine:latest" )
+#    ex: __imgstr="alpine" ; dex-image-build dex/v1-install => 1: __built_images=( "dex/v1-install/alpine:latest" )
+#    ex: __imgstr="invalid-image-name" ; dex-image-build => 1: __built_images=( )
+
 dex-image-build(){
   # when installing, we prefix with "dex/$DEX_API-install"
   local namespace=${1:-$DEX_NAMESPACE}
-  local built_image=false
+  __built_images=()
 
-  if [ -z "$LOOKUP" ]; then
-    ERRCODE=2
-    error "image-build requires an image name, package name, or wildcard match to install"
-  fi
+  [ -z "$__imgstr" ] && error_exception \
+    "image-build requires an [repository/]<image>[:tag] imgstr"
 
-  dex-detect-imgstr $LOOKUP || error "lookup failed to parse $LOOKUP"
+  dex-detect-imgstr $__imgstr || error "lookup failed to parse $__imgstr"
 
   for repo_dir in $(ls -d $DEX_HOME/checkouts/$__source_match 2>/dev/null); do
     for image_dir in $(ls -d $repo_dir/images/$__image_match 2>/dev/null); do
@@ -30,22 +37,23 @@ dex-image-build(){
         cd $image_dir
         docker build -t $tag \
           --label=org.dockerland.dex.build-api=$DEX_API \
-          --label=org.dockerland.dex.build-imgstr="$LOOKUP" \
+          --label=org.dockerland.dex.build-imgstr="$__imgstr" \
           --label=org.dockerland.dex.build-tag="$__image_tag" \
           --label=org.dockerland.dex.image=$image \
           --label=org.dockerland.dex.namespace=$namespace \
           --label=org.dockerland.dex.source=$source \
           -f $dockerfile .
-      ) && built_image=true
+      ) && __built_images+=( "$tag" )
+
     done
   done
 
-  $built_image && {
+  if [ ${#__built_images[@]} -gt 0 ]; then
     log "built $__source_match/$__image_match"
     return 0
-  }
-
-  error "failed to find images matching $__source_match/$__image_match"
+  else
+    return 1
+  fi
 }
 
 
@@ -57,8 +65,8 @@ dex-image-ls(){
     local filters="--filter=label=org.dockerland.dex.namespace=$namespace"
   fi
 
-  if [ ! -z "$LOOKUP" ]; then
-    dex-detect-imgstr $LOOKUP
+  if [ ! -z "$__imgstr" ]; then
+    dex-detect-imgstr $__imgstr
 
     [ ! "$__source_match" = "*" ] && \
       filters="$filters --filter=label=org.dockerland.dex.source=$__source_match"
@@ -81,10 +89,8 @@ dex-image-rm(){
   local force_flag=
   $__force_flag && force_flag="--force"
 
-  if [ -z "$LOOKUP" ]; then
-    ERRCODE=2
-    error "image-rm requires an image name, package name, or wildcard match to install"
-  fi
+  [ -z "$__imgstr" ] && error_exception \
+    "image-rm requires an [repository/]<image>[:tag] imgstr"
 
   QUIET_FLAG="-q"
   for image in $(dex-image-ls $namespace); do
@@ -96,5 +102,5 @@ dex-image-rm(){
     exit 0
   }
 
-  error "failed to remove any images matching $LOOKUP"
+  error "failed to remove any images matching $__imgstr"
 }
