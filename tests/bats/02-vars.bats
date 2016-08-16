@@ -66,10 +66,9 @@ compare_defaults(){
   [ $output = "DEX_BIN_DIR=/usr/local/bin" ]
 }
 
-@test "vars exits with status code 127 on invalid configuration variable lookups" {
+@test "vars exits with status code 2 on invalid configuration variable lookups" {
   run $DEX vars INVALID_VAR
-  echo $DEX
-  [ $status -eq 127 ]
+  [ $status -eq 2 ]
 }
 
 @test "vars prints evaluable lines matching configuration defaults" {
