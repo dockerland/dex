@@ -44,6 +44,7 @@ dex-image-build(){
           --label=org.dockerland.dex.source=$source \
           -f $dockerfile .
       ) && __built_images+=( "$tag" )
+
     done
   done
 
