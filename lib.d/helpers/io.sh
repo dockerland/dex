@@ -11,17 +11,17 @@ error(){
 
 error_noent() {
   __error_code=127
-  error $@
+  error "$@"
 }
 
 error_perms() {
   __error_code=126
-  error $@
+  error "$@"
 }
 
 error_exception() {
   __error_code=2
-  error $@
+  error "$@"
 }
 
 
