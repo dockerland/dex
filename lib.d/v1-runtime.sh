@@ -1,46 +1,46 @@
 #!/usr/bin/env bash
 
-# runtime defaults,
-#  images may provide a org.dockerland.dex.<var> label supplying a value
-#  that overrides these default values, examples are:
-#  org.dockerland.dex.docker_home
-#  org.dockerland.dex.docker_workspace
-#  org.dockerland.dex.docker_flags
-
-__docker_home=~
-__docker_workspace=$(pwd)
-__docker_flags=
-__docker_entypoint=
-__docker_cmd=
-
-__docker_persist=false
-__docker_uid=$(id -u)
-__docker_gid=$(id -g)
-__docker_log_driver="none"
-
-# You may override these by exporting the following vars:
-#
-# DEX_DOCKER_HOME - docker host directory mounted as the container's $HOME
-# DEX_DOCKER_WORKSPACE - docker host directory mounted as the container's CWD
-# DEX_DOCKER_FLAGS - flags passed to docker run
-# DEX_DOCKER_ENTRYPOINT - alternative entrypoint passed to docker run
-# DEX_DOCKER_CMD - alternative command passed to docker run
-#
-# DEX_DOCKER_UID - uid to run the container under
-# DEX_DOCKER_GID - gid to run the container under
-#
-# DEX_DOCKER_LOG_DRIVER - logging driver to use for container
-# DEX_DOCKER_PERSIST - when false, container is removed after it exits
-#
-# DEX_X11_FLAGS - typically appended to org.dockerland.dex. in the .env file of
-#                S images providing X11 applications
-
-
-DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
-DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
-
 v1-runtime(){
   [ -z "$__image" ] && echo "missing runtime image" && exit 1
+
+  # runtime defaults,
+  #  images may provide a org.dockerland.dex.<var> label supplying a value
+  #  that overrides these default values, examples are:
+  #  org.dockerland.dex.docker_home
+  #  org.dockerland.dex.docker_workspace
+  #  org.dockerland.dex.docker_flags
+
+  __docker_home=~
+  __docker_workspace=$(pwd)
+  __docker_flags=
+  __docker_entypoint=
+  __docker_cmd=
+
+  __docker_persist=false
+  __docker_uid=$(id -u)
+  __docker_gid=$(id -g)
+  __docker_log_driver="none"
+
+  # You may override these by exporting the following vars:
+  #
+  # DEX_DOCKER_HOME - docker host directory mounted as the container's $HOME
+  # DEX_DOCKER_WORKSPACE - docker host directory mounted as the container's CWD
+  # DEX_DOCKER_FLAGS - flags passed to docker run
+  # DEX_DOCKER_ENTRYPOINT - alternative entrypoint passed to docker run
+  # DEX_DOCKER_CMD - alternative command passed to docker run
+  #
+  # DEX_DOCKER_UID - uid to run the container under
+  # DEX_DOCKER_GID - gid to run the container under
+  #
+  # DEX_DOCKER_LOG_DRIVER - logging driver to use for container
+  # DEX_DOCKER_PERSIST - when false, container is removed after it exits
+  #
+  # DEX_X11_FLAGS - typically appended to org.dockerland.dex. in the .env file of
+  #                S images providing X11 applications
+
+
+  DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
+  DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
 
   # augment defaults with image meta
   local prefix="org.dockerland.dex"
