@@ -45,6 +45,11 @@ teardown(){
   [ $output = "/dex/workspace" ]
 }
 
+@test "runtime supports piping of stdin" {
+  local out=$(echo "foo" | $DEX run imgtest/debian sed 's/foo/bar/')
+  [ $? -eq 0 ]
+  [ "$out" = "bar" ]
+}
 
 @test "runtime environmental variables override behavior" {
 
