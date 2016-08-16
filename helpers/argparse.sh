@@ -22,5 +22,5 @@ unrecognized_arg(){
     printf "\n\n$1 is an unrecognized argument to the $__cmd command.\n\n"
   fi
 
-  display_help 127
+  display_help 2
 }
