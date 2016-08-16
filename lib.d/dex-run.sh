@@ -3,10 +3,9 @@
 #
 
 dex-run(){
-  if [ -z "$__imgstr" ]; then
-    ERRCODE=2
-    error "dex-run requires an [repository/]<image>[:tag] imgstr"
-  fi
+  
+  [ -z "$__imgstr" ] && error_exception \
+    "dex-run requires an [repository/]<image>[:tag] imgstr"
 
   dex-detect-imgstr $__imgstr || error "lookup failed to parse $__imgstr"
   __image="$DEX_NAMESPACE/$__image_match:$__image_tag"

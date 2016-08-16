@@ -13,10 +13,8 @@ dex-image-build(){
   local namespace=${1:-$DEX_NAMESPACE}
   local __built_images=()
 
-  if [ -z "$__imgstr" ]; then
-    ERRCODE=2
-    error "image-build requires an image name, package name, or wildcard match to install"
-  fi
+  [ -z "$__imgstr" ] && error_exception \
+    "image-build requires an [repository/]<image>[:tag] imgstr"
 
   dex-detect-imgstr $__imgstr || error "lookup failed to parse $__imgstr"
 
@@ -90,10 +88,8 @@ dex-image-rm(){
   local force_flag=
   $__force_flag && force_flag="--force"
 
-  if [ -z "$__imgstr" ]; then
-    ERRCODE=2
-    error "image-rm requires an image name, package name, or wildcard match to install"
-  fi
+  [ -z "$__imgstr" ] && error_exception \
+    "image-rm requires an [repository/]<image>[:tag] imgstr"
 
   QUIET_FLAG="-q"
   for image in $(dex-image-ls $namespace); do

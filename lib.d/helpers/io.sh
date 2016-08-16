@@ -3,9 +3,27 @@
 #
 
 error(){
+  [ -z "$1" ] && $1="error"
+
   printf "\e[31m%s\n\e[0m" "$@" >&2
-  exit ${ERRCODE:-1}
+  exit ${__error_code:-1}
 }
+
+error_noent() {
+  __error_code=127
+  error $@
+}
+
+error_perms() {
+  __error_code=126
+  error $@
+}
+
+error_exception() {
+  __error_code=2
+  error $@
+}
+
 
 log(){
   printf "\e[33m%s\n\e[0m" "$@" >&2

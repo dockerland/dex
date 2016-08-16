@@ -26,7 +26,7 @@ dex-vars-init(){
       DEX_HOME) eval "$1=\${$1:-~/.dex}" ;;
       DEX_NAMESPACE) eval "$1=\${$1:-dex/\$DEX_API}" ;;
       DEX_NETWORK) eval "$1=\${$1:-true}" ;;
-      *) ERRCODE=127; error "$1 has no default configuration value" ;;
+      *) error_exception "$1 has no default configuration value" ;;
     esac
     shift
   done

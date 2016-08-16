@@ -16,9 +16,9 @@ setup(){
   [ $status -eq 2 ]
 }
 
-@test "help exits with status code 127 when invalid argument passed" {
+@test "help exits with status code 2 when invalid argument passed" {
   run $DEX invalid-argument
-  [ $status -eq 127 ]
+  [ $status -eq 2 ]
 }
 
 @test "help prints helpful output matching our fixture" {
@@ -49,10 +49,11 @@ setup(){
   done
 }
 
-@test "help exits with status code 127 when invalid arguments are passed to a command" {
+@test "help exits with status code 2 when invalid arguments are passed to a command" {
   for cmd in ${DEX_CMDS[@]} ; do
-    [ "$cmd" = "run" ] && continue
+    { [ "$cmd" = "run" ] || [ "$cmd" = "install" ] ; } && continue
     run $DEX $cmd invalid-argument
-    [ $status -eq 127 ]
+    echo $status
+    [ $status -eq 2 ]
   done
 }

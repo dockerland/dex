@@ -56,10 +56,7 @@ dex-detect-sourcestr(){
   __sources=()
   local retval=1
 
-  [ -e $DEX_HOME/sources.list ] || {
-    ERRCODE=127
-    error "missing $DEX_HOME/sources.list"
-  }
+  [ -e $DEX_HOME/sources.list ] || error_noent "missing $DEX_HOME/sources.list"
 
   while read name url junk ; do
 
