@@ -11,7 +11,7 @@
 dex-image-build(){
   # when installing, we prefix with "dex/$DEX_API-install"
   local namespace=${1:-$DEX_NAMESPACE}
-  local __built_images=()
+  __built_images=()
 
   [ -z "$__imgstr" ] && error_exception \
     "image-build requires an [repository/]<image>[:tag] imgstr"
