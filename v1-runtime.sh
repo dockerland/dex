@@ -59,14 +59,12 @@ v1-runtime(){
 
   if tty -s >/dev/null 2>&1; then
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS -e DEX_PIPED=false"
-    __pipe=
   else
     # piping into a container requires interactive
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --interactive -e DEX_PIPED=true"
-    __pipe="cat - |"
   fi
 
-  eval $__pipe docker run $DEX_DOCKER_FLAGS \
+  exec docker run $DEX_DOCKER_FLAGS \
     -v ${DEX_DOCKER_HOME:-$__docker_home}:/dex/home \
     -v ${DEX_DOCKER_WORKSPACE:-$__docker_workspace}:/dex/workspace \
     -e HOME=/dex/home \
