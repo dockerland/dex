@@ -55,7 +55,7 @@ dex:
 
 install: dex
 
-  # use mkdir vs. install -D/d (darwin portability)
+  # use mkdir vs. install -D/d (macos portability)
 	mkdir -p $(BINDIR)
 	install bin/dex $(BINDIR)/dex
 

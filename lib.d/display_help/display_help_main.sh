@@ -11,7 +11,7 @@ Usage: dex <command> [options]
 
   dex run --pull sed
   dex run sed s/foo/bar/ <(echo 'foo')
-  dex run sed:darwin -h
+  dex run sed:macos -h
 
 Commands:
 

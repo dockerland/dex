@@ -24,15 +24,15 @@ Installed executables
 
 Usage: dex install [options] <imgstr>*
 
-  # Install a dexecutable (creates 'dsed' and 'dsed-darwin' in /usr/local/bin)
+  # Install a dexecutable (creates 'dsed' and 'dsed-macos' in /usr/local/bin)
   dex install sed
-  dex install sed:darwin
+  dex install sed:macos
 
   # Install a dexecutable from a specific source repository
   dex install extras/sed
 
   # Globally install a dexecutable (creates 'sed' in /usr/local/bin)
-  dex install --global sed:darwin
+  dex install --global sed:macos
 
 * <imgstr> is a multi-form string defined as "[source/]<image[*]>[:tag]" and is
   used to lookup image(s), optionally filtering by source name and/or tag

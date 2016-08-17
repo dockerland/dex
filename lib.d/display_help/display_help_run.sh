@@ -27,8 +27,8 @@ Usage: dex run <imgstr>* [options]
   echo 'foo' | dex run sed s/foo/bar/
   dex run sed s/foo/bar/ <(echo 'foo')
 
-  # Run a tagged version of a dexecutable (below maps to sed/Dockerfile.darwin)
-  dex run sed:darwin -h
+  # Run a tagged version of a dexecutable (below maps to sed/Dockerfile.macos)
+  dex run sed:macos -h
 
   # Run a dexecutable from a particular source repository
   dex run extra/gitk
