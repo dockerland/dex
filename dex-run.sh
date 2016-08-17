@@ -3,7 +3,7 @@
 #
 
 dex-run(){
-  
+
   [ -z "$__imgstr" ] && error_exception \
     "dex-run requires an [repository/]<image>[:tag] imgstr"
 
@@ -17,7 +17,10 @@ dex-run(){
   image_api=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $__image)
   if [ $? -ne 0 ] || $__build_flag ; then
     $__pull_flag && dex-source-pull "$__source_match"
-    dex-image-build || error "error building $__image"
+    dex-image-build || error \
+      "unable to build $__image" \
+      "is $__image_match:$__image_tag provided by a source?"
+
   else
     [ -z "$image_api" ] && error \
       "the $__image image is missing a org.dockerland.dex.api label" \
