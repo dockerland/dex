@@ -11,8 +11,8 @@ images don't make themselves, dex will.
 
 Usage: dex image <command> [options]
 
-  # build the darwin version of sed from any repository (first found)
-  dex build sed:darwin
+  # build the macos version of sed from any repository (first found)
+  dex build sed:macos
 
   # build 'sed' from the "extras" repository
   dex image build extras/sed

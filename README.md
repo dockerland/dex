@@ -17,8 +17,7 @@ _anywhere docker works_ including [Windows 10](https://msdn.microsoft.com/en-us/
 
 ## using dex
 
-At the heart, dex manages _'dexecutables'_. These are simply scripts that
-execute docker containers under a consistent _'api runtime'_. The Dockerfiles
+At the heart, dex manages _'dexecutables'_. These are  scripts that execute docker containers under a consistent _'api runtime'_. The Dockerfiles
 for these containers are kept in configurable _'source repositories'_ also
 managed by dex.
 
@@ -43,30 +42,27 @@ dgitk
 # install all images from the core/ repository, pulling any changes first.
 sudo dex install --pull "core/*"
 
-# install darwin-sed to an alternative path, without the 'd' prefix
-export DEX_BIN_DIR=~/bin/darwin/
-export PATH=~/bin/darwin:$PATH
-dex install --global sed:darwin
+# install macos-sed to an alternative path, without the 'd' prefix
+export DEX_BIN_DIR=~/bin/macos/
+export PATH=~/bin/macos:$PATH
+dex install --global sed:macos
 sed
-# ^^^ launches sed:darwin
+# ^^^ launches sed:macos
 ```
 
 ### source repositories
 
 Dex consults source repositories for the Dockerfile to build an image from --
 similar to how yum and apt consult package sources. These are defined in
-`$DEX_HOME/sources.list` and represent regular [git](https://git-scm.com/)
-repositories with an `images/` tree. Thus, __the applications available to dex
-are dictated by source repository contents__.
+`$DEX_HOME/sources.list` and represent regular [git repositories](https://git-scm.com/)
+with an `images/` tree. Thus, __applications available to dex
+are dictated by source repository checkouts__.
 
-Checkouts of source repositories are performed when added, and
- _not automatically updated_. Run `dex source pull '*'` to update all defined
- sources, or you may pass the pull flag to run|build|install commands to
- _'auto-pull'_, e.g. `dex run --pull firefox`
+Checkouts of source repositories are performed when added. Use `dex source pull '*'` to pull upstream changes into all defined sources, or the _--pull_ flag -- e.g. `dex run --pull firefox` to update the source(s) before running.
 
 Dex defines two source repositories; _'core'_ and _'extra'_.
-Use `dex source add` to add additional sources. It accepts **remote
-URLs and local paths**. `dex help source` for more.
+Use `dex source add` to add additional sources. Sources may point to _remote_ URLs
+or _local_ paths of a git repository. `dex help source` for more.
 
 
 ### environmental variables
@@ -104,6 +100,7 @@ DEX_X11_FLAGS="-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"
   * labeling / api versioning
   * X11 examples
   * tagging conventions
+  * org.dockerland.dex.docker_home labels, non absolute path relative to $DEX_HOME/<api>-homes/<label>
 
 
 ## installing dex
@@ -142,4 +139,4 @@ See [LICENSE](LICENSE) for the full license text.
 
 * _docker_ and _dex_ are now your only dependencies - your OS is a clean OS.
 * dependency isolation - different versions of python? no problem
-* test tools from other platforms - `dex install sed:darwin && dsed --help`
+* test tools from other platforms - `dex install sed:macos && dsed --help`
