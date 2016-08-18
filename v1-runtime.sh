@@ -21,6 +21,7 @@ v1-runtime(){
   __docker_gid=$(id -g)
   __docker_log_driver="none"
 
+
   # You may override these by exporting the following vars:
   #
   # DEX_DOCKER_HOME - docker host directory mounted as the container's $HOME
@@ -53,6 +54,16 @@ v1-runtime(){
 
   DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
 
+  [ -z "$__api" ] && \
+    { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
+
+  # if home is not an absolute path, make relative to $DEX_HOME/image-homes/
+  [[ "$__docker_home" != '/'* ]] && \
+    __docker_home=$DEX_HOME/$__api-homes/$__docker_home
+
+  [ -d "${DEX_DOCKER_HOME:=$__docker_home}" ] || mkdir -p $DEX_DOCKER_HOME || \
+    { echo "unable to stub home directory: $DEX_DOCKER_HOME" ; exit 1 ; }
+
   [ -z "${DEX_DOCKER_ENTRYPOINT:=$__docker_entypoint}" ] || \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --entrypoint=$DEX_DOCKER_ENTRYPOINT"
 
@@ -64,7 +75,7 @@ v1-runtime(){
   $__interactive_flag && DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --interactive"
 
   exec docker run $DEX_DOCKER_FLAGS \
-    -v ${DEX_DOCKER_HOME:-$__docker_home}:/dex/home \
+    -v $DEX_DOCKER_HOME:/dex/home \
     -v ${DEX_DOCKER_WORKSPACE:-$__docker_workspace}:/dex/workspace \
     -e HOME=/dex/home \
     -e DEX_API=$__api \
