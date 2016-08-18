@@ -46,6 +46,7 @@ teardown(){
   [ $status -eq 0 ]
   [[ $output == *"built imgtest/debian"* ]]
   [[ $output == *"DEBIAN_RELEASE"* ]]
+  [[ $output == *"DEX_API"* ]]
 }
 
 @test "run supports pulling from source(s)" {

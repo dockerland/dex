@@ -100,6 +100,7 @@ DEX_X11_FLAGS="-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"
   * labeling / api versioning
   * X11 examples
   * tagging conventions
+  * org.dockerland.dex.docker_home labels, non absolute path relative to $DEX_HOME/<api>-homes/<label>
 
 
 ## installing dex
