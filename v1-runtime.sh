@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 v1-runtime(){
-  [ -z "$__image" ] && echo "missing runtime image" && exit 1
+  [ -z "$__image" ] && { echo "missing runtime image" ; exit 1 ; }
 
   # runtime defaults,
   #  images may provide a org.dockerland.dex.<var> label supplying a value
@@ -38,18 +38,20 @@ v1-runtime(){
   # DEX_X11_FLAGS - typically appended to org.dockerland.dex. in the .env file of
   #                S images providing X11 applications
 
-
   DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
-  DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
+  DEX_HOME=${DEX_HOME:-~/.dex}
+  __interactive_flag=${__interactive_flag:-false}
 
   # augment defaults with image meta
   local prefix="org.dockerland.dex"
-  for label in docker_home docker_workspace docker_flags; do
+  for label in api docker_home docker_workspace docker_flags; do
     # @TODO reduce this to a single docker inspect command
     val=$(docker inspect --format "{{ index .Config.Labels \"$prefix.$label\" }}" $__image)
     [ -z "$val" ] && continue
     eval "__$label=$val"
   done
+
+  DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
 
   [ -z "${DEX_DOCKER_ENTRYPOINT:=$__docker_entypoint}" ] || \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --entrypoint=$DEX_DOCKER_ENTRYPOINT"
@@ -57,17 +59,15 @@ v1-runtime(){
   ${DEX_DOCKER_PERSIST:=$__docker_persist} || \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --rm"
 
-  if tty -s >/dev/null 2>&1; then
-    DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS -e DEX_PIPED=false"
-  else
-    # piping into a container requires interactive
-    DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --interactive -e DEX_PIPED=true"
-  fi
+  # piping into a container requires interactive
+  ! tty -s >/dev/null 2>&1 && __interactive_flag=true
+  $__interactive_flag && DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --interactive"
 
   exec docker run $DEX_DOCKER_FLAGS \
     -v ${DEX_DOCKER_HOME:-$__docker_home}:/dex/home \
     -v ${DEX_DOCKER_WORKSPACE:-$__docker_workspace}:/dex/workspace \
     -e HOME=/dex/home \
+    -e DEX_API=$__api \
     -u ${DEX_DOCKER_UID:-$__docker_uid}:${DEX_DOCKER_GID:-$__docker_gid} \
     --log-driver=${DEX_DOCKER_LOG_DRIVER:-$__docker_log_driver} \
     --workdir=/dex/workspace \
