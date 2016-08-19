@@ -44,7 +44,7 @@ v1-runtime(){
     # @TODO reduce this to a single docker inspect command
     val=$(docker inspect --format "{{ index .Config.Labels \"$prefix.$label\" }}" $__image)
     [ -z "$val" ] && continue
-    eval "__$label=$val"
+    eval "__$label=\"$val\""
   done
 
   DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
