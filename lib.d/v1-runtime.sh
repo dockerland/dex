@@ -21,7 +21,6 @@ v1-runtime(){
   __docker_gid=$(id -g)
   __docker_log_driver="none"
 
-
   # You may override these by exporting the following vars:
   #
   # DEX_DOCKER_HOME - docker host directory mounted as the container's $HOME
@@ -39,10 +38,6 @@ v1-runtime(){
   # DEX_X11_FLAGS - typically appended to org.dockerland.dex. in the .env file of
   #                S images providing X11 applications
 
-  DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
-  DEX_HOME=${DEX_HOME:-~/.dex}
-  __interactive_flag=${__interactive_flag:-false}
-
   # augment defaults with image meta
   local prefix="org.dockerland.dex"
   for label in api docker_home docker_workspace docker_flags; do
@@ -53,6 +48,9 @@ v1-runtime(){
   done
 
   DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-$__docker_flags}
+  DEX_HOME=${DEX_HOME:-~/.dex}
+  DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
+  __interactive_flag=${__interactive_flag:-false}
 
   [ -z "$__api" ] && \
     { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
@@ -63,6 +61,9 @@ v1-runtime(){
 
   [ -d "${DEX_DOCKER_HOME:=$__docker_home}" ] || mkdir -p $DEX_DOCKER_HOME || \
     { echo "unable to stub home directory: $DEX_DOCKER_HOME" ; exit 1 ; }
+
+  [ -d "${DEX_DOCKER_WORKSPACE:=$__docker_workspace}" ] || \
+    { echo "workspace is not a directory: $DEX_DOCKER_WORKSPACE" ; exit 1 ; }
 
   [ -z "${DEX_DOCKER_ENTRYPOINT:=$__docker_entypoint}" ] || \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --entrypoint=$DEX_DOCKER_ENTRYPOINT"
@@ -75,11 +76,13 @@ v1-runtime(){
   $__interactive_flag && DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --interactive"
 
   exec docker run $DEX_DOCKER_FLAGS \
-    -v $DEX_DOCKER_HOME:/dex/home \
-    -v ${DEX_DOCKER_WORKSPACE:-$__docker_workspace}:/dex/workspace \
-    -e HOME=/dex/home \
     -e DEX_API=$__api \
+    -e DEX_DOCKER_HOME=$DEX_DOCKER_HOME \
+    -e DEX_DOCKER_WORKSPACE=$DEX_DOCKER_WORKSPACE \
+    -e HOME=/dex/home \
     -u ${DEX_DOCKER_UID:-$__docker_uid}:${DEX_DOCKER_GID:-$__docker_gid} \
+    -v $DEX_DOCKER_HOME:/dex/home \
+    -v $DEX_DOCKER_WORKSPACE:/dex/workspace \
     --log-driver=${DEX_DOCKER_LOG_DRIVER:-$__docker_log_driver} \
     --workdir=/dex/workspace \
     $__image ${DEX_DOCKER_CMD:-$__docker_cmd} $@
