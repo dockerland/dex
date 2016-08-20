@@ -51,6 +51,27 @@ teardown(){
   [ "$out" = "bar" ]
 }
 
+@test "runtime assigns dex-v1 and passthrough environmental variables" {
+
+  export LANG="test"
+  export LC_ALL="test"
+  export LC_CTYPE="test"
+
+  run $DEX run imgtest/debian
+
+  # v1 vars
+  [[ $output == *"DEX_API=v1"* ]]
+  [[ $output == *"DEX_DOCKER_HOME"* ]]
+  [[ $output == *"DEX_DOCKER_WORKSPACE"* ]]
+
+  # v1 passthrough
+  [[ $output == *"LANG=test"* ]]
+  [[ $output == *"LC_ALL=test"* ]]
+  [[ $output == *"LC_CTYPE=test"* ]]
+
+}
+
+
 @test "runtime environmental variables override behavior" {
 
   # DEX_DOCKER_HOME - docker host directory mounted as the container's $HOME

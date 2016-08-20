@@ -15,6 +15,7 @@ v1-runtime(){
   __docker_flags=
   __docker_entypoint=
   __docker_cmd=
+  __docker_envars="LANG LC_ALL LC_CTYPE"
 
   __docker_persist=false
   __docker_uid=$(id -u)
@@ -27,6 +28,8 @@ v1-runtime(){
   # DEX_DOCKER_WORKSPACE - docker host directory mounted as the container's CWD
   # DEX_DOCKER_FLAGS - flags passed to docker run
   # DEX_DOCKER_ENTRYPOINT - alternative entrypoint passed to docker run
+  # DEX_DOCKER_ENVARS - space-deliminated environmental variables to passthrough
+  #                     from docker host to container
   # DEX_DOCKER_CMD - alternative command passed to docker run
   #
   # DEX_DOCKER_UID - uid to run the container under
@@ -34,13 +37,12 @@ v1-runtime(){
   #
   # DEX_DOCKER_LOG_DRIVER - logging driver to use for container
   # DEX_DOCKER_PERSIST - when false, container is removed after it exits
-  #
   # DEX_X11_FLAGS - typically appended to org.dockerland.dex. in the .env file of
   #                S images providing X11 applications
 
   # augment defaults with image meta
   local prefix="org.dockerland.dex"
-  for label in api docker_home docker_workspace docker_flags; do
+  for label in api docker_envars docker_home docker_workspace docker_flags; do
     # @TODO reduce this to a single docker inspect command
     val=$(docker inspect --format "{{ index .Config.Labels \"$prefix.$label\" }}" $__image)
     [ -z "$val" ] && continue
@@ -74,6 +76,12 @@ v1-runtime(){
   # piping into a container requires interactive
   ! tty -s >/dev/null 2>&1 && __interactive_flag=true
   $__interactive_flag && DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --interactive"
+
+  # pass specified host environmental variables to container
+  for var in ${DEX_DOCKER_ENVARS:=$__docker_envars}; do
+    eval "val=\$$var"
+    [ -z "$val" ] || DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS -e $var=$val"
+  done
 
   exec docker run $DEX_DOCKER_FLAGS \
     -e DEX_API=$__api \
