@@ -7,6 +7,7 @@ FROM debian:jessie
 LABEL \
   org.dockerland.dex.api="v1" \
   org.dockerland.dex.docker_devices="tty0 /dev/console" \
+  org.dockerland.dex.docker_envars="BATS_TESTVAR" \
   org.dockerland.dex.docker_flags="--tty -e TESTVAR=TEST" \
   org.dockerland.dex.docker_home="/tmp/dex-tests/tmp/home" \
   org.dockerland.dex.docker_workspace="/tmp/dex-tests/tmp/workspace" \

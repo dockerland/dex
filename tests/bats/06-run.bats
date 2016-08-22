@@ -46,7 +46,6 @@ teardown(){
   [ $status -eq 0 ]
   [[ $output == *"built imgtest/debian"* ]]
   [[ $output == *"DEBIAN_RELEASE"* ]]
-  [[ $output == *"DEX_API"* ]]
 }
 
 @test "run supports pulling from source(s)" {
@@ -77,4 +76,4 @@ teardown(){
 }
 
 
-#@TODO test image labels (entrypoint, cmd, flags) effect on behavior
+#@TODO test image labels (entrypoint, cmd, flags, vars) effect on behavior
