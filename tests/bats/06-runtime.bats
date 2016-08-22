@@ -11,6 +11,7 @@ load dex
 setup(){
   [ -e $DEX ] || install_dex
   mk-images
+    mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol,vol-ro}
   __containers=()
 }
 
@@ -47,6 +48,76 @@ teardown(){
 
 @test "runtime supports piping of stdin" {
   local out=$(echo "foo" | $DEX run imgtest/debian sed 's/foo/bar/')
+  [ $? -eq 0 ]
+  [ "$out" = "bar" ]
+}
+
+@test "runtime respects docker_home label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_home="/tmp/dex-tests/tmp/home"
+  touch /tmp/dex-tests/tmp/home/__exists__
+
+  run $DEX run imgtest/labels ls /dex/home/__exists__
+  [ $status -eq 0 ]
+}
+
+@test "runtime respects docker_workspace label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_workspace="/tmp/dex-tests/tmp/workspace"
+  touch /tmp/dex-tests/tmp/workspace/__exists__
+
+  run $DEX run imgtest/labels ls __exists__
+  [ $status -eq 0 ]
+}
+
+@test "runtime respects docker_flags label" {
+  # imgtest/labels image ::
+  # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
+
+  run $DEX run imgtest/labels printenv TESTVAR
+  [ "$(echo $output | sed -e 's/[^a-zA-Z]//g')" = "TEST" ]
+}
+
+@test "runtime respects docker_devices label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_devices="tty0 /dev/console"
+  run $DEX run imgtest/debian ls /dev/tty0
+  [ $status -eq 2 ]
+
+  run $DEX run imgtest/debian ls /dev/console
+  [ $status -eq 2 ]
+
+  run $DEX run imgtest/labels ls /dev/tty0
+  echo $output
+  $DEX run imgtest/labels ls /dev/
+  [ $status -eq 0 ]
+
+  run $DEX run imgtest/labels ls /dev/console
+  [ $status -eq 0 ]
+}
+
+@test "runtime respects docker_volumes label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_volumes="/tmp/dex-tests/tmp/vol /tmp/dex-tests/tmp/vol-ro:/tmp/ro:ro"
+  touch /tmp/dex-tests/tmp/vol/__exists__
+  touch /tmp/dex-tests/tmp/vol-ro/__exists__
+
+  run $DEX run imgtest/labels ls /tmp/dex-tests/tmp/vol/__exists__
+  [ $status -eq 0 ]
+
+  run $DEX run imgtest/labels ls /tmp/ro/__exists__
+  echo $output
+  [ $status -eq 0 ]
+
+  run $DEX run imgtest/labels rm /tmp/ro/__exists__
+  [ $status -eq 1 ]
+}
+
+@test "runtime suppresses tty flags when stdin is piped" {
+  # imgtest/labels image ::
+  # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
+
+  local out=$(echo "foo" | $DEX run imgtest/labels sed 's/foo/bar/')
   [ $? -eq 0 ]
   [ "$out" = "bar" ]
 }
