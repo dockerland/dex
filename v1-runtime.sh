@@ -54,8 +54,10 @@ v1-runtime(){
   DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
   __interactive_flag=${__interactive_flag:-false}
 
-  [ -z "$__api" ] && \
-    { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
+  [ -z "$__api" ] && {
+    echo "$__image did not specify an org.dockerland.dex.api label!"
+    exit 1
+  }
 
   # if home is not an absolute path, make relative to $DEX_HOME/image-homes/
   [[ "$__docker_home" != '/'* ]] && \
