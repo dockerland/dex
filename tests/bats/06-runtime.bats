@@ -11,7 +11,7 @@ load dex
 setup(){
   [ -e $DEX ] || install_dex
   mk-images
-    mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol,vol-ro}
+    mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol}
   __containers=()
 }
 
@@ -100,7 +100,6 @@ teardown(){
   # imgtest/labels image ::
   # LABEL org.dockerland.dex.docker_volumes="/tmp/dex-tests/tmp/vol /tmp/dex-tests/tmp/vol-ro:/tmp/ro:ro"
   touch /tmp/dex-tests/tmp/vol/__exists__
-  touch /tmp/dex-tests/tmp/vol-ro/__exists__
 
   run $DEX run imgtest/labels ls /tmp/dex-tests/tmp/vol/__exists__
   [ $status -eq 0 ]
