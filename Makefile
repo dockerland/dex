@@ -69,6 +69,7 @@ tests: $(SCRATCH_PATH)/dockerbuild-tests
 	mkdir -p /tmp/dex-tests
 
 	docker run -it --rm -u $$(id -u):$(DOCKER_GID) \
+	  --device=/dev/tty0 --device=/dev/console \
 	  -v $(CWD)/:/dex/ \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v /tmp/dex-tests:/tmp/dex-tests \
