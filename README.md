@@ -33,10 +33,10 @@ dex run core/debian
 
 # test piping to 'sed'
 echo 'ping' | docker run sed 's/ping/pong/'
+# ^^^ "pong"
 
 # install gitk  (as /usr/local/bin/dgitk)
-sudo dex install gitk
-dgitk
+sudo dex install gitk && dgitk
 # ^^^ launches gitk:latest
 
 # install all images from the core/ repository, pulling any changes first.

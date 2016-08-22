@@ -71,8 +71,12 @@ v1-runtime(){
   ${DEX_DOCKER_PERSIST:=$__docker_persist} || \
     DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --rm"
 
-  # piping into a container requires interactive
-  ! tty -s >/dev/null 2>&1 && __interactive_flag=true
+  # piping into a container requires interactive, non-tty input
+  ! tty -s >/dev/null 2>&1 && {
+    __interactive_flag=true
+    DEX_DOCKER_FLAGS="--tty=false"
+  }
+
   $__interactive_flag && DEX_DOCKER_FLAGS="$DEX_DOCKER_FLAGS --interactive"
 
   exec docker run $DEX_DOCKER_FLAGS \
