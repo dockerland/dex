@@ -78,16 +78,13 @@ DEX_NETWORK| true | enables network fetching
 
 v1 runtime vars | default | description
 --- | --- | ---
+DEX_DOCKER_CMD | | alternative command passed to docker run
+DEX_DOCKER_ENTRYPOINT | |  alternative entrypoint passed to docker run
 DEX_DOCKER_HOME | ~ | directory bind mounted as container's $HOME
 DEX_DOCKER_WORKSPACE | $(pwd) |  directory bind mounted as container's CWD
-DEX_DOCKER_FLAGS | | additional flags passed to docker run
-DEX_DOCKER_ENTRYPOINT | |  alternative entrypoint passed to docker run
-DEX_DOCKER_ENVARS | "LANG LC_ALL LC_CTYPE" | host environmental variables to passthrough to container
-DEX_DOCKER_CMD | | alternative command passed to docker run
-DEX_DOCKER_UID| $(id -u) | uid to run the container under
 DEX_DOCKER_GID| $(id -g) | gid to run the container under
+DEX_DOCKER_UID| $(id -u) | uid to run the container under
 DEX_DOCKER_LOG_DRIVER | none | logging driver to use for container
-DEX_DOCKER_PERSIST | false | when false, container is removed after it exits
 
 in addition, we define
 ```
