@@ -8,6 +8,7 @@ main_run(){
   __build_flag=false
   __pull_flag=false
   __interactive_flag=false
+  __persist_flag=false
 
   if [ $# -eq 0 ]; then
     display_help 2
@@ -18,7 +19,7 @@ main_run(){
         -b|--build)       __build_flag=true ;;
         -p|--pull)        __build_flag=true ; __pull_flag=true ;;
         -i|--interactive) __interactive_flag=true ;;
-        --persist)        DEX_DOCKER_PERSIST=true ;;
+        --persist)        __persist_flag=true ;;
         -h|--help)        display_help ;;
         *)                arg_var "$1" __imgstr && {
                             shift
