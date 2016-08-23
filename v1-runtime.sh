@@ -12,6 +12,7 @@ v1-runtime(){
   #  org.dockerland.dex.docker_home=~             (user's actual home)
   #  org.dockerland.dex.docker_volumes=/etc/hosts:/etc/hosts:ro
   #  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
+  #  org.dockerland.dex.window=true               (applies window/X11 flags)
   #
   __docker_devices=
   __docker_envars="LANG TZ"
@@ -19,9 +20,10 @@ v1-runtime(){
   __docker_home=~
   __docker_workspace=$(pwd)
   __docker_volumes=
+  __window=
 
   # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_home docker_workspace docker_volumes ; do
+  for label in api docker_devices docker_envars docker_flags docker_home docker_workspace docker_volumes window ; do
     # @TODO reduce this to a single docker inspect command
     val=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
@@ -44,7 +46,7 @@ v1-runtime(){
   # DEX_DOCKER_UID - uid to run the container under
   #
   # DEX_DOCKER_LOG_DRIVER - docker logging driver
-  # DEX_X11_FLAGS - used by X11 images via org.dockerland.dex.docker_flags label
+  # DEX_WINDOW_FLAGS - flags applied to windowed/X11 images
   #
   DEX_DOCKER_CMD=${DEX_DOCKER_CMD:-}
   DEX_DOCKER_ENTRYPOINT=${DEX_DOCKER_ENTRYPOINT:-}
@@ -56,7 +58,7 @@ v1-runtime(){
   DEX_DOCKER_UID=${DEX_DOCKER_UID:-$(id -u)}
 
   DEX_DOCKER_LOG_DRIVER=${DEX_DOCKER_LOG_DRIVER:-'none'}
-  DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
+  DEX_WINDOW_FLAGS=${DEX_WINDOW_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
 
   [ -z "$__api" ] && \
     { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
@@ -92,11 +94,32 @@ v1-runtime(){
     __docker_flags+=" -v $path_host:${path_container:-$path_host}:${path_mode:-rw}"
   done
 
-  # pass specified passthru envars (only if defined)
+  # pass specified passthru envars (only if !empty)
   for var in $__docker_envars; do
     eval "val=\$$var"
     [ -z "$val" ] || __docker_flags+=" -e $var=$val"
   done
+
+  # apply windowing vars (if window=true)
+  case $(echo "$__window" | awk '{print tolower($0)}') in
+    true|yes|on)
+
+      __docker_flags+=" $DEX_WINDOW_FLAGS"
+
+      for group in audio video; do
+        gid=$(getent group $group | cut -d: -f3)
+        [ -z "$gid" ] || __docker_flags+=" --group-add=$gid"
+      done
+
+      # lookup CONFIG_USER_NS (e.g. for chrome sandbox),
+      #   and add SYS_ADMIN cap if missing
+      type zgrep &>/dev/null && {
+        zgrep CONFIG_USER_NS=y /proc/config.gz &>/dev/null || \
+          __docker_flags+=" --cap-add=SYS_ADMIN"
+      }
+
+      ;;
+  esac
 
   exec docker run $__docker_flags \
     -e DEX_API=$__api \
