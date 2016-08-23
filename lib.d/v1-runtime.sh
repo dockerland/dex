@@ -64,6 +64,7 @@ v1-runtime(){
     { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
 
   # if home is not an absolute path, make relative to $DEX_HOME/<api>-homes/
+  [ "$DEX_DOCKER_HOME" = "~" ] && DEX_DOCKER_HOME=~
   [ "${DEX_DOCKER_HOME:0:1}" != '/' ] && \
     DEX_DOCKER_HOME=${DEX_HOME:-~/dex}/$__api-homes/$DEX_DOCKER_HOME
 
