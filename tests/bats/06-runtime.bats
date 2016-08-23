@@ -11,6 +11,7 @@ load dex
 setup(){
   [ -e $DEX ] || install_dex
   mk-images
+    mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol}
   __containers=()
 }
 
@@ -51,11 +52,9 @@ teardown(){
   [ "$out" = "bar" ]
 }
 
-@test "runtime assigns dex-v1 and passthrough environmental variables" {
-
+@test "runtime assigns default v1 vars + envar passthu" {
   export LANG="test"
-  export LC_ALL="test"
-  export LC_CTYPE="test"
+  export TZ="test"
 
   run $DEX run imgtest/debian
 
@@ -66,11 +65,85 @@ teardown(){
 
   # v1 passthrough
   [[ $output == *"LANG=test"* ]]
-  [[ $output == *"LC_ALL=test"* ]]
-  [[ $output == *"LC_CTYPE=test"* ]]
-
+  [[ $output == *"TZ=test"* ]]
 }
 
+@test "runtime respects docker_envars label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_envars="BATS_TESTVAR"
+
+  export BATS_TESTVAR=TEST
+  run $DEX run imgtest/labels printenv BATS_TESTVAR
+  [ "$(echo $output | sed -e 's/[^a-zA-Z]//g')" = "TEST" ]
+}
+
+@test "runtime respects docker_home label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_home="/tmp/dex-tests/tmp/home"
+  touch /tmp/dex-tests/tmp/home/__exists__
+
+  run $DEX run imgtest/labels ls /dex/home/__exists__
+  [ $status -eq 0 ]
+}
+
+@test "runtime respects docker_workspace label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_workspace="/tmp/dex-tests/tmp/workspace"
+  touch /tmp/dex-tests/tmp/workspace/__exists__
+
+  run $DEX run imgtest/labels ls __exists__
+  [ $status -eq 0 ]
+}
+
+@test "runtime respects docker_flags label" {
+  # imgtest/labels image ::
+  # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
+
+  run $DEX run imgtest/labels printenv TESTVAR
+  [ "$(echo $output | sed -e 's/[^a-zA-Z]//g')" = "TEST" ]
+}
+
+@test "runtime respects docker_devices label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_devices="tty0 /dev/console"
+  run $DEX run imgtest/debian ls /dev/tty0
+  [ $status -eq 2 ]
+
+  run $DEX run imgtest/debian ls /dev/console
+  [ $status -eq 2 ]
+
+  run $DEX run imgtest/labels ls /dev/tty0
+  echo $output
+  $DEX run imgtest/labels ls /dev/
+  [ $status -eq 0 ]
+
+  run $DEX run imgtest/labels ls /dev/console
+  [ $status -eq 0 ]
+}
+
+@test "runtime respects docker_volumes label" {
+  # imgtest/labels image ::
+  # LABEL org.dockerland.dex.docker_volumes="/tmp/dex-tests/tmp/vol /tmp/dex-tests/tmp/vol-ro:/tmp/ro:ro"
+  touch /tmp/dex-tests/tmp/vol/__exists__
+
+  run $DEX run imgtest/labels ls /tmp/dex-tests/tmp/vol/__exists__
+  [ $status -eq 0 ]
+
+  run $DEX run imgtest/labels ls /tmp/ro/__exists__
+  echo $output
+  [ $status -eq 0 ]
+
+  run $DEX run imgtest/labels rm /tmp/ro/__exists__
+  [ $status -eq 1 ]
+}
+
+@test "runtime suppresses tty flags when stdin is piped" {
+  # imgtest/labels image ::
+  # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
+  local out=$(echo "foo" | $DEX run imgtest/labels sed 's/foo/bar/')
+  [ $? -eq 0 ]
+  [ "$out" = "bar" ]
+}
 
 @test "runtime environmental variables override behavior" {
 
@@ -82,7 +155,6 @@ teardown(){
   # DEX_DOCKER_UID - uid to run the container under
   # DEX_DOCKER_GID - gid to run the container under
   # DEX_DOCKER_LOG_DRIVER - logging driver to use for container
-  # DEX_DOCKER_PERSIST - when false, container is removed after it exits
 
   export DEX_DOCKER_HOME=$TMPDIR/docker-test
   export DEX_DOCKER_WORKSPACE=$DEX_DOCKER_HOME/ping-pong
@@ -105,20 +177,17 @@ teardown(){
   get_containers
   [ ${#__containers[@]} -eq 0 ]
 
-  export DEX_DOCKER_PERSIST=true
   export DEX_DOCKER_UID=$(id root -u)
   export DEX_DOCKER_GID=$(id root -g)
   export DEX_DOCKER_LOG_DRIVER="json-file"
-  export DEX_DOCKER_FLAGS="--label=org.dockerland.dex.runtime-test=ping-pong"
 
-  run $DEX run imgtest/debian
+  run $DEX run --persist imgtest/debian
   [ $status -eq 0 ]
 
   get_containers
   [ ${#__containers[@]} -eq 1 ]
   [ $(docker inspect --format "{{ index .Config \"User\" }}" ${__containers[0]}) = "$DEX_DOCKER_UID:$DEX_DOCKER_GID" ]
   [ $(docker inspect --format "{{ index .HostConfig.LogConfig \"Type\" }}" ${__containers[0]}) = "$DEX_DOCKER_LOG_DRIVER" ]
-  [ $(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.runtime-test\" }}" ${__containers[0]}) = "ping-pong" ]
 }
 
 #@TODO test X11 flags/containers
