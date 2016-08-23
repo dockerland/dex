@@ -75,5 +75,38 @@ teardown(){
   [ $output = "ping-pong" ]
 }
 
+@test "run returns exit code from container's command" {
+  run $DEX run imgtest/debian ls /no-dang-way
+  [ $status -eq 2 ]
+}
 
-#@TODO test image labels (entrypoint, cmd, flags, vars) effect on behavior
+@test "run allows passing alternative CMD and entrypoint" {
+  run $DEX run --entrypoint "echo" --cmd "ping-pong" imgtest/debian
+  [ $status -eq 0 ]
+  [ $output = "ping-pong" ]
+}
+
+@test "run allows passing alternative UID and GID" {
+  [ $($DEX run --uid 1 imgtest/debian id -u) -eq 1 ]
+  [ $($DEX run --gid 1 imgtest/debian id -g) -eq 1 ]
+}
+
+@test "run allows passing alternative HOME and CWD" {
+  rm -rf $TMPDIR/alt-home/ ; mkdir -p $TMPDIR/alt-home/abc
+  [ $($DEX run --workspace $TMPDIR/alt-home/ imgtest/debian ls) = "abc" ]
+  [ $($DEX run --home $TMPDIR/alt-home/ imgtest/debian ls /dex/home) = "abc" ]
+}
+
+@test "run allows passing alternative log-driver and persist flag" {
+
+  get_containers
+  [ ${#__containers[@]} -eq 0 ]
+
+  run $DEX run --persist --log-driver json-file imgtest/debian
+  [ $status -eq 0 ]
+
+  get_containers
+  [ ${#__containers[@]} -eq 1 ]
+
+  [ $(docker inspect --format "{{ index .HostConfig.LogConfig \"Type\" }}" ${__containers[0]}) = "json-file" ]
+}

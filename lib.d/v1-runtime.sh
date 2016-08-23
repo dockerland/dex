@@ -28,6 +28,9 @@ v1-runtime(){
     eval "__$label=\"$val\""
   done
 
+  ${__interactive_flag:-false} && __docker_flags+=" --tty --interactive"
+  ${__persist_flag:-false} || __docker_flags+=" --rm"
+
   # rutime defaults -- override these by passing run flags, or through
   # exporting the following vars:
   #
@@ -55,9 +58,6 @@ v1-runtime(){
   DEX_DOCKER_LOG_DRIVER=${DEX_DOCKER_LOG_DRIVER:-'none'}
   DEX_X11_FLAGS=${DEX_X11_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
 
-  __interactive_flag=${__interactive_flag:-false}
-  __persist_flag=${__persist_flag:-false}
-
   [ -z "$__api" ] && \
     { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
 
@@ -76,8 +76,7 @@ v1-runtime(){
 
   # piping into a container requires interactive, non-tty input
   ! tty -s >/dev/null 2>&1 && {
-    __interactive_flag=true
-    __docker_flags+=" --tty=false"
+    __docker_flags+=" --interactive=true --tty=false"
   }
 
   # mount specicified devices (only if they exist)
@@ -98,9 +97,6 @@ v1-runtime(){
     eval "val=\$$var"
     [ -z "$val" ] || __docker_flags+=" -e $var=$val"
   done
-
-  $__interactive_flag && __docker_flags+=" --interactive"
-  $__persist_flag || __docker_flags+=" --rm"
 
   exec docker run $__docker_flags \
     -e DEX_API=$__api \
