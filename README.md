@@ -5,7 +5,7 @@
 Dex runs applications  _without_ installing them or their dependencies -- by
 using [docker](https://www.docker.com/) containers.
 
-GUI applications are supported through X11, so expect `dex run firefox` and
+Windowed/X11 applications are supported, so expect `dex run firefox` and
 `dex run gitk` to work. [Piping](https://en.wikipedia.org/wiki/Redirection_%28computing%29#Piping)
 and [redirection](https://en.wikipedia.org/wiki/Redirection_%28computing%29) are
 respected, so expect _pong_ from `echo 'ping' | docker run sed 's/ping/pong/'`.
@@ -85,21 +85,27 @@ DEX_DOCKER_WORKSPACE | $(pwd) |  directory bind mounted as container's CWD
 DEX_DOCKER_GID| $(id -g) | gid to run the container under
 DEX_DOCKER_UID| $(id -u) | uid to run the container under
 DEX_DOCKER_LOG_DRIVER | none | logging driver to use for container
-
-in addition, we define
-```
-# use DEX_X11_FLAGS to overwride flags passed by X11 images.
-DEX_X11_FLAGS="-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"
-```
+DEX_WINDOW_FLAGS | -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY | applied to windowed containers
 
 ## developing dexecutables
 
 * TBD
   * labeling / api versioning
-  * X11 examples
-  * tagging conventions
+  * Windowed/X11 examples
   * org.dockerland.dex.docker_home labels, non absolute path relative to $DEX_HOME/<api>-homes/<label>
-
+```
+# label defaults -- images may provide a org.dockerland.dex.<var> label
+#  supplying a value that overrides these default values, examples are:
+#
+#  org.dockerland.dex.docker_devices=/dev/shm   (shm mounted as /dev/shm)
+#  org.dockerland.dex.docker_envars="LANG TERM" (passthru LANG & TERM)
+#  org.dockerland.dex.docker_flags=-it          (interactive tty)
+#  org.dockerland.dex.docker_home=~             (user's actual home)
+#  org.dockerland.dex.docker_volumes=/etc/hosts:/etc/hosts:ro
+#  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
+#  org.dockerland.dex.window=true               (applies window/X11 flags)
+#
+```
 
 ## installing dex
 
