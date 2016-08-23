@@ -127,6 +127,8 @@ v1-runtime(){
     -e DEX_API=$__api \
     -e DEX_DOCKER_HOME=$DEX_DOCKER_HOME \
     -e DEX_DOCKER_WORKSPACE=$DEX_DOCKER_WORKSPACE \
+    -e DEX_HOST_HOME=$HOME \
+    -e DEX_HOST_PWD=$(pwd) \
     -e HOME=/dex/home \
     -u $DEX_DOCKER_UID:$DEX_DOCKER_GID \
     -v $DEX_DOCKER_HOME:/dex/home \
