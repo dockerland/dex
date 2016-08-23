@@ -72,9 +72,8 @@ teardown(){
   # imgtest/labels image ::
   # LABEL org.dockerland.dex.docker_envars="BATS_TESTVAR"
 
-  export BATS_TESTVAR=TEST
-  run $DEX run imgtest/labels printenv BATS_TESTVAR
-  [ "$(echo $output | sed -e 's/[^a-zA-Z]//g')" = "TEST" ]
+  export BATS_TESTVAR="abc"
+  [ "$($DEX run imgtest/labels printenv -0 BATS_TESTVAR)" = "abc" ]
 }
 
 @test "runtime respects docker_home label" {
@@ -99,8 +98,7 @@ teardown(){
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
 
-  run $DEX run imgtest/labels printenv TESTVAR
-  [ "$(echo $output | sed -e 's/[^a-zA-Z]//g')" = "TEST" ]
+  [ "$($DEX run imgtest/labels printenv -0 TESTVAR)" = "TEST" ]
 }
 
 @test "runtime respects docker_devices label" {
