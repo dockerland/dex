@@ -59,9 +59,12 @@ teardown(){
   run $DEX run imgtest/debian
 
   # v1 vars
+  for line in ${lines[@]}; do echo $line ; done
   [[ $output == *"DEX_API=v1"* ]]
-  [[ $output == *"DEX_DOCKER_HOME"* ]]
-  [[ $output == *"DEX_DOCKER_WORKSPACE"* ]]
+  [[ $output == *"DEX_DOCKER_HOME=/tmp/dex-tests/home"* ]]
+  [[ $output == *"DEX_DOCKER_WORKSPACE=$(pwd)"* ]]
+  [[ $output == *"DEX_HOST_HOME=$HOME"* ]]
+  [[ $output == *"DEX_HOST_PWD=$(pwd)"* ]]
 
   # v1 passthrough
   [[ $output == *"LANG=test"* ]]
