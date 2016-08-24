@@ -9,6 +9,7 @@ v1-runtime(){
   #  org.dockerland.dex.docker_devices=/dev/shm   (shm mounted as /dev/shm)
   #  org.dockerland.dex.docker_envars="LANG TERM" (passthru LANG & TERM)
   #  org.dockerland.dex.docker_flags=-it          (interactive tty)
+  #  org.dockerland.dex.docker_groups=tty         (adds 'tty' to container user)
   #  org.dockerland.dex.docker_home=~             (user's actual home)
   #  org.dockerland.dex.docker_volumes=/etc/hosts:/etc/hosts:ro
   #  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
@@ -17,13 +18,14 @@ v1-runtime(){
   __docker_devices=
   __docker_envars="LANG TZ"
   __docker_flags=
+  __docker_groups=
   __docker_home=~
   __docker_workspace=$(pwd)
   __docker_volumes=
   __window=
 
   # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_home docker_workspace docker_volumes window ; do
+  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes window ; do
     # @TODO reduce this to a single docker inspect command
     val=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
@@ -83,6 +85,20 @@ v1-runtime(){
     __docker_flags+=" --interactive=true --tty=false"
   }
 
+  # apply windowing vars (if window=true)
+  case $(echo "$__window" | awk '{print tolower($0)}') in true|yes|on)
+      __docker_flags+=" $DEX_WINDOW_FLAGS"
+      __docker_groups+=" audio video"
+
+      # lookup CONFIG_USER_NS (e.g. for chrome sandbox),
+      #   and add SYS_ADMIN cap if missing
+      type zgrep &>/dev/null && {
+        zgrep CONFIG_USER_NS=y /proc/config.gz &>/dev/null || \
+          __docker_flags+=" --cap-add=SYS_ADMIN"
+      }
+      ;;
+  esac
+
   # mount specicified devices (only if they exist)
   for path in $__docker_devices; do
     [ "${path:0:5}" = "/dev/" ] || path="/dev/$path"
@@ -96,32 +112,17 @@ v1-runtime(){
     __docker_flags+=" -v $path_host:${path_container:-$path_host}:${path_mode:-rw}"
   done
 
+  # add specified groups (only if they exist)
+  for group in $__docker_groups; do
+    gid=$(getent group $group | cut -d: -f3)
+    [ -z "$gid" ] || __docker_flags+=" --group-add=$gid"
+  done
+
   # pass specified passthru envars (only if !empty)
   for var in $__docker_envars; do
     eval "val=\$$var"
     [ -z "$val" ] || __docker_flags+=" -e $var=$val"
   done
-
-  # apply windowing vars (if window=true)
-  case $(echo "$__window" | awk '{print tolower($0)}') in
-    true|yes|on)
-
-      __docker_flags+=" $DEX_WINDOW_FLAGS"
-
-      for group in audio video; do
-        gid=$(getent group $group | cut -d: -f3)
-        [ -z "$gid" ] || __docker_flags+=" --group-add=$gid"
-      done
-
-      # lookup CONFIG_USER_NS (e.g. for chrome sandbox),
-      #   and add SYS_ADMIN cap if missing
-      type zgrep &>/dev/null && {
-        zgrep CONFIG_USER_NS=y /proc/config.gz &>/dev/null || \
-          __docker_flags+=" --cap-add=SYS_ADMIN"
-      }
-
-      ;;
-  esac
 
   exec docker run $__docker_flags \
     -e DEX_API=$__api \
