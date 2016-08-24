@@ -10,8 +10,8 @@ load dex
 
 setup(){
   [ -e $DEX ] || install_dex
-  mk-images
-    mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol}
+  mk-images "imgtest/labels" "imgtest/labels:x11"
+  mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol}
   __containers=()
 }
 
@@ -34,7 +34,6 @@ teardown(){
   rm -rf $TMPDIR/docker-test
   rm_containers
 }
-
 
 @test "runtime properly sets \$HOME as /dex/home" {
   run $DEX run imgtest/debian printenv HOME
@@ -211,4 +210,9 @@ teardown(){
   [ $(docker inspect --format "{{ index .HostConfig.LogConfig \"Type\" }}" ${__containers[0]}) = "$DEX_DOCKER_LOG_DRIVER" ]
 }
 
-#@TODO test X11 flags/containers
+@test "runtime respects window label and DEX_WINDOW_FLAGS envar" {
+  (
+    export DEX_WINDOW_FLAGS="-e WINDOW_FLAG=abc"
+    [ "$($DEX run imgtest/labels:x11 printenv -0 WINDOW_FLAG)" = "abc" ]
+  ) || return 1
+}
