@@ -10,8 +10,8 @@ load dex
 
 setup(){
   [ -e $DEX ] || install_dex
-  mk-images
-    mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol}
+  mk-images "imgtest/labels" "imgtest/labels:x11"
+  mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol}
   __containers=()
 }
 
@@ -34,7 +34,6 @@ teardown(){
   rm -rf $TMPDIR/docker-test
   rm_containers
 }
-
 
 @test "runtime properly sets \$HOME as /dex/home" {
   run $DEX run imgtest/debian printenv HOME
@@ -59,9 +58,12 @@ teardown(){
   run $DEX run imgtest/debian
 
   # v1 vars
+  for line in ${lines[@]}; do echo $line ; done
   [[ $output == *"DEX_API=v1"* ]]
-  [[ $output == *"DEX_DOCKER_HOME"* ]]
-  [[ $output == *"DEX_DOCKER_WORKSPACE"* ]]
+  [[ $output == *"DEX_DOCKER_HOME=/tmp/dex-tests/home"* ]]
+  [[ $output == *"DEX_DOCKER_WORKSPACE=$(pwd)"* ]]
+  [[ $output == *"DEX_HOST_HOME=$HOME"* ]]
+  [[ $output == *"DEX_HOST_PWD=$(pwd)"* ]]
 
   # v1 passthrough
   [[ $output == *"LANG=test"* ]]
@@ -72,9 +74,8 @@ teardown(){
   # imgtest/labels image ::
   # LABEL org.dockerland.dex.docker_envars="BATS_TESTVAR"
 
-  export BATS_TESTVAR=TEST
-  run $DEX run imgtest/labels printenv BATS_TESTVAR
-  [ "$(echo $output | sed -e 's/[^a-zA-Z]//g')" = "TEST" ]
+  export BATS_TESTVAR="abc"
+  [ "$($DEX run imgtest/labels printenv -0 BATS_TESTVAR)" = "abc" ]
 }
 
 @test "runtime respects docker_home label" {
@@ -99,8 +100,27 @@ teardown(){
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
 
-  run $DEX run imgtest/labels printenv TESTVAR
-  [ "$(echo $output | sed -e 's/[^a-zA-Z]//g')" = "TEST" ]
+  [ "$($DEX run imgtest/labels printenv -0 TESTVAR)" = "TEST" ]
+}
+
+@test "runtime respects docker_groups label, maps to host group ID" {
+  # imgtest/labels image ::
+  # LABEL dockerland.dex.docker_groups="tty"
+
+  host_gid=$(getent group tty | cut -d: -f3)
+  found=false
+
+  for gid in $($DEX run imgtest/labels id -G); do
+    # trim trailing null character
+    gid=$(echo $gid | tr -d '[:space:]')
+    echo "comparing container gid: $gid to host gid: $host_gid"
+    if [ $gid = "$host_gid" ]; then
+      found=true
+      break
+    fi
+  done
+
+  $found
 }
 
 @test "runtime respects docker_devices label" {
@@ -190,4 +210,9 @@ teardown(){
   [ $(docker inspect --format "{{ index .HostConfig.LogConfig \"Type\" }}" ${__containers[0]}) = "$DEX_DOCKER_LOG_DRIVER" ]
 }
 
-#@TODO test X11 flags/containers
+@test "runtime respects window label and DEX_WINDOW_FLAGS envar" {
+  (
+    export DEX_WINDOW_FLAGS="-e WINDOW_FLAG=abc"
+    [ "$($DEX run imgtest/labels:x11 printenv -0 WINDOW_FLAG)" = "abc" ]
+  ) || return 1
+}
