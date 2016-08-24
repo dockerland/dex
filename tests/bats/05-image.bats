@@ -80,8 +80,12 @@ setup(){
 }
 
 @test "image ls output matches 'docker images' and supports quiet flag" {
-  diff <($DEX image ls -q) <(docker images -q $IMAGES_FILTER)
-  ! diff <($DEX image ls) <(docker images -q $IMAGES_FILTER)
+  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/images/* | wc -l)
+
+  run $DEX image ls
+  [ ${#lines[@]} -eq $(($repo_image_count + 1)) ]
+
+  diff -b <(docker images -q $IMAGES_FILTER) <($DEX image ls -q)
 }
 
 @test "image rm errors if it cannot find images to remove" {
