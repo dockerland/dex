@@ -104,6 +104,26 @@ teardown(){
   [ "$($DEX run imgtest/labels printenv -0 TESTVAR)" = "TEST" ]
 }
 
+@test "runtime respects docker_groups label, maps to host group ID" {
+  # imgtest/labels image ::
+  # LABEL dockerland.dex.docker_groups="tty"
+
+  host_gid=$(getent group tty | cut -d: -f3)
+  found=false
+
+  for gid in $($DEX run imgtest/labels id -G); do
+    # trim trailing null character
+    gid=$(echo $gid | tr -d '[:space:]')
+    echo "comparing container gid: $gid to host gid: $host_gid"
+    if [ $gid = "$host_gid" ]; then
+      found=true
+      break
+    fi
+  done
+
+  $found
+}
+
 @test "runtime respects docker_devices label" {
   # imgtest/labels image ::
   # LABEL org.dockerland.dex.docker_devices="tty0 /dev/console"
