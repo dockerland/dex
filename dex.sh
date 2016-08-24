@@ -8,6 +8,8 @@ main(){
 
   __cmd="main"
   __entrypoint="$0 $@"
+  __dex_build="@DEX_BUILD@"
+  __dex_version="@DEX_VERSION@"
 
   # DEX_API: api version: v1
   # DEX_BIN_DIR: location where dex installs : /usr/local/bin
@@ -32,6 +34,7 @@ main(){
         help)             __cmd=${2:-$__cmd} ; display_help ;;
         runfunc)          shift ; runfunc "$@" ; exit $? ;;
         -h|--help)        display_help ;;
+        -v|--version)     log "Dex version $__dex_version build $__dex_build" ;;
         *)                unrecognized_arg "$1" ;;
 
       esac

@@ -39,19 +39,31 @@ $(SCRATCH_PATH)/dockerbuild-%: $(SCRATCH_PATH)
 	docker build --tag dockerbuild-$(NAMESPACE)-$* $*/
 	touch $@
 
+#
+# app targets
+.PHONY: dex tests install uninstall
 
-#
-# app
-#
+DEX_VERSION ?= $(shell git rev-parse --abbrev-ref HEAD)
+DEX_BUILD ?= $(shell git rev-parse --short HEAD)
+
+DOCKER_GID ?= $(shell getent group docker | cut -d: -f3)
+
+TEST ?=
+SKIP_NETWORK_TEST ?=
 
 dex:
-	#
-	# inline helpers into single shell-script
-	#
-	sed '/\@start/,/\@end/d' $(CWD)/dex.sh > $(CWD)/bin/dex
-	find $(CWD)/lib.d/ -type f -name "*.sh" -exec cat {} >> $(CWD)/bin/dex +
-	echo 'main "$$@"' >> $(CWD)/bin/dex
-	chmod +x $(CWD)/bin/dex
+	$(info building dex...)
+	@( \
+	  sed \
+	    -e '/\@start/,/\@end/d' \
+		  -e 's/@DEX_VERSION@/$(DEX_VERSION)/' \
+		  -e 's/@DEX_BUILD@/$(DEX_BUILD)/' \
+		  $(CWD)/dex.sh > $(CWD)/bin/dex ; \
+	  find $(CWD)/lib.d/ -type f -name "*.sh" -exec cat {} >> $(CWD)/bin/dex + ; \
+	  echo 'main "$$@"' >> $(CWD)/bin/dex ; \
+	  chmod +x $(CWD)/bin/dex ; \
+	)
+	$(info * built $(CWD)/bin/dex)
 
 install: dex
 
