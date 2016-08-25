@@ -38,8 +38,8 @@ $(SCRATCH_PATH)/dockerbuild-%: $(SCRATCH_PATH)
 # app targets
 .PHONY: dex tests install uninstall
 
-DEX_VERSION ?= $(shell git rev-parse --abbrev-ref HEAD)
-DEX_BUILD ?= $(shell git rev-parse --short HEAD)
+RELEASE_TAG ?= $(shell git rev-parse --abbrev-ref HEAD)
+RELEASE_SHA ?= $(shell git rev-parse --short HEAD)
 
 DOCKER_GID ?= $(shell getent group docker | cut -d: -f3)
 
@@ -51,8 +51,8 @@ dex:
 	@( \
 	  sed \
 	    -e '/\@start/,/\@end/d' \
-		  -e 's/@DEX_VERSION@/$(DEX_VERSION)/' \
-		  -e 's/@DEX_BUILD@/$(DEX_BUILD)/' \
+		  -e 's/@DEX_VERSION@/$(RELEASE_TAG)/' \
+		  -e 's/@DEX_BUILD@/$(shell echo "$(RELEASE_SHA)" | cut -c1-7)/' \
 		  $(CWD)/dex.sh > $(CWD)/bin/dex ; \
 	  find $(CWD)/lib.d/ -type f -name "*.sh" -exec cat {} >> $(CWD)/bin/dex + ; \
 	  echo 'main "$$@"' >> $(CWD)/bin/dex ; \
@@ -87,7 +87,7 @@ tests: $(SCRATCH_PATH)/dockerbuild-tests
 # release helpers
 .PHONY: release prerelease _mkrelease
 
-RELEASE_TAG ?=
+RELEASE_VERSION ?=
 
 GH_TOKEN ?=
 GH_URL ?= https://api.github.com
@@ -107,18 +107,18 @@ release: MERGE_BRANCH = master
 release: PRERELEASE = false
 release: _mkrelease
 
+_mkrelease: RELEASE_SHA = $(shell git rev-parse $(MERGE_BRANCH))
+_mkrelease: RELEASE_TAG = v$(RELEASE_VERSION)$(shell $(PRERELEASE) && echo '-pr')
 _mkrelease: _release_check dex
 	git push $(REMOTE_LOCAL) $(MERGE_BRANCH):$(BRANCH)
 	git push $(REMOTE_GH) $(BRANCH)
-	$(eval RELEASE_SHA=$(shell git rev-parse remotes/$(REMOTE_GH)/$(BRANCH)))
-	$(eval RELEASE_TAG_FIXED=v$(RELEASE_TAG)$(shell $(PRERELEASE) && echo '-pr'))
-	$(eval CREATE_JSON=$(shell printf '{"tag_name": "%s","target_commitish": "%s","draft": false,"prerelease": %s}' $(RELEASE_TAG_FIXED) $(RELEASE_SHA) $(PRERELEASE)))
+	$(eval CREATE_JSON=$(shell printf '{"tag_name": "%s","target_commitish": "%s","draft": false,"prerelease": %s}' $(RELEASE_TAG) $(RELEASE_SHA) $(PRERELEASE)))
 	@( \
-	  echo "  * attempting to create release $(RELEASE_TAG_FIXED) ..." ; \
+	  echo "  * attempting to create release $(RELEASE_TAG) ..." ; \
 		id=$$(curl -sLH "Authorization: token $(GH_TOKEN)" $(GH_URL)/repos/$(GH_PROJECT)/releases/tags/$(RELEASE_TAG) | jq -Me .id) ; \
 		[ $$id = "null" ] && id=$$(curl -sLH "Authorization: token $(GH_TOKEN)" -X POST --data '$(CREATE_JSON)' $(GH_URL)/repos/$(GH_PROJECT)/releases | jq -Me .id) ; \
 		[ $$id = "null" ] && echo "  !! unable to create release -- perhaps it exists?" && exit 1 ; \
-		echo "  * uploading $(CWD)/bin/dex to release $(RELEASE_TAG_FIXED) ($$id) ..." ; \
+		echo "  * uploading $(CWD)/bin/dex to release $(RELEASE_TAG) ($$id) ..." ; \
     curl -sL -H "Authorization: token $(GH_TOKEN)" -H "Content-Type: text/x-shellscript" --data-binary @"$(CWD)/bin/dex" -X POST $(GH_UPLOAD_URL)/repos/$(GH_PROJECT)/releases/$$id/assets?name=dex.sh &>/dev/null ; \
 	)
 
@@ -129,8 +129,8 @@ _mkrelease: _release_check dex
 SKIP_WC_CHECK ?=
 
 _release_check: _wc_check _git_check _gh_check
-	@test ! -z "$(RELEASE_TAG)" || ( \
-	  echo "  * please provide RELEASE_TAG - e.g. '1.0.0'" ; \
+	@test ! -z "$(RELEASE_VERSION)" || ( \
+	  echo "  * please provide RELEASE_VERSION - e.g. '1.0.0'" ; \
 		echo "     'v' and '-pre' are automatically added" ; \
 		false )
 
