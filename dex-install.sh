@@ -19,6 +19,8 @@ dex-install(){
   dex-image-build $namespace || error_exception \
     "failed to build any images matching $__imgstr"
 
+  log "* installing $__source_match/$__image_match images..."
+
   for imgname in ${__built_images[@]}; do
 
     local api=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $imgname)
@@ -44,7 +46,7 @@ dex-install(){
 
       if [ -e $bin ]; then
         log \
-          "* $bin exists" \
+          "! $bin exists" \
           "  skipping $image installation" \
           "  use --force to overwrite"
       else
@@ -53,7 +55,7 @@ dex-install(){
         echo "__image=\"$imgname\"" >> $bin
         echo "$runtimeFn \$@" >> $bin
         chmod +x $bin || error_exception "unable to mark $bin executable"
-        log "installed $image"
+        log "+ installed $(basename $bin)"
 
         dex-install-link $bin ${DEX_BIN_PREFIX}${image} || \
           error_exception "unable to create link to $bin"
@@ -79,12 +81,12 @@ dex-install-link(){
 
     if [ -e $2 ] || [ -L $2 ]; then
       log \
-        "* $__src_dir/$2 exists" \
+        "! $__src_dir/$2 exists" \
         "  skipped linking $2 to $__src_file" \
         "  use --force to overwrite"
     else
       ln -s $__src_file $2 || exit 1
-      log "  + linked $2 to $1"
+      log "+ linked $__src_dir/$2 to $__src_file"
     fi
   )
   return $?
