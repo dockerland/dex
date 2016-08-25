@@ -2,6 +2,7 @@
 
 v1-runtime(){
   [ -z "$__image" ] && { echo "missing runtime image" ; exit 1 ; }
+  IFS=":" read -r __name __tag <<< "$__image"
 
   # label defaults -- images may provide a org.dockerland.dex.<var> label
   #  supplying a value that overrides these default values, examples are:
@@ -19,7 +20,7 @@ v1-runtime(){
   __docker_envars="LANG TZ"
   __docker_flags=
   __docker_groups=
-  __docker_home=~
+  __docker_home=$(basename $__name)-$__tag
   __docker_workspace=$(pwd)
   __docker_volumes=
   __window=
@@ -69,7 +70,7 @@ v1-runtime(){
   # if home is not an absolute path, make relative to $DEX_HOME/<api>-homes/
   [ "$DEX_DOCKER_HOME" = "~" ] && DEX_DOCKER_HOME=~
   [ "${DEX_DOCKER_HOME:0:1}" != '/' ] && \
-    DEX_DOCKER_HOME=${DEX_HOME:-~/dex}/$__api-homes/$DEX_DOCKER_HOME
+    DEX_DOCKER_HOME=${DEX_HOME:-~/dex}/homes/$DEX_DOCKER_HOME
 
   [ -d "$DEX_DOCKER_HOME" ] || mkdir -p $DEX_DOCKER_HOME || \
     { echo "unable to stub home directory: $DEX_DOCKER_HOME" ; exit 1 ; }
