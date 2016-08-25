@@ -44,7 +44,7 @@ teardown(){
   run $DEX image --force rm imgtest/*
   run $DEX run imgtest/debian
   [ $status -eq 0 ]
-  [[ $output == *"built imgtest/debian"* ]]
+  [[ $output == *"built $DEX_NAMESPACE/debian"* ]]
   [[ $output == *"DEBIAN_RELEASE"* ]]
 }
 

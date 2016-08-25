@@ -40,15 +40,16 @@ imgcount(){
   [ $status -eq 2 ]
 }
 
-@test "install adds prefixed runtime script of matching image to DEX_BIN_DIR" {
+@test "install adds tagged runtime to DEX_BIN_DIR and a prefixed link to it" {
   [ $(imgcount) -eq 0 ]
   eval $($DEX vars DEX_BIN_PREFIX)
 
-  run $DEX install imgtest/alpine
+  run $DEX install imgtest/alpine:latest
 
   [ $status -eq 0 ]
-  [ $(imgcount) -eq 1 ]
-  [ -e $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine ]
+  [ $(imgcount) -eq 2 ]
+  [ -e $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine-latest ]
+  [ -L $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine ]
 }
 
 @test "install writes _behaving dexecutables_ to DEX_BIN_DIR"  {
@@ -73,7 +74,7 @@ imgcount(){
 
   run $DEX install imgtest/*
   [ $status -eq 0 ]
-  [ $(imgcount) -eq $repo_image_count ]
+  [ $(imgcount) -eq $(($repo_image_count + $repo_image_count)) ]
 }
 
 @test "install adds symlink to runtime script when --global flag is passed" {
@@ -93,9 +94,10 @@ imgcount(){
 
   run $DEX install --global imgtest/alpine
   [[ $output = *"$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine exists"* ]]
-  [[ $output = *"skipping global install"* ]]
+  [[ $output = *"skipped linking alpine to ${DEX_BIN_PREFIX}alpine-latest"* ]]
 
   run $DEX install --global --force imgtest/alpine
+  [ -L $DEX_BIN_DIR/dalpine ]
   [ -L $DEX_BIN_DIR/alpine ]
 }
 

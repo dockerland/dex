@@ -19,51 +19,75 @@ dex-install(){
   dex-image-build $namespace || error_exception \
     "failed to build any images matching $__imgstr"
 
+  log "* installing $__source_match/$__image_match images..."
+
   for imgname in ${__built_images[@]}; do
 
     local api=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $imgname)
     local image=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.image\" }}" $imgname)
-    local bin="$DEX_BIN_DIR/${DEX_BIN_PREFIX}${image}"
-    local gbin="$DEX_BIN_DIR/${image}"
+    local tag=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.build-tag\" }}" $imgname)
+    local bin="$DEX_BIN_DIR/${DEX_BIN_PREFIX}${image}-${tag}"
     local runtimeFn="$api-runtime"
 
     if [ -z "$api" ]; then
       log "skipping $imgname -- org.dockerland.dex.api label not provided"
       continue
-    elif [ -z "$image" ]; then
-      log "skipping $imgname -- org.dockerland.dex.image label not provided"
-      continue
     elif [ ! "$(type -t $runtimeFn)" = "function" ]; then
       log "skipping $imgname -- missing api runtime function ($runtimeFn)"
       continue
-    elif [ -e $bin ] && ! $__force_flag; then
-      log "skipping $image -- $bin exists" "  use --force to overwrite"
+    elif [ -z "$image" ]; then
+      log "skipping $imgname -- org.dockerland.dex.image label not provided"
+      continue
+    elif [ -z "$tag" ]; then
+      log "skipping $imgname -- org.dockerland.dex.build-tag label not provided"
+      continue
     else
-      rm -rf $bin || error
-      echo "#!/usr/bin/env bash" > $bin
-      declare -f $runtimeFn >> $bin
-      echo "__image=\"$imgname\"" >> $bin
-      echo "$runtimeFn \$@" >> $bin
-      chmod +x $bin || error_exception "unable to mark $bin executable"
-      log "installed $bin"
+      $__force_flag && rm -rf $bin
+
+      if [ -e $bin ]; then
+        log \
+          "! $bin exists" \
+          "  skipping $image installation" \
+          "  use --force to overwrite"
+      else
+        echo "#!/usr/bin/env bash" > $bin
+        declare -f $runtimeFn >> $bin
+        echo "__image=\"$imgname\"" >> $bin
+        echo "$runtimeFn \$@" >> $bin
+        chmod +x $bin || error_exception "unable to mark $bin executable"
+        log "+ installed $(basename $bin)"
+
+        dex-install-link $bin ${DEX_BIN_PREFIX}${image} || \
+          error_exception "unable to create link to $bin"
+      fi
     fi
 
     if $__global_flag ; then
-      if [ -e $gbin ] || [ -L $gbin ]; then
-        $__force_flag || {
-          log "skipping global install -- $gbin exists" "  use --force to overwrite"
-          continue
-        }
-        rm -rf $gbin || error
-      fi
-
-      (
-        cd $DEX_BIN_DIR || exit 1
-        ln -s ${DEX_BIN_PREFIX}${image} ${image} || exit 1
-      ) || error_exception "unable to link global executable"
-
-      log "installed $gbin"
+      dex-install-link $bin $image || \
+        error_exception "unable to create global link to $bin"
     fi
   done
+}
 
+# dex-install-link <src> <dest>
+dex-install-link(){
+  [ -e $1 ] || error_exception "install-link: source $1 does not exist"
+  local __src_dir=$(dirname $1)
+  local __src_file=$(basename $1)
+  (
+    cd $__src_dir || exit 1
+
+    $__force_flag && rm -rf $2
+
+    if [ -e $2 ] || [ -L $2 ]; then
+      log \
+        "! $__src_dir/$2 exists" \
+        "  skipped linking $2 to $__src_file" \
+        "  use --force to overwrite"
+    else
+      ln -s $__src_file $2 || exit 1
+      log "+ linked $__src_dir/$2 to $__src_file"
+    fi
+  )
+  return $?
 }

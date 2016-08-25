@@ -18,6 +18,9 @@ dex-image-build(){
 
   dex-detect-imgstr $__imgstr || error "lookup failed to parse $__imgstr"
 
+
+  log "* building $__source_match/$__image_match images..."
+
   for repo_dir in $(ls -d $DEX_HOME/checkouts/$__source_match 2>/dev/null); do
     for image_dir in $(ls -d $repo_dir/images/$__image_match 2>/dev/null); do
       if [ "$__image_tag" = "latest" ]; then
@@ -31,7 +34,7 @@ dex-image-build(){
       local source=$(basename $repo_dir)
       local tag="$namespace/$image:$__image_tag"
 
-      log "building $tag ..."
+      log "- building $tag"
       (
         set -e
         cd $image_dir
@@ -49,7 +52,9 @@ dex-image-build(){
   done
 
   if [ ${#__built_images[@]} -gt 0 ]; then
-    log "built $__source_match/$__image_match"
+    for __image in ${__built_images[@]}; do
+      log "+ built $__image"
+    done
     return 0
   else
     return 1
