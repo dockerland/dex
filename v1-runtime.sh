@@ -66,9 +66,9 @@ v1-runtime(){
   [ -z "$__api" ] && \
     { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
 
-
+  # expand tilde
+  DEX_DOCKER_HOME=${DEX_DOCKER_HOME/#\~/$HOME}
   # if home is not an absolute path, make relative to $DEX_HOME/<api>-homes/
-  [ "$DEX_DOCKER_HOME" = "~" ] && DEX_DOCKER_HOME=~
   [ "${DEX_DOCKER_HOME:0:1}" != '/' ] && \
     DEX_DOCKER_HOME=${DEX_HOME:-~/dex}/homes/$DEX_DOCKER_HOME
 
@@ -109,6 +109,7 @@ v1-runtime(){
   # mount specified volumes (only if they exist)
   for path in $__docker_volumes; do
     IFS=":" read path_host path_container path_mode <<<$path
+    path_host=${path_host/#\~/$HOME}
     [ -e "$path_host" ] || continue
     __docker_flags+=" -v $path_host:${path_container:-$path_host}:${path_mode:-rw}"
   done
