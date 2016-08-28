@@ -70,6 +70,14 @@ teardown(){
   [[ $output == *"TZ=test"* ]]
 }
 
+@test "runtime sets a unique home by default (DEX_HOME/homes/<image>-<tag>)" {
+  rm -rf $DEX_HOME/homes/debian-latest
+
+  run $DEX run imgtest/debian:latest
+  [ $status -eq 0 ]
+  [ -d $DEX_HOME/homes/debian-latest ]
+}
+
 @test "runtime respects docker_envars label" {
   # imgtest/labels image ::
   # LABEL org.dockerland.dex.docker_envars="BATS_TESTVAR"
@@ -84,6 +92,14 @@ teardown(){
   touch /tmp/dex-tests/tmp/home/__exists__
 
   run $DEX run imgtest/labels ls /dex/home/__exists__
+  [ $status -eq 0 ]
+
+  # imgtest/labels:realhome image ::
+  # LABEL org.dockerland.dex.docker_home="~"
+
+  touch ~/.dex_realhome_test
+  run $DEX run imgtest/labels:realhome ls /dex/home/.dex_realhome_test
+  rm -rf ~/.dex_realhome_test
   [ $status -eq 0 ]
 }
 
