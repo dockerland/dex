@@ -90,6 +90,8 @@ v1-runtime(){
   case $(echo "$__window" | awk '{print tolower($0)}') in true|yes|on)
       __docker_flags+=" $DEX_WINDOW_FLAGS -e DEX_WINDOW=true"
       __docker_groups+=" audio video"
+      __docker_devices+=" dri snd video video0"
+      __docker_volumes+=" /dev/shm /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro /etc/machine-id:/etc/machine-id:ro"
 
       # @TODO bats testing
       [ -z "$XDG_RUNTIME_DIR" ] || {
