@@ -91,6 +91,21 @@ v1-runtime(){
       __docker_flags+=" $DEX_WINDOW_FLAGS -e DEX_WINDOW=true"
       __docker_groups+=" audio video"
 
+      # @TODO bats testing
+      [ -z "$XDG_RUNTIME_DIR" ] || {
+        __docker_flags+=" -v $XDG_RUNTIME_DIR:/var/run/xdg -e XDG_RUNTIME_DIR=/var/run/xdg"
+      }
+
+      # append xauth
+      # @TODO test under fedora, opensuse, ubuntu
+      # @TODO bats testing
+      type xauth &>/dev/null && {
+        __xauth=${DEX_HOME:-~/dex}/.xauth
+        touch $__xauth && \
+          xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $__xauth nmerge - &>/dev/null && \
+          __docker_flags+=" -v $__xauth:/tmp/.xauth -e XAUTHORITY=/tmp/.xauth"
+      }
+
       # lookup CONFIG_USER_NS (e.g. for chrome sandbox),
       #   and add SYS_ADMIN cap if missing
       type zgrep &>/dev/null && {
