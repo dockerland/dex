@@ -87,7 +87,7 @@ v1-runtime(){
 
   # apply windowing vars (if window=true)
   case $(echo "$__window" | awk '{print tolower($0)}') in true|yes|on)
-      __docker_flags+=" $DEX_WINDOW_FLAGS"
+      __docker_flags+=" $DEX_WINDOW_FLAGS -e DEX_WINDOW=true"
       __docker_groups+=" audio video"
 
       # lookup CONFIG_USER_NS (e.g. for chrome sandbox),

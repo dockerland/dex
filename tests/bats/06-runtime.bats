@@ -214,5 +214,6 @@ teardown(){
   (
     export DEX_WINDOW_FLAGS="-e WINDOW_FLAG=abc"
     [ "$($DEX run imgtest/labels:x11 printenv -0 WINDOW_FLAG)" = "abc" ]
+    [ "$($DEX run imgtest/labels:x11 printenv -0 DEX_WINDOW)" = "true" ]
   ) || return 1
 }
