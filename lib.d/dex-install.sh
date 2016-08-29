@@ -23,9 +23,9 @@ dex-install(){
 
   for imgname in ${__built_images[@]}; do
 
-    local api=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $imgname)
-    local image=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.image\" }}" $imgname)
-    local tag=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.build-tag\" }}" $imgname)
+    local api=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $imgname)
+    local image=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.image\" }}" $imgname)
+    local tag=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.build-tag\" }}" $imgname)
     local bin="$DEX_BIN_DIR/${DEX_BIN_PREFIX}${image}-${tag}"
     local runtimeFn="$api-runtime"
 
@@ -51,6 +51,8 @@ dex-install(){
           "  use --force to overwrite"
       else
         echo "#!/usr/bin/env bash" > $bin
+        declare -f __local_docker >> $bin
+        declare -f __deactivate_machine >> $bin
         declare -f $runtimeFn >> $bin
         echo "__image=\"$imgname\"" >> $bin
         echo "$runtimeFn \$@" >> $bin
