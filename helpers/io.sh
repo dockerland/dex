@@ -40,27 +40,3 @@ prompt_confirm() {
     esac
   done
 }
-
-# sed_inplace : in place file substitution
-############################################
-#
-# usage: sed_inplace "file" "sed substitution"
-#    ex: sed_inplace "/tmp/file" "s/CLIENT_CODE/BA/g"
-#
-sed_inplace(){
-  # linux
-  local __sed="sed"
-
-  if [[ $OSTYPE == macos* ]]; then
-    if $(type gsed >/dev/null 2>&1); then
-      local __sed="gsed"
-    elif $(type /usr/local/bin/sed >/dev/null 2>&1); then
-      local __sed="/usr/local/bin/sed"
-    else
-      sed -i '' -E "$2" $1
-      return
-    fi
-  fi
-
-  $__sed -r -i "$2" $1
-}
