@@ -41,7 +41,8 @@ $(SCRATCH_PATH)/dockerbuild-%: $(SCRATCH_PATH)
 RELEASE_TAG ?= $(shell git rev-parse --abbrev-ref HEAD)
 RELEASE_SHA ?= $(shell git rev-parse --short HEAD)
 
-DOCKER_GID ?= $(shell getent group docker | cut -d: -f3)
+DOCKER_GROUP ?= docker
+DOCKER_GID ?= $(shell if type getent &>/dev/null; then getent group $(DOCKER_GROUP) | cut -d: -f3 ; elif type dscl &>/dev/null; then dscl . -read /Groups/$(DOCKER_GROUP) PrimaryGroupID 2>/dev/null | awk '{ print $2 }' ; else python -c "import grp; print(grp.getgrnam(\"$(DOCKER_GROUP)\").gr_gid)" 2>/dev/null ; fi)
 
 TEST ?=
 SKIP_NETWORK_TEST ?=

@@ -123,7 +123,7 @@ teardown(){
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_groups="tty"
 
-  host_gid=$(getent group tty | cut -d: -f3)
+  host_gid=$($DEX runfunc get_group_id tty)
   found=false
 
   for gid in $($DEX run imgtest/labels id -G); do
