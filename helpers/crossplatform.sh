@@ -21,7 +21,7 @@ sed_inplace(){
   # linux
   local __sed="sed"
 
-  if [[ $OSTYPE == macos* ]]; then
+  if [[ "$OSTYPE" == darwin* ]] || [[ "$OSTYPE" == macos* ]] ; then
     if $(type gsed >/dev/null 2>&1); then
       local __sed="gsed"
     elif $(type /usr/local/bin/sed >/dev/null 2>&1); then
