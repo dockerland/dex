@@ -38,7 +38,7 @@ dex-image-build(){
       (
         set -e
         cd $image_dir
-        docker build -t $tag \
+        __local_docker build -t $tag \
           --label=org.dockerland.dex.build-api=$DEX_API \
           --label=org.dockerland.dex.build-imgstr="$__imgstr" \
           --label=org.dockerland.dex.build-tag="$__image_tag" \
@@ -84,7 +84,7 @@ dex-image-ls(){
       filters="$filters --filter=label=org.dockerland.dex.build-tag=$__image_tag"
   fi
 
-  docker images $QUIET_FLAG $filters
+  __local_docker images $QUIET_FLAG $filters
 }
 
 
@@ -99,7 +99,7 @@ dex-image-rm(){
 
   QUIET_FLAG="-q"
   for image in $(dex-image-ls $namespace); do
-    docker rmi $force_flag $image && removed_image=true
+    __local_docker rmi $force_flag $image && removed_image=true
   done
 
   $removed_image && {
