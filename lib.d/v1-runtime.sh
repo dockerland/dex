@@ -28,7 +28,7 @@ v1-runtime(){
   # augment defaults with image meta
   for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes window ; do
     # @TODO reduce this to a single docker inspect command
-    val=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
+    val=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
     eval "__$label=\"$val\""
   done
@@ -143,6 +143,9 @@ v1-runtime(){
     [ -z "$val" ] || __docker_flags+=" -e $var=$val"
   done
 
+  # deactivate docker-machine
+  __deactivate_machine
+
   exec docker run $__docker_flags \
     -e DEX_API=$__api \
     -e DEX_DOCKER_HOME=$DEX_DOCKER_HOME \
@@ -156,6 +159,4 @@ v1-runtime(){
     --log-driver=$DEX_DOCKER_LOG_DRIVER \
     --workdir=/dex/workspace \
     $__image $DEX_DOCKER_CMD $@
-
-  return $?
 }

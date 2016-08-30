@@ -24,7 +24,6 @@ setup(){
   run $DEX image build imgtest/alpine
   [ $status -eq 0 ]
 
-
   run docker images -q $DEX_NAMESPACE/alpine:latest
   [ $status -eq 0 ]
   [ ${#lines[@]} -eq 1 ]
@@ -56,6 +55,37 @@ setup(){
   done
 }
 
+@test "image ls prints built images in 'docker images' format" {
+  run $DEX image ls
+  [ "$(echo ${lines[0]} | awk '{print $1}')" = "$(docker images $IMAGES_FILTER | head -n1 | awk '{print $1}')" ]
+  [[ "$output" == *"$DEX_NAMESPACE/alpine"* ]]
+}
+
+@test "image ls supports quiet flag akin to 'docker images -q'" {
+  run $DEX image ls -q
+  [ ! "$(echo ${lines[0]} | awk '{print $1}')" = "$(docker images $IMAGES_FILTER | head -n1 | awk '{print $1}')" ]
+  [[ ! "$output" == *"$DEX_NAMESPACE/alpine"* ]]
+  [ "${lines[0]}" = "$(docker images -q $IMAGES_FILTER | head -n1)" ]
+}
+
+
+@test "image rm errors if it cannot find images to remove" {
+  run $DEX image rm imgtest/zzz
+  [ $status -eq 1 ]
+}
+
+@test "image rm removes named image(s)" {
+  run docker images -q $DEX_NAMESPACE/alpine:latest
+  [ $status -eq 0 ]
+  [ ${#lines[@]} -eq 1 ]
+
+  run $DEX image rm imgtest/alpine
+  run docker images -q $DEX_NAMESPACE/alpine:latest
+  [ $status -eq 0 ]
+  [ ${#lines[@]} -eq 0 ]
+}
+
+
 @test "image build respects tags" {
   [ -d $DEX_HOME/checkouts/imgtest/images ]
 
@@ -79,27 +109,41 @@ setup(){
   [ ${#lines[@]} -eq $repo_image_count ]
 }
 
-@test "image ls output matches 'docker images' and supports quiet flag" {
-  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/images/* | wc -l)
-
-  run $DEX image ls
-  [ ${#lines[@]} -eq $(($repo_image_count + 1)) ]
-
-  diff -b <(docker images -q $IMAGES_FILTER) <($DEX image ls -q)
-}
-
-@test "image rm errors if it cannot find images to remove" {
-  run $DEX image rm imgtest/zzz
-  [ $status -eq 1 ]
-}
-
 @test "image rm respects repo wildcards" {
   local image_count=$(docker images -q $IMAGES_FILTER | wc -l)
-  [ ! $image_count -eq 0 ]
+  [ $image_count -ne 0 ]
 
   run $DEX image rm imgtest/*
   [ $status -eq 0 ]
 
   image_count=$(docker images -q $IMAGES_FILTER | wc -l)
   [ $image_count -eq 0 ]
+}
+
+@test "image build|ls|rm always target local/default docker host" {
+  rm-images
+
+  echo "mock setting DOCKER_HOST"
+  (
+    set -e
+    export DOCKER_HOST=an.invalid-host.tld
+    export DOCKER_MACHINE_NAME=invalid-host
+
+    # test build
+    run $DEX image build imgtest/alpine
+    [ $status -eq 0 ]
+
+    # test ls
+    run $DEX image ls
+    [ $status -eq 0 ]
+    [[ "$output" == *"$DEX_NAMESPACE/alpine"* ]]
+
+    # test rm
+    run $DEX image rm imgtest/alpine
+    [ $status -eq 0 ]
+  )
+
+  run docker images -q $DEX_NAMESPACE/alpine:latest
+  [ $status -eq 0 ]
+  [ ${#lines[@]} -eq 0 ]
 }
