@@ -2,23 +2,49 @@
 
 [![Build Status](https://travis-ci.org/dockerland/dex.svg?branch=master)](https://travis-ci.org/dockerland/dex)
 
-Dex runs applications  _without_ installing them or their dependencies -- by
-using [docker](https://www.docker.com/) containers.
+Dex runs applications  _without_ installing them or their dependencies by
+leveraging [docker](https://www.docker.com/). Dex also makes it [easier](docs/HOWTO.md#containerize-your-application) to contain and _properly_ execute
+applications you write, no matter the OS.
 
-Windowed/X11 applications are supported, so expect `dex run firefox` and
-`dex run gitk` to work. [Piping](https://en.wikipedia.org/wiki/Redirection_%28computing%29#Piping)
+Windowed/X11 applications are supported, so expect `dex run firefox` to work. [Pipes](https://en.wikipedia.org/wiki/Redirection_%28computing%29#Piping)
 and [redirection](https://en.wikipedia.org/wiki/Redirection_%28computing%29) are
 respected, so expect _pong_ from `echo 'ping' | docker run sed 's/ping/pong/'`.
 
 Dex is plain [bash](https://www.gnu.org/software/bash/manual/bash.html). In fact
-it's a _bashlication_ with a Makefile, modular design, and complete [bats](https://github.com/sstephenson/bats) testing. It should be able to run
-_anywhere docker works_ including [Windows 10](https://msdn.microsoft.com/en-us/commandline/wsl/about).
+it's a _bashlication_ with a Makefile, modular design, and complete [bats](https://github.com/sstephenson/bats) testing. It can run
+_anywhere docker works_, including Windows 10.
 
+## installing dex
+
+#### dependencies
+
+Dex needs a working _bash shell_ and [docker](https://www.docker.com/) cli. Test
+docker by opening your terminal and typing;
+```sh
+docker ps
+[ $? -eq 0 ] && echo "Docker appears working. Lets install dex..."
+```
+
+### from a github release
+
+* download a [release](https://github.com/dockerland/dex/releases/) and copy it to a folder in your $PATH
+
+### from source
+
+```sh
+git clone git@github.com:dockerland/dex.git
+cd dex
+# run dex,
+./dex.sh
+# -or- install to /usr/local/bin/dex
+sudo make install
+```
 
 ## using dex
 
-At the heart, dex manages _'dexecutables'_. These are  scripts that execute docker containers under a consistent _'api runtime'_. The Dockerfiles
-for these containers are kept in configurable _'source repositories'_ also
+At the heart, dex manages _'dexecutables'_ -- scripts that execute contained
+applications under a [consistent runtime](docs/v1-runtime.md). The Dockerfiles
+for these applications are kept in configurable [source repositories](#source-repositories) also
 managed by dex.
 
 
@@ -28,44 +54,59 @@ managed by dex.
 # get help
 dex help
 
-# run 'debian' from the 'core' repository
-dex run core/debian
+# run 'debian' from any repository
+#  (first image matching 'debian' is built & executed)
+dex run debian
 
-# test piping to 'sed'
-echo 'ping' | docker run sed 's/ping/pong/'
-# ^^^ "pong"
+# run 'ag' (the grep replacement!) from the "extra" repository
+dex run extra/ag
 
-# install gitk  (as /usr/local/bin/dgitk)
+# play sed pong
+echo 'ping' | dex run sed 's/ping/pong/'
+
+# install gitk (defaults to /usr/local/bin/dgitk) and execute it
+#  (gitk is a windowed application and requires e.g. X)
 sudo dex install gitk && dgitk
-# ^^^ launches gitk:latest
 
-# install all images from the core/ repository, pulling any changes first.
-sudo dex install --pull "core/*"
+# add a local source repository named "dev" and install all images from it
+dex source add dev /path/to/my-dex-repo
+dex install 'dev/*'
 
 # install macos-sed to an alternative path, without the 'd' prefix
-export DEX_BIN_DIR=~/bin/macos/
 export PATH=~/bin/macos:$PATH
-dex install --global sed:macos
+(
+  export DEX_BIN_DIR=~/bin/macos/
+  dex install --global sed:macos
+)
 sed
-# ^^^ launches sed:macos
+# ^^^ yay 1993
+
+# use DOS like a boss
+dex install --global deltree
+mkdir -p /tmp/dex-makes-it/possible
+deltree /tmp/dex-makes-it
+# ^^^ yay 1983
 ```
+
+[docs/HOWTO.md](docs/HOWTO.md) for more.
 
 ### source repositories
 
 Dex consults source repositories for the Dockerfile to build an image from --
-similar to how yum and apt consult package sources. These are defined in
-`$DEX_HOME/sources.list` and represent regular [git repositories](https://git-scm.com/)
-with an `images/` tree. Thus, __applications available to dex
-are dictated by source repository checkouts__.
+similar to how yum and apt consult package sources. Thus,
+__applications available to dex are dictated by source repository checkouts__.
 
-Checkouts of source repositories are performed when added. Use `dex source pull '*'` to pull upstream changes into all defined sources, or the _--pull_ flag -- e.g. `dex run --pull firefox` to update the source(s) before running.
+Source Repositories are defined one-per-line in `$DEX_HOME/sources.list` as `<name> <url>`. URLs may point to the  _remote URL_ or _local path_ of a [git repository](https://git-scm.com/) with an `images/` tree containing applications . Use `dex source add` to add additional sources. `dex help source` for more.
 
-Dex defines two source repositories; _'core'_ and _'extra'_.
-Use `dex source add` to add additional sources. Sources may point to _remote_ URLs
-or _local_ paths of a git repository. `dex help source` for more.
+[sources.list example](sources.list) - [repository example](https://github.com/dockerland/dex-dockerfiles-core)
+
+Checkouts are __only__ performed when a source is added. Use `dex source pull '*'` to downstream
+changes to all defined sources, or `dex run --pull ...`  to downstream into the detected source.
 
 
 ### environmental variables
+
+use variables to effect default dex behavior.
 
 global envars | default | description
 --- | --- | ---
@@ -80,61 +121,25 @@ v1 runtime vars | default | description
 --- | --- | ---
 DEX_DOCKER_CMD | | alternative command passed to docker run
 DEX_DOCKER_ENTRYPOINT | |  alternative entrypoint passed to docker run
-DEX_DOCKER_HOME | ~ | directory bind mounted as container's $HOME
+DEX_DOCKER_HOME | $DEX_HOME/homes/[image] | directory bind mounted as container's $HOME
 DEX_DOCKER_WORKSPACE | $(pwd) |  directory bind mounted as container's CWD
 DEX_DOCKER_GID| $(id -g) | gid to run the container under
 DEX_DOCKER_UID| $(id -u) | uid to run the container under
 DEX_DOCKER_LOG_DRIVER | none | logging driver to use for container
 DEX_WINDOW_FLAGS | -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY | applied to windowed containers
 
-## developing dexecutables
+## developing dex
 
-* TBD
-  * labeling / api versioning
-  * Windowed/X11 examples
-  * org.dockerland.dex.docker_home labels, non absolute path relative to $DEX_HOME/<api>-homes/<label>
-```
-# label defaults -- images may provide a org.dockerland.dex.<var> label
-#  supplying a value that overrides these default values, examples are:
-#
-#  org.dockerland.dex.docker_devices=/dev/shm   (shm mounted as /dev/shm)
-#  org.dockerland.dex.docker_envars="LANG TERM" (passthru LANG & TERM)
-#  org.dockerland.dex.docker_flags=-it          (interactive tty)
-#  org.dockerland.dex.docker_home=~             (user's actual home)
-#  org.dockerland.dex.docker_volumes=/etc/hosts:/etc/hosts:ro
-#  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
-#  org.dockerland.dex.window=true               (applies window/X11 flags)
-#
-```
+### containerize your application
 
-## installing dex
+**work in progress** see [docs/HOWTO.md](docs/HOWTO.md#containerize-your-application)
 
-#### dependencies
+### contributing to dex
 
-The only dependency of dex is a working bash shell and a working [docker](https://www.docker.com/) cli. Test
-that docker is working by opening your terminal and typing
-```sh
-docker ps
-[ $? -eq 0 ] && echo "Docker appears working. Lets install dex..."
-```
+By all means! Before you submit a PR, please include tests and make sure
+they pass. See [tests](tests/) for more.
 
-### from a github release
-
-* download a [release](https://github.com/dockerland/dex/releases/) and copy it to a folder in your $PATH
-
-### from source
-
-```
-git clone git@github.com:dockerland/dex.git
-cd dex
-make
-sudo make install
-```
-
-alternatively, run `./dex.sh` from the source checkout.
-
-
-## license
+### license
 
 Dex is licensed under the Apache License, Version 2.0.
 See [LICENSE](LICENSE) for the full license text.
@@ -142,5 +147,6 @@ See [LICENSE](LICENSE) for the full license text.
 ## why dex?
 
 * _docker_ and _dex_ are now your only dependencies - your OS is a clean OS.
-* dependency isolation - different versions of python? no problem
+* makes it easier to containerize and _properly_ execute any application from any OS.
+  * dependency isolation - different versions of python? no problem
 * test tools from other platforms - `dex install sed:macos && dsed --help`
