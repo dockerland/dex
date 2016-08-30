@@ -37,12 +37,12 @@ teardown(){
 
 @test "runtime properly sets \$HOME as /dex/home" {
   run $DEX run imgtest/debian printenv HOME
-  [ $output = "/dex/home" ]
+  [ "$output" = "/dex/home" ]
 }
 
 @test "runtime properly sets cwd as /dex/workspace" {
   run $DEX run imgtest/debian pwd
-  [ $output = "/dex/workspace" ]
+  [ "$output" = "/dex/workspace" ]
 }
 
 @test "runtime supports piping of stdin" {
@@ -66,8 +66,8 @@ teardown(){
   [[ $output == *"DEX_HOST_PWD=$(pwd)"* ]]
 
   # v1 passthrough
-  [[ $output == *"LANG=test"* ]]
-  [[ $output == *"TZ=test"* ]]
+  [[ "$output" == *"LANG=test"* ]]
+  [[ "$output" == *"TZ=test"* ]]
 }
 
 @test "runtime sets a unique home by default (DEX_HOME/homes/<image>-<tag>)" {
@@ -231,4 +231,22 @@ teardown(){
     export DEX_WINDOW_FLAGS="-e WINDOW_FLAG=abc"
     [ "$($DEX run imgtest/labels:x11 printenv -0 WINDOW_FLAG)" = "abc" ]
   ) || return 1
+}
+
+@test "runtime always targets local/default docker host" {
+  get_containers
+  [ ${#__containers[@]} -eq 0 ]
+
+  echo "mock setting DOCKER_HOST"
+  (
+    set -e
+    export DOCKER_HOST=an.invalid-host.tld
+    export DOCKER_MACHINE_NAME=invalid-host
+
+    run $DEX run --persist imgtest/debian
+    [ $status -eq 0 ]
+  )
+
+  get_containers
+  [ ${#__containers[@]} -eq 1 ]
 }
