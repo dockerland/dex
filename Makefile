@@ -41,8 +41,12 @@ $(SCRATCH_PATH)/dockerbuild-%: $(SCRATCH_PATH)
 RELEASE_TAG ?= $(shell git rev-parse --abbrev-ref HEAD)
 RELEASE_SHA ?= $(shell git rev-parse --short HEAD)
 
-DOCKER_GROUP ?= docker
-DOCKER_GID ?= $(shell if type getent >/dev/null 2>&1; then getent group $(DOCKER_GROUP) | cut -d: -f3 ; elif type dscl >/dev/null 2>&1; then dscl . -read /Groups/$(DOCKER_GROUP) PrimaryGroupID 2>/dev/null | awk '{ print $2 }' ; else python -c "import grp; print(grp.getgrnam(\"$(DOCKER_GROUP)\").gr_gid)" 2>/dev/null ; fi)
+DOCKER_SOCKET ?= /var/run/docker.sock
+DOCKER_GROUP_ID ?= $(shell if [[ "$$OSTYPE" == darwin* ]] || [[ "$$OSTYPE" == macos* ]]; then stat -f '%Dg' $(DOCKER_SOCKET) ; else stat -c '%g' $(DOCKER_SOCKET) ; fi)
+
+# for docker-for-mac, we also add group-id of 50 ("authedusers") as moby seems to auto bind-mount /var/run/docker.sock w/ this ownership
+# @TODO investigate and remove this docker-for-mac kludge
+DOCKER_FOR_MAC_WORKAROUND := $(shell if [[ "$$OSTYPE" == darwin* ]] || [[ "$$OSTYPE" == macos* ]]; then echo "--group-add=50" ; fi)
 
 TEST ?=
 SKIP_NETWORK_TEST ?=
@@ -75,14 +79,16 @@ uninstall:
 tests: $(SCRATCH_PATH)/dockerbuild-tests
 	rm -rf /tmp/dex-tests
 	mkdir -p /tmp/dex-tests
-	docker run -it --rm -u $$(id -u):$(DOCKER_GID) \
-	  --device=/dev/tty0 --device=/dev/console \
-	  -v $(CWD)/:/dex/ \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v /tmp/dex-tests:/tmp/dex-tests \
-	  -e SKIP_NETWORK_TEST=$(SKIP_NETWORK_TEST) \
-		-e IN_TEST_CONTAINER=true \
-	  dockerbuild-$(NAMESPACE)-tests bats tests/bats/$(TEST)
+	docker run -it --rm -u $$(id -u):$$(id -g) \
+    --group-add=$(DOCKER_GROUP_ID) \
+    $(DOCKER_FOR_MAC_WORKAROUND) \
+    --device=/dev/tty0 --device=/dev/console \
+    -v $(CWD)/:/dex/ \
+    -v $(DOCKER_SOCKET):/var/run/docker.sock \
+    -v /tmp/dex-tests:/tmp/dex-tests \
+    -e SKIP_NETWORK_TEST=$(SKIP_NETWORK_TEST) \
+    -e IN_TEST_CONTAINER=true \
+	    dockerbuild-$(NAMESPACE)-tests bats tests/bats/$(TEST)
 
 #
 # release helpers
