@@ -3,7 +3,7 @@
 #
 
 error(){
-  [ -z "$1" ] && $1="error"
+  [ -z "$1" ] && set -- "general exception. halting..."
 
   printf "\e[31m%s\n\e[0m" "$@" >&2
   exit ${__error_code:-1}
