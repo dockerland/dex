@@ -146,7 +146,7 @@ v1-runtime(){
   # deactivate docker-machine
   __deactivate_machine
 
-  exec docker run $__docker_flags \
+  ${DEX_RUNTIME:-exec} docker run $__docker_flags \
     -e DEX_API=$__api \
     -e DEX_DOCKER_HOME=$DEX_DOCKER_HOME \
     -e DEX_DOCKER_WORKSPACE=$DEX_DOCKER_WORKSPACE \
