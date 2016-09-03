@@ -46,7 +46,7 @@ teardown(){
 
   mkdir -p $DEX_HOME && chmod 000 $DEX_HOME
   run $DEX runfunc dex-init
-  chmod 700 $DEX_HOME
+  chmod 755 $DEX_HOME
 
   [ $status -eq 126 ]
 }

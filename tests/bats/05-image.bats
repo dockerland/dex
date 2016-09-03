@@ -14,7 +14,7 @@ export DEX_NAMESPACE="dex/v1-tests"
 
 setup(){
   [ -e $DEX ] || install_dex
-  mk-images
+  mk-imgtest
 }
 
 @test "image build creates an image from checkouts" {

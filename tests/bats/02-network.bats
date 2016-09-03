@@ -8,8 +8,7 @@ load dex
 
 setup(){
   [ -e $DEX ] || install_dex
-  OUTFILE=/tmp/dex-google-output
-  rm -rf $OUTFILE
+  OUTFILE=$TMPDIR/dex-google-output
 }
 
 teardown(){
@@ -42,9 +41,6 @@ teardown(){
 
   run $DEX runfunc dex-fetch https://999.999.999.999/ $OUTFILE
 
-  echo $output
-  echo "status $status"
-
   [ $status -eq 126 ]
   [ ! -e "$OUTFILE" ]
 }
@@ -54,9 +50,6 @@ teardown(){
   export DEX_NETWORK=true
 
   run $DEX runfunc dex-fetch https://google.com/ $OUTFILE
-
-  echo $output
-  echo "STATUS: $status"
 
   [ $status -eq 0 ]
   [ -e "$OUTFILE" ]

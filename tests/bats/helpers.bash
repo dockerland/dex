@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
 
-HELPERS_LOADED=true
+#BATS_TEST_DIRNAME=<autoloaded by bats>-
 NAMESPACE=dex
 REPO_ROOT=${REPO_ROOT:-"$(git rev-parse --show-toplevel)"}
-TMPDIR=/tmp/$NAMESPACE-tests
-#BATS_TEST_DIRNAME=<autoloaded by bats>-
+TMPDIR=$BATS_TEST_DIRNAME/tmp
 
 #
 # bootstrap
 #
 
-mkdir -p $TMPDIR/home
+# ready the $TMPDIR on first run
+[ -z "$HELPERS_LOADED" ] && {
+  mkdir -p $TMPDIR
+}
 
-# stub git config if we're in docker container and .git is missing
-if [ $IN_TEST_CONTAINER ] && [ ! -d $TMPDIR/home/.git ]; then
-  git config --global user.email "tests-container@$NAMESPACE.git"
-  git config --global user.name "Tests Docker"
-fi
+HELPERS_LOADED=true
 
 #
 # runtime fns

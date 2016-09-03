@@ -48,18 +48,17 @@ dex-init(){
 }
 
 dex-init-sources(){
-
+  rm -rf $DEX_HOME/sources.list.fetched &>/dev/null
+  
   if [ ! -e $DEX_HOME/sources.list ]; then
     if dex-fetch "https://raw.githubusercontent.com/dockerland/dex/master/sources.list" $DEX_HOME/sources.list.fetched ; then
-      cat $DEX_HOME/sources.list.fetched > $DEX_HOME/sources.list || error \
+      cat $DEX_HOME/sources.list.fetched > $DEX_HOME/sources.list || error_perms \
         "error writing sources.list from fetched file"
     else
-      dex-sources-cat > $DEX_HOME/sources.list || error \
+      dex-sources-cat > $DEX_HOME/sources.list || error_perms \
         "error creating $DEX_HOME/sources.list"
     fi
   fi
-
-  rm -rf $DEX_HOME/sources.list.fetched >/dev/null 2>&1
 }
 
 dex-sources-cat(){

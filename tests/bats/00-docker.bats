@@ -18,13 +18,11 @@ load helpers
   [ $status -eq 0 ]
 }
 
-@test "docker /tmp/dex-tests is aligned with host" {
-  local target=$TMPDIR/docker-test
-
-  mkdir -p $target/ping-pong
-  run docker run --rm -v $target:/tmp alpine:3.4 ls /tmp
-  rm -rf $target
+@test "docker ensure \$TMPDIR in container is aligned with host" {
+  rm -rf $TMPDIR/docker-test && mkdir -p $TMPDIR/docker-test/ping-pong
+  run docker run --rm -v $TMPDIR/docker-test/:/tmp alpine:3.4 ls /tmp
+  echo $TMPDIR
 
   [ $status -eq 0 ]
-  [ $output = "ping-pong" ]
+  [ "$output" = "ping-pong" ]
 }

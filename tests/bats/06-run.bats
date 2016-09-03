@@ -11,7 +11,7 @@ load dex
 
 setup(){
   [ -e $DEX ] || install_dex
-  mk-images
+  mk-imgtest
   __containers=()
 }
 

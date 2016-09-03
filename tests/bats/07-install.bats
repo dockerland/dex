@@ -12,7 +12,7 @@ export DEX_BIN_DIR=$TMPDIR/usr/local/bin/installs
 setup(){
   [ -e $DEX ] || install_dex
   [ -d $DEX_BIN_DIR ] || mkdir -p $DEX_BIN_DIR
-  mk-images
+  mk-imgtest
 }
 
 teardown(){

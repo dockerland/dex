@@ -62,11 +62,10 @@ setup(){
   [ $status -eq 0 ]
 
   IFS=" "
-  read -r known_name known_url <<< "${lines[0]}"
+  read -r known_name known_url <<< "${lines[2]}"
   run $DEX source add $known_name fake-url.git
 
-  echo $output
-  [[ $output == *refusing* ]]
+  [[ $output == *duplicate* ]]
   [ $status -eq 2 ]
 
   run $DEX source add unique $known_url

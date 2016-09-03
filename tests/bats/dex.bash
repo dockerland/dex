@@ -39,7 +39,7 @@ mk-repo(){
   return $?
 }
 
-mk-images(){
+mk-imgtest(){
   if [ ! -d $DEX_HOME/checkouts/imgtest ]; then
     (
       set -e
@@ -52,15 +52,6 @@ mk-images(){
       $DEX source --force add imgtest $MK_REPO
     ) || error "failed stubbing imgtest"
   fi
-
-  # prebuild images
-  mkdir -p $TMPDIR/prebuilds
-  while [ $# -ne 0 ]; do
-    [ -d "$TMPDIR/prebuilds/$1" ] || {
-      $DEX image build $1 && mkdir -p "$TMPDIR/prebuilds/$1"
-    }
-    shift ;
-  done
 }
 
 rm-images(){

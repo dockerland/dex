@@ -7,12 +7,12 @@
 export DEX_NAMESPACE="dex/v1-tests"
 load dex
 
-
 setup(){
   [ -e $DEX ] || install_dex
-  mk-images "imgtest/labels" "imgtest/labels:x11"
-  mkdir -p /tmp/dex-tests/tmp/{home,workspace,vol}
+  mk-imgtest
+  mkdir -p $TMPDIR/label-test/{home,vol,workspace}
   __containers=()
+  export TMPDIR=$TMPDIR
 }
 
 get_containers(){
@@ -31,7 +31,7 @@ rm_containers(){
 }
 
 teardown(){
-  rm -rf $TMPDIR/docker-test
+  rm -rf $TMPDIR/label-test
   rm_containers
 }
 
@@ -60,7 +60,7 @@ teardown(){
   # v1 vars
   for line in ${lines[@]}; do echo $line ; done
   [[ $output == *"DEX_API=v1"* ]]
-  [[ $output == *"DEX_DOCKER_HOME=/tmp/dex-tests/home"* ]]
+  [[ $output == *"DEX_DOCKER_HOME=$DEX_HOME/homes/debian"* ]]
   [[ $output == *"DEX_DOCKER_WORKSPACE=$(pwd)"* ]]
   [[ $output == *"DEX_HOST_HOME=$HOME"* ]]
   [[ $output == *"DEX_HOST_PWD=$(pwd)"* ]]
@@ -83,30 +83,37 @@ teardown(){
   # LABEL org.dockerland.dex.docker_envars="BATS_TESTVAR"
 
   export BATS_TESTVAR="abc"
+  $DEX run imgtest/labels printenv -0 BATS_TESTVAR
   [ "$($DEX run imgtest/labels printenv -0 BATS_TESTVAR)" = "abc" ]
 }
 
-@test "runtime respects docker_home label" {
+@test "runtime supports variable expansion in docker_home label" {
   # imgtest/labels image ::
-  # LABEL org.dockerland.dex.docker_home="/tmp/dex-tests/tmp/home"
-  touch /tmp/dex-tests/tmp/home/__exists__
+  # LABEL org.dockerland.dex.docker_home="\$TMPDIR/label-test/home"
+  mkdir -p $TMPDIR/label-test/home
+  touch $TMPDIR/label-test/home/__exists__
 
-  run $DEX run imgtest/labels ls /dex/home/__exists__
-  [ $status -eq 0 ]
-
-  # imgtest/labels:realhome image ::
-  # LABEL org.dockerland.dex.docker_home="~"
-
-  touch ~/.dex_realhome_test
-  run $DEX run imgtest/labels:realhome ls /dex/home/.dex_realhome_test
-  rm -rf ~/.dex_realhome_test
+  run $DEX run --build imgtest/labels ls /dex/home/__exists__
   [ $status -eq 0 ]
 }
 
-@test "runtime respects docker_workspace label" {
+
+@test "runtime expands ~ as real \$HOME in labels" {
+  # imgtest/labels:home image ::
+  # LABEL org.dockerland.dex.docker_home="~"
+  # LABEL org.dockerland.dex.docker_volumes="~:/realhome:ro"
+  touch $DEX_HOME/.dex_realhome_test
+
+  HOME=$DEX_HOME $DEX run --build imgtest/labels:home ls /dex/home/.dex_realhome_test
+  HOME=$DEX_HOME $DEX run imgtest/labels:home ls /realhome/.dex_realhome_test
+
+  rm -rf $DEX_HOME/.dex_realhome_test
+}
+
+@test "runtime supports variable expansion in docker_workspace label" {
   # imgtest/labels image ::
-  # LABEL org.dockerland.dex.docker_workspace="/tmp/dex-tests/tmp/workspace"
-  touch /tmp/dex-tests/tmp/workspace/__exists__
+  # LABEL org.dockerland.dex.docker_workspace="\$TMPDIR/label-test/workspace"
+  touch $TMPDIR/label-test/workspace/__exists__
 
   run $DEX run imgtest/labels ls __exists__
   [ $status -eq 0 ]
@@ -159,14 +166,13 @@ teardown(){
 
 @test "runtime respects docker_volumes label" {
   # imgtest/labels image ::
-  # LABEL org.dockerland.dex.docker_volumes="/tmp/dex-tests/tmp/vol /tmp/dex-tests/tmp/vol-ro:/tmp/ro:ro"
-  touch /tmp/dex-tests/tmp/vol/__exists__
+  # LABEL org.dockerland.dex.docker_volumes="\$TMPDIR/label-test/vol \$TMPDIR/label-test/vol:/tmp/ro:ro"
+  touch $TMPDIR/label-test/vol/__exists__
 
-  run $DEX run imgtest/labels ls /tmp/dex-tests/tmp/vol/__exists__
+  run $DEX run imgtest/labels ls $TMPDIR/label-test/vol/__exists__
   [ $status -eq 0 ]
 
   run $DEX run imgtest/labels ls /tmp/ro/__exists__
-  echo $output
   [ $status -eq 0 ]
 
   run $DEX run imgtest/labels rm /tmp/ro/__exists__
