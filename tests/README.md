@@ -1,10 +1,10 @@
-# dex-tests
+# Testing Dex
 
 
 ## test execution
 
-Tests are executed in a docker container with bats, git, and some common shells.
-Use the Makefile in our repository root to execute. The following runs all tests
+Use the root `Makefile` to build and run tests in a container preloaded with
+with [bats](https://github.com/sstephenson/bats), git, and common shells.
 
 ```
 cd /path/to/dex.git
@@ -24,22 +24,32 @@ export SKIP_NETWORK_TEST=true
 make tests
 ```
 
+### manual test execution
+
+If you have [bats](https://github.com/sstephenson/bats) installed, you can
+manually trigger tests as well.
+
+```
+cd /path/to/dex.git
+cd tests
+bats .
+```
+
 
 ## test development
 
-TBD
+TBD - for now use existing bats/ files as reference. We prefer to numericaly
+prefix filenames to maintain execution order.
 
-### rebuild the test dockerfile
+### fixtures
 
-```
-cd /path/to/dex.git
-make clean
-make tests
-```
+Use fixtures to mock complicated/larger expected output.
 
-### updating the help.txt fixture
+#### updating help fixtures
 
 ```
 cd /path/to/dex.git
-./dex.sh > tests/fixtures/help.txt
+./dex.sh --help > tests/fixtures/help.txt
+./dex.sh help vars > tests/fixtures/help-vars.txt
+# &c...
 ```
