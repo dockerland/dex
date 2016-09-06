@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 
 HELPERS_LOADED=true
+NAMESPACE=dex
 REPO_ROOT=${REPO_ROOT:-"$(git rev-parse --show-toplevel)"}
+TMPDIR=/tmp/$NAMESPACE-tests
+#BATS_TEST_DIRNAME=<autoloaded by bats>-
 
-# path to writable test targets
-TMPDIR=/tmp/dex-tests
+#
+# bootstrap
+#
+
 mkdir -p $TMPDIR/home
 
 # stub git config if we're in docker container and .git is missing
 if [ $IN_TEST_CONTAINER ] && [ ! -d $TMPDIR/home/.git ]; then
-  git config --global user.email "dex@dex-tests.com"
-  git config --global user.name "Dex"
+  git config --global user.email "tests-container@$NAMESPACE.git"
+  git config --global user.name "Tests Docker"
 fi
-
 
 #
 # runtime fns
