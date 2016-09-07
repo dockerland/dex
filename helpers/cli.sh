@@ -14,24 +14,49 @@
 normalize_flags(){
   local fargs="$1"
   shift
-  while [ $# -ne 0 ]; do
-    if [ "--" = ${1:0:2} ]; then
-      echo ${1%=*}
-      [[ "$1" == *"="* ]] && echo ${1#*=}
-    elif [ "-" = ${1:0:1} ]; then
+  for arg in $@; do
+    if [ "--" = ${arg:0:2} ]; then
+      echo ${arg%=*}
+      [[ "$arg" == *"="* ]] && echo ${arg#*=}
+    elif [ "-" = ${arg:0:1} ]; then
       local i=1
       while read -n1 flag; do
         ((i++))
         [ -z "$flag" ] || echo "-$flag"
         if [[ "$fargs" == *"$flag"* ]]; then
-          echo ${1:$i}
+          echo ${arg:$i}
           break
         fi
-      done < <(echo -n "${1:1}")
+      done < <(echo -n "${arg:1}")
     else
-      echo $1
+      echo $arg
     fi
-    shift
+  done
+}
+
+# normalize_flags_first - like normalize_flags, but outputs flags first.
+# usage: normalize_flags <fargs> [<flags>...]
+#   <fargs>: string of short flags requiring an argument.
+#   <flags>: flag string(s) to normalize, typically passed as "$@"
+# examples:
+#   normalize_flags_first "" "-abc command -xyz otro"
+#     => -a -b -c -x -y -z command otro
+
+normalize_flags_first(){
+  local fargs="$1"
+  local args=()
+  shift
+  args=()
+  for arg in $(normalize_flags "$fargs" "$@"); do
+    if [ "-" = ${arg:0:1} ]; then
+      echo $arg
+    else
+      args+=( "$arg" )
+    fi
+  done
+
+  for arg in ${args[@]}; do
+    echo $arg
   done
 }
 
