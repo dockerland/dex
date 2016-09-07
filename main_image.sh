@@ -7,8 +7,9 @@
 #@TODO fix argparsing, build only accepts a single argument
 
 main_image(){
+  local operand="display_help"
+  local operand_args=
 
-  local runstr="display_help"
   __force_flag=false
   __skip_namespace=false
   QUIET_FLAG=
@@ -16,16 +17,19 @@ main_image(){
   if [ $# -eq 0 ]; then
     display_help 2
   else
+    set -- $(normalize_flags_first "" "$@")
     while [ $# -ne 0 ]; do
-
       case $1 in
-        build|rm|ls)      runstr="dex-image-$1"
-                          arg_var "$2" __imgstr && shift
-                          ;;
         -f|--force)       __force_flag=true ;;
         -h|--help)        display_help ;;
         -q|--quiet)       QUIET_FLAG="-q" ;;
         -a|--all)         __skip_namespace=true ;;
+        --)               shift ; operand_args="$@" ; break ;;
+        -*)               unrecognized_flag $1 ;;
+        build|rm|ls)      operand="dex-image-$1"
+                          __imgstr=$2
+                          shift
+                          ;;
         *)                unrecognized_arg "$1" ;;
       esac
       shift
@@ -33,7 +37,7 @@ main_image(){
   fi
 
   dex-init
-  $runstr
+  $operand $operand_args
   exit $?
 
 }

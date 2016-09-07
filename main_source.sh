@@ -3,8 +3,9 @@
 #
 
 main_source(){
+  local operand="display_help"
+  local operand_args=
 
-  local runstr="display_help"
   __force_flag=false
 
   if [ $# -eq 0 ]; then
@@ -12,18 +13,21 @@ main_source(){
   else
     while [ $# -ne 0 ]; do
 
-      #@TODO migrate to argparsing (getopts?) to supports add --force
       case $1 in
-        add|ls|pull|rm)   runstr="dex-source-$1"
-                          if [ $1 = "add" ]; then
-                            arg_var "$2" __lookup_name && shift
-                            arg_var "$2" __lookup_url && shift
-                          else
-                            arg_var "$2" __sourcestr && shift
-                          fi
-                          ;;
         -f|--force)       __force_flag=true ;;
         -h|--help)        display_help ;;
+        --)               shift ; operand_args="$@" ; break ;;
+        -*)               unrecognized_flag $1 ;;
+        add|ls|pull|rm)   operand="dex-source-$1"
+                          if [ $1 = "add" ]; then
+                            __lookup_name=$2
+                            __lookup_url=$3
+                            shift 2
+                          else
+                            __sourcestr=$2
+                            shift
+                          fi
+                          ;;
         *)                unrecognized_arg "$1" ;;
       esac
       shift
@@ -31,6 +35,6 @@ main_source(){
   fi
 
   dex-init
-  $runstr
+  $operand $operand_args
   exit $?
 }
