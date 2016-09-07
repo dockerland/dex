@@ -51,9 +51,18 @@ setup(){
 
 @test "help exits with status code 2 when invalid arguments are passed to a command" {
   for cmd in ${DEX_CMDS[@]} ; do
-    { [ "$cmd" = "run" ] || [ "$cmd" = "install" ] ; } && continue
+    { [ "$cmd" = "run" ] || [ "$cmd" = "install" ] || [ "$cmd" = "vars" ] ; } && continue
     run $DEX $cmd invalid-argument
-    echo $status
     [ $status -eq 2 ]
+    [[ "$output" == *"unrecognized argument"* ]]
+  done
+}
+
+@test "help exits with status code 2 when invalid flags are passed to a command" {
+  for cmd in ${DEX_CMDS[@]} ; do
+    { [ "$cmd" = "run" ] || [ "$cmd" = "install" ] ; } && continue
+    run $DEX $cmd --invalid-flag
+    [ $status -eq 2 ]
+    [[ "$output" == *"unrecognized flag"* ]]
   done
 }
