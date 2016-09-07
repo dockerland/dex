@@ -35,3 +35,13 @@ setup(){
   run $DEX runfunc normalize_flags \"om\" \"-abcooutput.txt\" \"--def=jam\" \"-mz\"
   [ "$(echo $output | tr -d '\n')" = "-a -b -c -o output.txt --def jam -m z" ]
 }
+
+@test "cli normalize_flags routine handles space-delimited single arguments" {
+  run $DEX runfunc normalize_flags \"om\" \"-abcooutput.txt --def=jam -mz\"
+  [ "$(echo $output | tr -d '\n')" = "-a -b -c -o output.txt --def jam -m z" ]
+}
+
+@test "cli normalize_flags_first routine prints flags before args" {
+  run $DEX runfunc normalize_flags_first \"\" \"-abc command -xyz otro\"
+  [ "$(echo $output | tr -d '\n')" = "-a -b -c -x -y -z command otro" ]
+}
