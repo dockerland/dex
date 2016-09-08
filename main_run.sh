@@ -22,10 +22,12 @@ main_run(){
         -p|--pull)      __build_flag=true ; __pull_flag=true ;;
         -i|-t)          __interactive_flag=true ;;
         -h|--help)      display_help ;;
+        --cmd)          DEX_DOCKER_CMD="$2" ; shift ;;
         --entrypoint)   DEX_DOCKER_ENTRYPOINT="$2" ; shift ;;
         --home)         DEX_DOCKER_HOME="$2" ; shift ;;
         --log-driver)   DEX_DOCKER_LOG_DRIVER="$2" ; shift ;;
         --persist)      __persist_flag=true ;;
+        --gid|--group)  DEX_DOCKER_GID="$2" ; shift ;;
         --uid|--user)   DEX_DOCKER_UID="$2" ; shift ;;
         --workspace)    DEX_DOCKER_WORKSPACE="$2" ; shift ;;
         --)             shift ; operand_args="$@" ; break ;;
