@@ -115,17 +115,19 @@ compare_defaults(){
 
 @test "internal vars get properly initialized" {
 
-  local ivars=( __checkouts )
+  local ivars=( __checkouts __version __build )
 
-  for var in $ivars; do
+  for var in ${ivars[@]}; do
     run $DEX runfunc dex-vars-print $var
 
-    IFS='='
-    read -r var val <<< "$output"
+    var=${output%%=*}
+    val=${output#*=}
 
     case $var in
-      __checkouts) [ $val = "$TMPDIR/home/.dex/checkouts" ] || return 1 ;;
-      *) echo "unrecognized var: $var" ; return 1 ;;
+      __checkouts) [ "$val" = "$TMPDIR/home/.dex/checkouts" ] ;;
+      __build) [ "$val" = "$(git rev-parse --short HEAD)" ] ;;
+      __version) [ "$val" = "$(git rev-parse --abbrev-ref HEAD)" ] ;;
+      *) echo "unrecognized var \"$var\"" ; return 1 ;;
     esac
   done
 }
