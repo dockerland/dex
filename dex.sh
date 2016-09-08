@@ -30,7 +30,7 @@ main(){
         image|install|source|run|uninstall|update|vars)
           __cmd=$1 ; shift ; main_$__cmd "$@" ;;
 
-        ping)             dex-ping ;;
+        ping)             shift ; echo "${@:-pong}" ; exit 0 ;;
         help)             __cmd=${2:-$__cmd} ; display_help ;;
         runfunc)          shift ; runfunc "$@" ; exit $? ;;
         -h|--help)        display_help ;;

@@ -34,14 +34,6 @@ setup(){
   [ $status -eq 2 ]
 }
 
-@test "source add tests arg_var handling of flag arguments" {
-  run $DEX source add aaa --a-flag-not-an-argument
-  [ $status -eq 2 ]
-
-  run $DEX source add -h
-  [ $status -eq 0 ]
-}
-
 @test "source add supports local repository checkouts" {
   mk-repo
   run $DEX source add local $MK_REPO

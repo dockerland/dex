@@ -3,8 +3,8 @@
 #
 
 main_uninstall(){
-
-  local runstr="display_help"
+  local operand="display_help"
+  local operand_args=
 
   if [ $# -eq 0 ]; then
     display_help 2
@@ -12,13 +12,15 @@ main_uninstall(){
     while [ $# -ne 0 ]; do
       case $1 in
         -h|--help)         display_help ;;
+        --)                shift ; operand_args="$@" ; break ;;
+        -*)                unrecognized_flag $1 ;;
         *)                 unrecognized_arg "$1" ;;
       esac
       shift
     done
   fi
 
-  $runstr
+  $operand $operand_args
   exit $?
 
 }

@@ -12,11 +12,6 @@ __deactivate_machine(){
   }
 }
 
-dex-ping(){
-  echo "${1:-pong}"
-  exit 0
-}
-
 # usage: dex-fetch <url> <target-path>
 dex-fetch(){
 
