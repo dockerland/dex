@@ -26,7 +26,6 @@ main(){
   else
     while [ $# -ne 0 ]; do
       case $1 in
-
         image|install|source|run|uninstall|update|vars)
           __cmd=$1 ; shift ; main_$__cmd "$@" ;;
 
@@ -35,8 +34,8 @@ main(){
         runfunc)          shift ; runfunc "$@" ; exit $? ;;
         -h|--help)        display_help ;;
         -v|--version)     log "Dex version $__version build $__build" ;;
+        -*)               unrecognized_flag "$1" ;;
         *)                unrecognized_arg "$1" ;;
-
       esac
       shift
     done
