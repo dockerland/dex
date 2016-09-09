@@ -5,7 +5,7 @@
 error(){
   [ -z "$1" ] && set -- "general exception. halting..."
 
-  printf "\e[31m%s\n\e[0m" "$@" >&2
+  printf "\e[31m%b\n\e[0m" "$@" >&2
   exit ${__error_code:-1}
 }
 
@@ -26,7 +26,7 @@ error_exception() {
 
 
 log(){
-  printf "\e[33m%s\n\e[0m" "$@" >&2
+  printf "\e[33m%b\n\e[0m" "$@" >&2
 }
 
 prompt_confirm() {
