@@ -1,9 +1,9 @@
 FROM alpine:3.4
 
-RUN echo "http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories ; \
+RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories ; \
   apk add --update \
     bash \
-    bats \
+    bats@testing \
     curl \
     docker \
     fish \
