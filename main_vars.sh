@@ -9,7 +9,6 @@ main_vars(){
   local reset=false
   local vars=()
 
-
   if [ $# -eq 0 ]; then
     display_help 2
   else

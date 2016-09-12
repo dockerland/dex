@@ -11,8 +11,8 @@ main_source(){
   if [ $# -eq 0 ]; then
     display_help 2
   else
+    set -- $(normalize_flags_first "" "$@")
     while [ $# -ne 0 ]; do
-
       case $1 in
         -f|--force)       __force_flag=true ;;
         -h|--help)        display_help ;;
