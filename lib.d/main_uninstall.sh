@@ -9,6 +9,7 @@ main_uninstall(){
   if [ $# -eq 0 ]; then
     display_help 2
   else
+    set -- $(normalize_flags_first "" "$@")
     while [ $# -ne 0 ]; do
       case $1 in
         -h|--help)         display_help ;;
