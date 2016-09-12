@@ -1,17 +1,3 @@
-__local_docker(){
-  (
-    __deactivate_machine
-    exec docker "$@"
-  )
-}
-
-__deactivate_machine(){
-  # @TODO support boot2docker / concept of "default" machine
-  type docker-machine &>/dev/null && {
-    eval $(docker-machine env --unset --shell bash)
-  }
-}
-
 # usage: dex-fetch <url> <target-path>
 dex-fetch(){
 
@@ -44,7 +30,7 @@ dex-init(){
 
 dex-init-sources(){
   rm -rf $DEX_HOME/sources.list.fetched &>/dev/null
-  
+
   if [ ! -e $DEX_HOME/sources.list ]; then
     if dex-fetch "https://raw.githubusercontent.com/dockerland/dex/master/sources.list" $DEX_HOME/sources.list.fetched ; then
       cat $DEX_HOME/sources.list.fetched > $DEX_HOME/sources.list || error_perms \
@@ -66,11 +52,4 @@ core git@github.com:dockerland/dex-dockerfiles-core.git
 extra git@github.com:dockerland/dex-dockerfiles-extra.git
 
 EOF
-}
-
-runfunc(){
-  [ "$(type -t $1)" = "function" ] || error \
-    "$1 is not a valid runfunc target"
-
-  eval "$@"
 }

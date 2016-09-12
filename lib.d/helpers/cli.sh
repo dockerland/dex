@@ -2,14 +2,14 @@
 # lib.d/helpers/cli.sh for dex -*- shell-script -*-
 #
 
-# normalize_flags - normalize POSIX short and long flags for easier parsing 
+# normalize_flags - normalize POSIX short and long flags for easier parsing
 # usage: normalize_flags <fargs> [<flags>...]
 #   <fargs>: string of short flags requiring an argument.
 #   <flags>: flag string(s) to normalize, typically passed as "$@"
 # examples:
 #   normalize_flags "" "-abc"
 #     => -a -b -c
-#   normalize_flags "om" "-abcooutput.txt" "--def=jam" "-mz" 
+#   normalize_flags "om" "-abcooutput.txt" "--def=jam" "-mz"
 #     => -a -b -c -o output.txt --def jam -m z"
 normalize_flags(){
   local fargs="$1"
@@ -58,6 +58,13 @@ normalize_flags_first(){
   for arg in ${args[@]}; do
     echo $arg
   done
+}
+
+runfunc(){
+  [ "$(type -t $1)" = "function" ] || error \
+    "$1 is not a valid runfunc target"
+
+  eval "$@"
 }
 
 unrecognized_flag(){
