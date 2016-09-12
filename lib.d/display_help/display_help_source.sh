@@ -32,8 +32,8 @@ Usage: dex source <command> [options]
 Commands:
 
   add <name> <url>       Add (and pulls) a dexecutable source repository.
-  pull <sourcestr>*      Pull (refresh) source repository matching name || url
-  rm <sourcestr>*        Remove source repository matching name || url.
+  pull [sourcestr]       Pull (refresh) sources, optionally matching name || url
+  rm <sourcestr>         Remove source repository matching name || url.
   ls                     List available source repositories
 
 * <sourcestr> is a multi-form string written as <name|url|'*'> and is used to

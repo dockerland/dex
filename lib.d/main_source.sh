@@ -18,15 +18,22 @@ main_source(){
         -h|--help)        display_help ;;
         --)               shift ; operand_args="$@" ; break ;;
         -*)               unrecognized_flag $1 ;;
-        add|ls|pull|rm)   operand="dex-source-$1"
-                          if [ $1 = "add" ]; then
-                            __lookup_name=$2
-                            __lookup_url=$3
-                            shift 2
+        add)              operand="dex-source-add"
+                          __lookup_name="$2"
+                          __lookup_url="$3"
+                          shift 2
+                          ;;
+        ls|pull)          operand="dex-source-$1"
+                          if [ -z "$2" ]; then
+                            __sourcestr='*'
                           else
-                            __sourcestr=$2
+                            __sourcestr="$2"
                             shift
                           fi
+                          ;;
+        rm)               operand="dex-source-rm"
+                          operand_args="$2"
+                          shift
                           ;;
         *)                unrecognized_arg "$1" ;;
       esac

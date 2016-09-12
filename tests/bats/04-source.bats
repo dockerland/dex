@@ -92,13 +92,6 @@ setup(){
   done
 }
 
-@test "source pull requires <sourcestr|*>" {
-  run $DEX source pull
-  [[ $output == *requires* ]]
-  [ $status -eq 2 ]
-}
-
-
 @test "source pull creates (clones) a new checkout" {
   mk-repo
   run $DEX source --force add pulltest $MK_REPO
@@ -149,7 +142,7 @@ setup(){
 
 @test "source pull supports a wildcard sourcestr" {
   export DEX_NETWORK=false
-  run $DEX source pull "*"
+  run $DEX source pull
   echo $output
   $DEX source ls
   [[ $output == *extra* ]]
