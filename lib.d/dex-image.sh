@@ -22,7 +22,7 @@ dex-image-build(){
   log "* building $__source_match/$__image_match images..."
 
   for repo_dir in $(ls -d $DEX_HOME/checkouts/$__source_match 2>/dev/null); do
-    for image_dir in $(ls -d $repo_dir/images/$__image_match 2>/dev/null); do
+    for image_dir in $(ls -d $repo_dir/dex-images/$__image_match 2>/dev/null); do
       if [ "$__image_tag" = "latest" ]; then
         dockerfile="Dockerfile"
       else

@@ -44,10 +44,10 @@ mk-imgtest(){
     (
       set -e
       mk-repo
-      rm -rf $MK_REPO/images
-      cp_fixture images/ $MK_REPO
+      rm -rf $MK_REPO/dex-images
+      cp_fixture dex-images/ $MK_REPO
       cd $MK_REPO
-      git add images
+      git add dex-images
       git commit -m "adding image fixtures"
       $DEX source --force add imgtest $MK_REPO
     ) || error "failed stubbing imgtest"

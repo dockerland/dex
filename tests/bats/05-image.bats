@@ -18,7 +18,7 @@ setup(){
 }
 
 @test "image build creates an image from checkouts" {
-  [ -d $DEX_HOME/checkouts/imgtest/images ]
+  [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
 
   rm-images
   run $DEX image build imgtest/alpine
@@ -87,7 +87,7 @@ setup(){
 
 
 @test "image build respects tags" {
-  [ -d $DEX_HOME/checkouts/imgtest/images ]
+  [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
 
   rm-images
   $DEX image build imgtest/alpine:3.2
@@ -99,12 +99,12 @@ setup(){
 }
 
 @test "image build respects repo wildcards" {
-  [ -d $DEX_HOME/checkouts/imgtest/images ]
+  [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
 
   rm-images
   $DEX image build imgtest/*
 
-  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/images/* | wc -l)
+  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/dex-images/* | wc -l)
   run docker images -q $IMAGES_FILTER
   [ ${#lines[@]} -eq $repo_image_count ]
 }

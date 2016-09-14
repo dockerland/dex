@@ -96,7 +96,7 @@ Dex consults source repositories for the Dockerfile to build an image from --
 similar to how yum and apt consult package sources. Thus,
 __applications available to dex are dictated by source repository checkouts__.
 
-Source Repositories are defined one-per-line in `$DEX_HOME/sources.list` as `<name> <url>`. URLs may point to the  _remote URL_ or _local path_ of a [git repository](https://git-scm.com/) with an `images/` tree containing applications . Use `dex source add` to add additional sources. `dex help source` for more.
+Source Repositories are defined one-per-line in `$DEX_HOME/sources.list` as `<name> <url>`. URLs may point to the  _remote URL_ or _local path_ of a [git repository](https://git-scm.com/) with an `dex-images/` tree containing applications . Use `dex source add` to add additional sources. `dex help source` for more.
 
 [sources.list example](sources.list) - [repository example](https://github.com/dockerland/dex-dockerfiles-core)
 

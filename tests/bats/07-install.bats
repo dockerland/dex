@@ -70,7 +70,7 @@ imgcount(){
 @test "install adds matching images to DEX_BIN_DIR" {
   [ $(imgcount) -eq 0 ]
 
-  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/images/* | wc -l)
+  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/dex-images/* | wc -l)
 
   run $DEX install imgtest/*
   [ $status -eq 0 ]

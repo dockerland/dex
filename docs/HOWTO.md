@@ -33,7 +33,7 @@ lets talk about how to "dexify" your application...
 dex source add dev /path/to/my-dex-repo
 
 # the hard way to test changes (requires pushing a commit)
-echo "# my changes" >> /path/to/my-dex-repo/images/my-app/Dockerfile
+echo "# my changes" >> /path/to/my-dex-repo/dex-images/my-app/Dockerfile
 ( cd /path/to/my-dex-repo && git commit -am "updated repo" )
 dex run --pull dev/my-app
 
