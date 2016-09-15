@@ -53,16 +53,20 @@ imgcount(){
 }
 
 @test "install writes _behaving dexecutables_ to DEX_BIN_DIR"  {
+
+  export TMPDIR=$TMPDIR
+  mkdir -p $TMPDIR/label-test/{home,vol,workspace}
+
   eval $($DEX vars DEX_BIN_PREFIX)
-  run $DEX install imgtest/debian
+  run $DEX install imgtest/labels
 
   [ $status -eq 0 ]
-  [ -x $DEX_BIN_DIR/${DEX_BIN_PREFIX}debian ]
+  [ -x $DEX_BIN_DIR/${DEX_BIN_PREFIX}labels ]
 
-  run $DEX_BIN_DIR/${DEX_BIN_PREFIX}debian
+  run $DEX_BIN_DIR/${DEX_BIN_PREFIX}labels
   [[ $output == *"DEBIAN_RELEASE"* ]]
 
-  output=$(echo "foo" | $DEX_BIN_DIR/${DEX_BIN_PREFIX}debian sed 's/foo/bar/')
+  output=$(echo "foo" | $DEX_BIN_DIR/${DEX_BIN_PREFIX}labels sed 's/foo/bar/')
   [ $? -eq 0 ]
   [ "$output" = "bar" ]
 }
