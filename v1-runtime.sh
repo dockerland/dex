@@ -81,10 +81,10 @@ v1-runtime(){
   [ -z "$DEX_DOCKER_ENTRYPOINT" ] || \
     __docker_flags+=" --entrypoint=$DEX_DOCKER_ENTRYPOINT"
 
-  # piping into a container requires interactive, non-tty input
-  ! tty -s >/dev/null 2>&1 && {
+  # piping to|from a container requires interactive, non-tty input
+  if [ ! -t 1 ] || ! tty -s > /dev/null 2>&1 ; then
     __docker_flags+=" --interactive=true --tty=false"
-  }
+  fi
 
   # apply windowing vars (if window=true)
   case $(echo "$__window" | awk '{print tolower($0)}') in true|yes|on)
