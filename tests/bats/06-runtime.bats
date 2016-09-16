@@ -179,13 +179,26 @@ teardown(){
   [ $status -eq 1 ]
 }
 
-@test "runtime suppresses tty flags when stdin is piped" {
+@test "runtime suppresses tty flags when container output is piped" {
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
-  local out=$(echo "foo" | $DEX run imgtest/labels sed 's/foo/bar/')
-  [ $? -eq 0 ]
+  local out=$(DEX_RUNTIME=echo $DEX run imgtest/labels echo "foo" | sed 's/foo/bar/')
+  [[ "$out" == *"--tty=false"* ]]
+
+  local out=$($DEX run imgtest/labels echo "foo" | sed 's/foo/bar/')
   [ "$out" = "bar" ]
 }
+
+@test "runtime suppresses tty flags when container input is piped" {
+  # imgtest/labels image ::
+  # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
+  local out=$(echo "foo" | DEX_RUNTIME=echo $DEX run imgtest/labels sed 's/foo/bar/')
+  [[ "$out" == *"--tty=false"* ]]
+
+  local out=$(echo "foo" | $DEX run imgtest/labels sed 's/foo/bar/')
+  [ "$out" = "bar" ]
+}
+
 
 @test "runtime environmental variables override behavior" {
 
