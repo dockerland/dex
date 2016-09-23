@@ -55,6 +55,38 @@ setup(){
   done
 }
 
+@test "image build uses docker build cache" {
+
+  # apparently docker applies `docker build --label X --label Y` in random order
+  # @TODO file bug
+  skip
+
+  run $DEX image build imgtest/cachebust:cache
+  [ $status -eq 0 ]
+  echo $output
+  first_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:cache)
+
+
+  run $DEX image build imgtest/cachebust:cache
+  [ $status -eq 0 ]
+  echo $output
+  second_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:cache)
+
+  [ "$first_sha" = "$second_sha" ]
+}
+
+@test "image build uses CACHE_BUST argument to circumvent docker build cache" {
+  run $DEX image build imgtest/cachebust:nocache
+  [ $status -eq 0 ]
+  first_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:nocache)
+
+  run $DEX image build imgtest/cachebust:nocache
+  [ $status -eq 0 ]
+  second_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:nocache)
+
+  [ "$first_sha" != "$second_sha" ]
+}
+
 @test "image ls prints built images in 'docker images' format" {
   run $DEX image ls
   [ "$(echo ${lines[0]} | awk '{print $1}')" = "$(docker images $IMAGES_FILTER | head -n1 | awk '{print $1}')" ]

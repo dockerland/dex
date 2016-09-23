@@ -28,7 +28,6 @@ dex runs your application with the [v1-runtime](v1-runtime.md)
 
 lets talk about how to "dexify" your application...
 
-
 ```sh
 dex source add dev /path/to/my-dex-repo
 
@@ -48,3 +47,27 @@ dex run --build dev/my-app
   * labeling / api versioning
   * Windowed/X11 examples
   * org.dockerland.dex.docker_home labels, non absolute path relative to $DEX_HOME/<api>-homes/<label>
+
+### busting cache
+
+Often, images will use a git repository to install an application. E.g.
+
+```
+# ...
+RUN git clone my-repo/my-app.git /app
+# ...
+```
+
+Docker will cache this, and use it's cache for subsequent builds -- no matter
+if the git repository and application code has been changed upstream. To get
+around this, dex builds images with a CACHE_BUST argument. Use this to introduce
+randomness and force the git clone command. E.g.
+
+```
+# ...
+ARG CACHE_BUST
+RUN git clone my-repo/my-app.git /app
+# ...
+```
+
+For an example, see our test [cachebust Dockerfiles](../tests/fixtures/images/cachebust)
