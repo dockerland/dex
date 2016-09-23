@@ -33,12 +33,19 @@ dex-image-build(){
       local image=$(basename $image_dir)
       local source=$(basename $repo_dir)
       local tag="$namespace/$image:$__image_tag"
+      local random=$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)
+      local cachebust=
 
       log "- building $tag"
       (
         set -e
         cd $image_dir
-        __local_docker build -t $tag \
+
+        # add cachebusting argument if requested/used in Dockerfile
+        grep -q "^ARG CACHE_BUST" $dockerfile &&  \
+          cachebust="--build-arg CACHE_BUST=$random"
+
+        __local_docker build -t $tag $cachebust \
           --label=org.dockerland.dex.build-api=$DEX_API \
           --label=org.dockerland.dex.build-imgstr="$__imgstr" \
           --label=org.dockerland.dex.build-tag="$__image_tag" \
