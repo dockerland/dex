@@ -35,6 +35,7 @@ dex-image-build(){
       local tag="$namespace/$image:$__image_tag"
       local random=$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)
       local cachebust=
+      local pull=
 
       log "- building $tag"
       (
@@ -45,7 +46,10 @@ dex-image-build(){
         grep -q "^ARG CACHE_BUST" $dockerfile &&  \
           cachebust="--build-arg CACHE_BUST=$random"
 
-        __local_docker build -t $tag $cachebust \
+        $__pull_flag && \
+          pull="--pull"
+
+        __local_docker build -t $tag $cachebust $pull \
           --label=org.dockerland.dex.build-api=$DEX_API \
           --label=org.dockerland.dex.build-imgstr="$__imgstr" \
           --label=org.dockerland.dex.build-tag="$__image_tag" \
