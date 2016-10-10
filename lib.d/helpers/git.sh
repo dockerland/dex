@@ -4,17 +4,17 @@
 
 # usage: clone_or_pull <repo-path-or-url> <destination> <force boolean>
 clone_or_pull(){
+  local force=${3:-false}
   if [ -d $2 ]; then
     # pull
     (
       cd $2
-      $3 && git reset --hard HEAD
+      $force && git reset --hard HEAD
       git pull
     ) || {
       log "error pulling changes from git"
       return 1
     }
-
   else
     # clone
 
