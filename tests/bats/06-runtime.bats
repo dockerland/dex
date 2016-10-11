@@ -65,6 +65,11 @@ teardown(){
   [[ $output == *"DEX_HOST_HOME=$HOME"* ]]
   [[ $output == *"DEX_HOST_PWD=$(pwd)"* ]]
 
+  [[ $output == *"DEX_HOST_GID=$(id -g)"* ]]
+  [[ $output == *"DEX_HOST_GROUP=$(id -gn)"* ]]
+  [[ $output == *"DEX_HOST_UID=$(id -un)"* ]]
+  [[ $output == *"DEX_HOST_USER=$(id -un)"* ]]
+
   # v1 passthrough
   [[ "$output" == *"LANG=test"* ]]
   [[ "$output" == *"TZ=test"* ]]

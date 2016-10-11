@@ -4,6 +4,9 @@ v1-runtime(){
   [ -z "$__image" ] && { echo "missing runtime image" ; exit 1 ; }
   IFS=":" read -r __name __tag <<< "$__image"
 
+  read -d "\n" DEX_HOST_UID DEX_HOST_GID DEX_HOST_USER DEX_HOST_GROUP DEX_HOST_PWD < <(
+    exec 2>/dev/null ; id -u ; id -g ; id -un ; id -gn ; pwd )
+
   # label defaults -- images may provide a org.dockerland.dex.<var> label
   #  supplying a value that overrides these default values, examples are:
   #
@@ -21,7 +24,7 @@ v1-runtime(){
   __docker_flags=
   __docker_groups=
   __docker_home=$(basename $__name)-$__tag
-  __docker_workspace=$(pwd)
+  __docker_workspace=$DEX_HOST_PWD
   __docker_volumes=
   __window=
 
@@ -55,10 +58,11 @@ v1-runtime(){
   DEX_DOCKER_ENTRYPOINT=${DEX_DOCKER_ENTRYPOINT:-}
 
   DEX_DOCKER_HOME=${DEX_DOCKER_HOME:-$__docker_home}
+  DEX_DOCKER_HOME=${DEX_DOCKER_HOME/#\~/$HOME}
   DEX_DOCKER_WORKSPACE=${DEX_DOCKER_WORKSPACE:-$__docker_workspace}
 
-  DEX_DOCKER_GID=${DEX_DOCKER_GID:-$(id -g)}
-  DEX_DOCKER_UID=${DEX_DOCKER_UID:-$(id -u)}
+  DEX_DOCKER_GID=${DEX_DOCKER_GID:-$DEX_HOST_GID}
+  DEX_DOCKER_UID=${DEX_DOCKER_UID:-$DEX_HOST_UID}
 
   DEX_DOCKER_LOG_DRIVER=${DEX_DOCKER_LOG_DRIVER:-'none'}
   DEX_WINDOW_FLAGS=${DEX_WINDOW_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
@@ -66,9 +70,7 @@ v1-runtime(){
   [ -z "$__api" ] && \
     { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
 
-  # expand tilde
-  DEX_DOCKER_HOME=${DEX_DOCKER_HOME/#\~/$HOME}
-  # if home is not an absolute path, make relative to $DEX_HOME/<api>-homes/
+  # if home is not an absolute path, make relative to $DEX_HOME/homes/
   [ "${DEX_DOCKER_HOME:0:1}" != '/' ] && \
     DEX_DOCKER_HOME=${DEX_HOME:-~/dex}/homes/$DEX_DOCKER_HOME
 
@@ -150,8 +152,12 @@ v1-runtime(){
     -e DEX_API=$__api \
     -e DEX_DOCKER_HOME=$DEX_DOCKER_HOME \
     -e DEX_DOCKER_WORKSPACE=$DEX_DOCKER_WORKSPACE \
+    -e DEX_HOST_GID=$DEX_HOST_GID \
+    -e DEX_HOST_GROUP=$DEX_HOST_GROUP \
+    -e DEX_HOST_PWD=$DEX_HOST_PWD \
+    -e DEX_HOST_UID=$DEX_HOST_UID \
+    -e DEX_HOST_USER=$DEX_HOST_USER \
     -e DEX_HOST_HOME=$HOME \
-    -e DEX_HOST_PWD=$(pwd) \
     -e HOME=/dex/home \
     -u $DEX_DOCKER_UID:$DEX_DOCKER_GID \
     -v $DEX_DOCKER_HOME:/dex/home \
