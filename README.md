@@ -2,13 +2,11 @@
 
 [![Build Status](https://travis-ci.org/dockerland/dex.svg?branch=master)](https://travis-ci.org/dockerland/dex)
 
-Dex runs applications  _without_ installing them or their dependencies by
-leveraging [docker](https://www.docker.com/). Dex also makes it [easier](docs/HOWTO.md#containerize-your-application) to contain and _properly_ execute
-applications you write, no matter the OS.
+Dex runs applications _without_ the need to install them or their dependencies by leveraging [docker](https://www.docker.com/). Dex also makes it [easier](docs/HOWTO.md#containerize-your-application) to containerize and _consistently_ execute
+applications, no matter the OS.
 
-Windowed/X11 applications are supported, so expect `dex run firefox` to work. [Pipes](https://en.wikipedia.org/wiki/Redirection_%28computing%29#Piping)
-and [redirection](https://en.wikipedia.org/wiki/Redirection_%28computing%29) are
-respected, so expect _pong_ from `echo 'ping' | docker run sed 's/ping/pong/'`.
+Windowed/X11 applications are supported, so expect `dex run firefox`. [Pipes](https://en.wikipedia.org/wiki/Redirection_%28computing%29#Piping)
+and [redirection](https://en.wikipedia.org/wiki/Redirection_%28computing%29) behave, so expect _pong_ from `echo 'ping' | docker run sed 's/ping/pong/'`.
 
 Dex is plain [bash](https://www.gnu.org/software/bash/manual/bash.html). In fact
 it's a _bashlication_ with a Makefile, modular design, and complete [bats](https://github.com/sstephenson/bats) testing. It can run
@@ -18,11 +16,10 @@ _anywhere docker works_, including Windows 10.
 
 #### dependencies
 
-Dex needs a working _bash shell_ and [docker](https://www.docker.com/) cli. Test
-docker by opening your terminal and typing;
+Dex needs [docker](https://www.docker.com/) and [git](https://git-scm.com/). Test
+docker in your terminal via;
 ```sh
-docker ps
-[ $? -eq 0 ] && echo "Docker appears working. Lets install dex..."
+docker info && echo "Docker appears working. Lets install dex..."
 ```
 
 ### from a github release
@@ -42,10 +39,9 @@ sudo make install
 
 ## using dex
 
-At the heart, dex manages _'dexecutables'_ -- scripts that execute contained
-applications under a [consistent runtime](docs/v1-runtime.md). The Dockerfiles
-for these applications are kept in configurable [source repositories](#source-repositories) also
-managed by dex.
+At its heart, dex manages _'dexecutables'_ -- [runtime scripts](docs/v1-runtime.md) that execute
+containerized applications. The Dockerfiles making up these applications
+are managed in [source repositories](#source-repositories).
 
 
 ### quickstart
@@ -92,7 +88,7 @@ deltree /tmp/dex-makes-it
 
 ### source repositories
 
-Dex consults source repositories for the Dockerfile to build an image from --
+Dex consults source repositories for the Dockerfile to build application images from --
 similar to how yum and apt consult package sources. Thus,
 __applications available to dex are dictated by source repository checkouts__.
 
@@ -100,15 +96,21 @@ Source Repositories are defined one-per-line in `$DEX_HOME/sources.list` as `<na
 
 [sources.list example](sources.list) - [repository example](https://github.com/dockerland/dex-dockerfiles-core)
 
-Checkouts are __only__ performed when a source is added. Use `dex source pull '*'` to downstream
-changes to all defined sources, or `dex run --pull ...`  to downstream into the detected source.
+Repository checkouts are performed __once__ when a source is added. Checkouts go to `~/.dex/checkouts/` by default. Use `dex source pull '*'` to checkout the latest from all sources, or `dex run --pull ...` to checkout on-the-fly when running an application.
 
 
 ### environmental variables
 
-use variables to effect default dex behavior.
+#### dex command
 
-global envars | default | description
+variables that globally effect the dex command, e.g.
+
+```sh
+DEX_BIN_DIR=~/bin/ DEX_BIN_PREFIX=acme- dex install ag
+# ^^^ ag installed to ~/bin/acme-ag
+```
+
+var | default | description
 --- | --- | ---
 DEX_API | v1 | api version
 DEX_BIN_DIR | /usr/local/bin | dexecutable installation target directory
@@ -117,16 +119,28 @@ DEX_HOME | ~/.dex | dex workspace, where checkouts and sources.list are kept.
 DEX_NAMESPACE | dex/v1 | prefix used when tagging image builds
 DEX_NETWORK| true | enables network fetching
 
+
+#### dex runtime
+
+variables that effect dex executio, e.g.
+
+```sh
+dex install ansible
+DEX_DOCKER_ENTYPOINT=bash dansible
+# ...we're now in the ansible container's bash shell...
+```
+
+
 v1 runtime vars | default | description
 --- | --- | ---
-DEX_DOCKER_CMD | | alternative command passed to docker run
-DEX_DOCKER_ENTRYPOINT | |  alternative entrypoint passed to docker run
-DEX_DOCKER_HOME | $DEX_HOME/homes/[image] | directory bind mounted as container's $HOME
-DEX_DOCKER_WORKSPACE | $(pwd) |  directory bind mounted as container's CWD
-DEX_DOCKER_GID| $(id -g) | gid to run the container under
-DEX_DOCKER_UID| $(id -u) | uid to run the container under
+DEX_DOCKER_CMD | _image_  | alternative command passed to docker run
+DEX_DOCKER_ENTRYPOINT | _image_  |  alternative entrypoint passed to docker run
+DEX_DOCKER_HOME | _image_  | host directory bind mounted as container's $HOME. Typically applications get their own home (`$DEX_HOME/homes/[image]-[tag]`) to avoid clobbering system-installed versions.
+DEX_DOCKER_WORKSPACE | current pwd |  host directory bind mounted as container's CWD
+DEX_DOCKER_GID| current uid | host gid to run the container under
+DEX_DOCKER_UID| current gid | host uid to run the container under
 DEX_DOCKER_LOG_DRIVER | none | logging driver to use for container
-DEX_WINDOW_FLAGS | -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY | applied to windowed containers
+DEX_WINDOW_FLAGS | _runtime_ | applied to windowed containers, typically `-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY`
 
 ## developing dex
 

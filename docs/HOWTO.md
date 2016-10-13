@@ -24,31 +24,94 @@ DEX_DOCKER_ENTRYPOINT=sh DEX_DOCKER_FLAGS="-it" DEX_DOCKER_CMD= dansible-playboo
 
 ## containerize your application
 
-dex runs your application with the [v1-runtime](v1-runtime.md)
+The process is no different than providing a regular Dockerfile for your application, except that
+* dex uses _labels_ to specify runtime behavior and runtime version
+* dex uses a runtime script to execute your image (for consistency and convenience)
 
-lets talk about how to "dexify" your application...
 
-```sh
-dex source add dev /path/to/my-dex-repo
-
-# the hard way to test changes (requires pushing a commit)
-echo "# my changes" >> /path/to/my-dex-repo/dex-images/my-app/Dockerfile
-( cd /path/to/my-dex-repo && git commit -am "updated repo" )
-dex run --pull dev/my-app
-
-# recommended alternative while developing
-echo "# my changes" >> ~/.dex/checkouts/dev/my-app/Dockerfile
-#  ^^^ source repositories are checked out to $DEX_HOME/checkous/<name>
-dex run --build dev/my-app
+For instance, setting the `org.dockerland.dex.docker_devices=/dev/shm`
+label will mount the host's /dev/shm into your application container at runtime.
+You may also pass arbitrary flags to `docker run` via the `org.dockerland.dex.docker_flags` label.  E.g.
 
 ```
+FROM debian:jessie
 
-* TBD
-  * labeling / api versioning
-  * Windowed/X11 examples
-  * org.dockerland.dex.docker_home labels, non absolute path relative to $DEX_HOME/<api>-homes/<label>
+#
+# dex my-app:latest image
+#
 
-### busting cache
+# ... commands to install my-app and all dependencies
+
+#
+# v1 dex-api
+#
+
+LABEL \
+  org.dockerland.dex.api="v1" \
+  org.dockerland.dex.docker_flags="--interactive --tty" \
+  org.dockerland.dex.docker_devices=/dev/shm
+```
+
+
+Refer to [v1-runtime documentation](v1-runtime.md) for a list of behavior-changing
+ labels and conventions.
+
+#### getting started
+
+
+To execute your application with dex, the Dockerfile must be in a [source repository](../README.md#source-repositories).
+
+
+
+##### create a local source repository
+
+Lets create a local development repository. Alternatively you can start
+working directly from a repository checkout (in `$DEX_HOME/checkouts/`).
+
+```sh
+
+# initialize local repository with Dockerfile for "my-app"
+mkdir -p /path/to/my/local-repo
+cd /path/to/my/local-repo
+git init
+mkdir -p dex-images/my-app
+cp /path/to/my-app/Dockerfile dex-images/my-app/Dockerfile
+echo "LABEL org.dockerland.dex.api=\"v1\"" >> dex-images/my-app/Dockerfile
+git add dex-images
+git commit -m "dexified my-app"
+
+# add local repository to dex
+dex source add local /path/to/my/local-repo
+```
+
+the "local" repository is now checked out to `~/.dex/checkouts/local/`
+
+
+##### testing / running your application
+
+> To speed up development, it is recommended to work within a checkout of a source repository. This way you do not need to
+commit and --pull changes whenever they're made -- the changes are immediately
+available.
+
+example of testing changes _from a checkout_
+
+```sh
+cd ~/.dex/checkouts/local/my-app
+echo "# my changes" >> Dockerfile
+dex run --build local/my-app
+```
+
+example of testing changes  _from a repository_ (requires intermittent commit)
+
+```sh
+cd /path/to/my/local-repo
+echo "# my changes" >> Dockerfile
+git commit -am "my changes"
+dex run --pull local/my-app
+```
+
+
+#### busting cache
 
 Often, images will use a git repository to install an application. E.g.
 
@@ -70,4 +133,4 @@ RUN git clone my-repo/my-app.git /app
 # ...
 ```
 
-For an example, see our test [cachebust Dockerfiles](../tests/fixtures/images/cachebust)
+For an example, see our test [cachebust Dockerfiles](../tests/fixtures/dex-images/cachebust)

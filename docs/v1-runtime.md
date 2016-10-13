@@ -2,6 +2,13 @@
 
 ## work in progress
 
+lets talk about how to "dexify" your application...
+
+* TBD
+  * labeling / api versioning
+  * Windowed/X11 examples
+
+
 ```sh
 # label defaults -- images may provide a org.dockerland.dex.<var> label
 #  supplying a value that overrides these default values, examples are:
