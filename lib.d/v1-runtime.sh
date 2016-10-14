@@ -12,7 +12,7 @@ v1-runtime(){
   #  supplying a value that overrides these default values, examples are:
   #
   #  org.dockerland.dex.docker_devices=/dev/shm   (shm mounted as /dev/shm)
-  #  org.dockerland.dex.docker_envars="LANG TERM" (passthru LANG & TERM)
+  #  org.dockerland.dex.docker_envars="LANG TERM !MYAPP_" (passthru LANG & TERM & MYAPP_*)
   #  org.dockerland.dex.docker_flags=-it          (interactive tty)
   #  org.dockerland.dex.docker_groups=tty         (adds 'tty' to container user)
   #  org.dockerland.dex.docker_home=~             (user's actual home)
@@ -142,10 +142,18 @@ v1-runtime(){
     [ -z "$gid" ] || __docker_flags+=" --group-add=$gid"
   done
 
-  # pass specified passthru envars (only if !empty)
+  # assign passthru envars (if empty)
+  # @TODO can probably refactor here...
+  __vars=""
   for var in $__docker_envars; do
-    eval "val=\$$var"
-    [ -z "$val" ] || __docker_flags+=" -e $var=$val"
+    if [[ $var == *"*" ]]; then
+      eval "for var in \${!$var}; do __vars+=\" \$var\" ; done"
+    else
+      __vars+=" $var"
+    fi
+  done
+  for var in $__vars; do
+    eval "[ -z \"\$$var\" ] || __docker_flags+=\" -e $var=\$$var\""
   done
 
   # mount typical host paths in container to coax some absolute path resolutions

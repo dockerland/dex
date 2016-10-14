@@ -51,10 +51,7 @@ teardown(){
   [ "$out" = "bar" ]
 }
 
-@test "runtime assigns default v1 vars + envar passthu" {
-  export LANG="test"
-  export TZ="test"
-
+@test "runtime assigns default v1 vars" {
   run $DEX run imgtest/debian
 
   # v1 vars
@@ -69,11 +66,38 @@ teardown(){
   [[ $output == *"DEX_HOST_GROUP=$(id -gn)"* ]]
   [[ $output == *"DEX_HOST_UID=$(id -un)"* ]]
   [[ $output == *"DEX_HOST_USER=$(id -un)"* ]]
+}
+
+@test "runtime assigns default passthrough vars" {
+  # by default, LANG and TZ are passed-through to container
+  export LANG="test"
+  export TZ="test"
+
+  run $DEX run imgtest/debian
 
   # v1 passthrough
   [[ "$output" == *"LANG=test"* ]]
   [[ "$output" == *"TZ=test"* ]]
 }
+
+@test "runtime supports wildcard passthrough vars" {
+  # by default, LANG and TZ are passed-through to container
+  export LANG="test"
+  export TZ="test"
+  export TEST_A="test"
+  export TEST_B="test"
+
+  run $DEX run imgtest/labels:passthru
+
+  # v1 passthrough
+  [[ "$output" == *"LANG=test"* ]]
+  [[ "$output" == *"TZ=test"* ]]
+
+  # wildcard passthrough
+  [[ "$output" == *"TEST_A=test"* ]]
+  [[ "$output" == *"TEST_B=test"* ]]
+}
+
 
 @test "runtime sets a unique home by default (DEX_HOME/homes/<image>-<tag>)" {
   rm -rf $DEX_HOME/homes/debian-latest
