@@ -83,6 +83,14 @@ teardown(){
   [ -d $DEX_HOME/homes/debian-latest ]
 }
 
+@test "runtime ro-mounts typical host paths to coax absolute path resolution by default" {
+  cd $TMPDIR
+  $DEX run imgtest/debian ls $TMPDIR
+
+  run $DEX run imgtest/labels:no-hostpaths ls $TMPDIR
+  [ $status -eq 2 ]
+}
+
 @test "runtime respects docker_envars label" {
   # imgtest/labels image ::
   # LABEL org.dockerland.dex.docker_envars="BATS_TESTVAR"

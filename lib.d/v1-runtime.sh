@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 v1-runtime(){
+  DEX_HOME=${DEX_HOME:-~/.dex}
   [ -z "$__image" ] && { echo "missing runtime image" ; exit 1 ; }
   IFS=":" read -r __name __tag <<< "$__image"
 
@@ -17,7 +18,8 @@ v1-runtime(){
   #  org.dockerland.dex.docker_home=~             (user's actual home)
   #  org.dockerland.dex.docker_volumes=/etc/hosts:/etc/hosts:ro
   #  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
-  #  org.dockerland.dex.window=true               (applies window/X11 flags)
+  #  org.dockerland.dex.proxy_hostpaths=rw        (rw mount host HOME and CWD)
+  #  org.dockerland.dex.window=yes                (applies window/X11 flags)
   #
   __docker_devices=
   __docker_envars="LANG TZ"
@@ -26,10 +28,11 @@ v1-runtime(){
   __docker_home=$(basename $__name)-$__tag
   __docker_workspace=$DEX_HOST_PWD
   __docker_volumes=
+  __proxy_hostpaths="ro"
   __window=
 
   # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes window ; do
+  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes proxy_hostpaths window ; do
     # @TODO reduce this to a single docker inspect command
     val=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
@@ -72,7 +75,7 @@ v1-runtime(){
 
   # if home is not an absolute path, make relative to $DEX_HOME/homes/
   [ "${DEX_DOCKER_HOME:0:1}" != '/' ] && \
-    DEX_DOCKER_HOME=${DEX_HOME:-~/dex}/homes/$DEX_DOCKER_HOME
+    DEX_DOCKER_HOME=$DEX_HOME/homes/$DEX_DOCKER_HOME
 
   [ -d "$DEX_DOCKER_HOME" ] || mkdir -p $DEX_DOCKER_HOME || \
     { echo "unable to stub home directory: $DEX_DOCKER_HOME" ; exit 1 ; }
@@ -104,7 +107,7 @@ v1-runtime(){
       # @TODO test under fedora, opensuse, ubuntu
       # @TODO bats testing
       type xauth &>/dev/null && {
-        __xauth=${DEX_HOME:-~/dex}/.xauth
+        __xauth=$DEX_HOME/.xauth
         touch $__xauth && \
           xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $__xauth nmerge - &>/dev/null && \
           __docker_flags+=" -v $__xauth:/tmp/.xauth -e XAUTHORITY=/tmp/.xauth"
@@ -144,6 +147,16 @@ v1-runtime(){
     eval "val=\$$var"
     [ -z "$val" ] || __docker_flags+=" -e $var=$val"
   done
+
+  # mount typical host paths in container to coax some absolute path resolutions
+  case $(echo "$__proxy_hostpaths" | awk '{print tolower($0)}') in rw|ro)
+    if [[ ! "$HOME" =~ ^($DEX_HOST_PWD|/dex/home)$ ]]; then
+      [ -d $HOME ] && __docker_flags+=" -v $HOME:$HOME:$__proxy_hostpaths"
+    fi
+    if [[ ! "$DEX_HOST_PWD" =~ ^($HOME|/dex/workspace|/|/bin|/dev|/etc|/lib|/lib64|/opt|/proc|/sbin|/run|/sbin|/srv|/sys|/usr|/var)$ ]]; then
+      __docker_flags+=" -v $DEX_HOST_PWD:$DEX_HOST_PWD:$__proxy_hostpaths"
+    fi
+  esac
 
   # deactivate docker-machine
   __deactivate_machine
