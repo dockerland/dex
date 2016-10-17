@@ -12,7 +12,7 @@ shell_detect(){
   case $__shell in
     bash|sh   ) search=".bashrc .bash_profile" ;;
     cmd       ) search=".profile" ;;
-    dash      ) search=".profile" ;;
+    ash|dash  ) search=".profile" ;;
     fish      ) search=".config/fish/config.fish" ;;
     ksh       ) search=".kshrc" ;;
     powershell) search=".profile" ;;
