@@ -11,14 +11,14 @@ main(){
   __build="@BUILD@"
   __version="@VERSION@"
 
-  # DEX_API: api version: v1
   # DEX_BIN_DIR: location where dex installs : /usr/local/bin
   # DEX_BIN_PREFIX: prefix of dexecutabls : d
   # DEX_HOME: dex workspace : ~/.dex
-  # DEX_NAMESPACE: prefix used when tagging image builds : dex/<DEX_API>, dex/v1
+  # DEX_NAMESPACE: prefix used when tagging image builds : dex/v1
   # DEX_NETWORK: enables network fetching : true
+  # DEX_RUNTIME: runtime api version: v1
 
-  DEX_VARS=( DEX_API DEX_BIN_DIR DEX_BIN_PREFIX DEX_HOME DEX_NAMESPACE DEX_NETWORK )
+  DEX_VARS=( DEX_BIN_DIR DEX_BIN_PREFIX DEX_HOME DEX_NETWORK DEX_RUNTIME DEX_NAMESPACE )
   dex-vars-init ${DEX_VARS[@]}
 
   if [ $# -eq 0 ]; then

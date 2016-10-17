@@ -16,7 +16,7 @@ set_vars(){
   export DEX_BIN_DIR="/mybin"
   export DEX_BIN_PREFIX="my"
   export DEX_NETWORK=false
-  export DEX_API=v9000
+  export DEX_RUNTIME=v9000
 }
 
 reset_vars(){
@@ -41,7 +41,7 @@ compare_defaults(){
     read -r var val <<< "$line"
     echo "comparing $var=$val"
     case $var in
-      DEX_API) [ $val = 'v1' ] || retval=1 ;;
+      DEX_RUNTIME) [ $val = 'v1' ] || retval=1 ;;
       DEX_BIN_DIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
       DEX_BIN_PREFIX) [ $val = "d" ] || retval=1 ;;
       DEX_HOME) ( [ $val = "$TMPDIR/home/.dex" ] || [ $val = "$HOME/.dex" ] ) || retval=1 ;;
@@ -91,7 +91,7 @@ compare_defaults(){
     eval $line
   done
 
-  [ "$DEX_API" = "v9000" ]
+  [ "$DEX_RUNTIME" = "v9000" ]
   [ "$DEX_HOME" = "/myhome" ]
   [ "$DEX_BIN_DIR" = "/mybin" ]
   [ "$DEX_BIN_PREFIX" = "my" ]

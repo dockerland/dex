@@ -29,10 +29,10 @@ setup(){
   [ ${#lines[@]} -eq 1 ]
 }
 
-@test "image build labels images according to the current DEX_API" {
+@test "image build labels images according to the current DEX_RUNTIME" {
 
   local img=$(docker images -q $DEX_NAMESPACE/alpine:latest)
-  local api_version=$($DEX vars DEX_API | sed 's/DEX_API=//')
+  local api_version=$($DEX vars DEX_RUNTIME | sed 's/DEX_RUNTIME=//')
 
   [ ! -z "$img" ]
   [ ! -z "$api_version" ]

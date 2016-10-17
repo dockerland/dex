@@ -20,12 +20,12 @@ dex-vars-reset(){
 dex-vars-init(){
   while [ $# -ne 0 ]; do
     case $1 in
-      DEX_API) eval "$1=\${$1:-v1}" ;;
       DEX_BIN_DIR) eval "$1=\${$1:-/usr/local/bin}" ;;
       DEX_BIN_PREFIX) eval "$1=\${$1:-d}" ;;
       DEX_HOME) eval "$1=\${$1:-~/.dex}" ;;
-      DEX_NAMESPACE) eval "$1=\${$1:-dex/\$DEX_API}" ;;
+      DEX_NAMESPACE) eval "$1=\${$1:-dex/\$DEX_RUNTIME}" ;;
       DEX_NETWORK) eval "$1=\${$1:-true}" ;;
+      DEX_RUNTIME) eval "$1=\${$1:-v1}" ;;
       *) error_exception "$1 has no default configuration value" ;;
     esac
     shift

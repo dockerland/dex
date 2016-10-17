@@ -7,7 +7,7 @@
 DEX=$TMPDIR/usr/local/bin/dex
 
 DEX_CMDS=( image install "source" run uninstall vars )
-DEX_VARS=( DEX_HOME DEX_BIN_DIR DEX_BIN_PREFIX DEX_NETWORK DEX_API  )
+DEX_VARS=( DEX_HOME DEX_BIN_DIR DEX_BIN_PREFIX DEX_NETWORK DEX_RUNTIME  )
 
 export DEX_HOME=$TMPDIR/home/.dex
 export DEX_NETWORK=false

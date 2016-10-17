@@ -112,12 +112,12 @@ DEX_BIN_DIR=~/bin/ DEX_BIN_PREFIX=acme- dex install ag
 
 var | default | description
 --- | --- | ---
-DEX_API | v1 | api version
 DEX_BIN_DIR | /usr/local/bin | dexecutable installation target directory
 DEX_BIN_PREFIX | d | dexecutable installation prefix
 DEX_HOME | ~/.dex | dex workspace, where checkouts and sources.list are kept.
 DEX_NAMESPACE | dex/v1 | prefix used when tagging image builds
 DEX_NETWORK| true | enables network fetching
+DEX_RUNTIME | v1 | runtime api version
 
 
 #### dex runtime

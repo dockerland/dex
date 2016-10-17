@@ -56,7 +56,6 @@ teardown(){
 
   # v1 vars
   for line in ${lines[@]}; do echo $line ; done
-  [[ $output == *"DEX_API=v1"* ]]
   [[ $output == *"DEX_DOCKER_HOME=$DEX_HOME/homes/debian"* ]]
   [[ $output == *"DEX_DOCKER_WORKSPACE=$(pwd)"* ]]
   [[ $output == *"DEX_HOST_HOME=$HOME"* ]]
@@ -67,6 +66,7 @@ teardown(){
   [[ $output == *"DEX_HOST_UID=$(id -un)"* ]]
   [[ $output == *"DEX_HOST_USER=$(id -un)"* ]]
 
+  [[ $output == *"DEX_IMAGE=debian"* ]]
   [[ $output == *"DEX_IMAGE_NAME=debian"* ]]
   [[ $output == *"DEX_IMAGE_TAG=latest"* ]]
 }
