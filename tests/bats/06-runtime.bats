@@ -66,6 +66,9 @@ teardown(){
   [[ $output == *"DEX_HOST_GROUP=$(id -gn)"* ]]
   [[ $output == *"DEX_HOST_UID=$(id -un)"* ]]
   [[ $output == *"DEX_HOST_USER=$(id -un)"* ]]
+
+  [[ $output == *"DEX_IMAGE_NAME=debian"* ]]
+  [[ $output == *"DEX_IMAGE_TAG=latest"* ]]
 }
 
 @test "runtime assigns default passthrough vars" {

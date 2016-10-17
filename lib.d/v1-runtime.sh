@@ -5,8 +5,8 @@ v1-runtime(){
   [ -z "$__image" ] && { echo "missing runtime image" ; exit 1 ; }
   IFS=":" read -r __name __tag <<< "$__image"
 
-  read -d "\n" DEX_HOST_UID DEX_HOST_GID DEX_HOST_USER DEX_HOST_GROUP DEX_HOST_PWD < <(
-    exec 2>/dev/null ; id -u ; id -g ; id -un ; id -gn ; pwd )
+  read -d "\n" DEX_HOST_UID DEX_HOST_GID DEX_HOST_USER DEX_HOST_GROUP DEX_HOST_PWD DEX_IMAGE_NAME < <(
+    exec 2>/dev/null ; id -u ; id -g ; id -un ; id -gn ; pwd ; basename $__name )
 
   # label defaults -- images may provide a org.dockerland.dex.<var> label
   #  supplying a value that overrides these default values, examples are:
@@ -25,7 +25,7 @@ v1-runtime(){
   __docker_envars="LANG TZ"
   __docker_flags=
   __docker_groups=
-  __docker_home=$(basename $__name)-$__tag
+  __docker_home=$DEX_IMAGE_NAME-$__tag
   __docker_workspace=$DEX_HOST_PWD
   __docker_volumes=
   __proxy_hostpaths="ro"
@@ -179,6 +179,8 @@ v1-runtime(){
     -e DEX_HOST_UID=$DEX_HOST_UID \
     -e DEX_HOST_USER=$DEX_HOST_USER \
     -e DEX_HOST_HOME=$HOME \
+    -e DEX_IMAGE_NAME=$DEX_IMAGE_NAME \
+    -e DEX_IMAGE_TAG=$__tag \
     -e HOME=/dex/home \
     -u $DEX_DOCKER_UID:$DEX_DOCKER_GID \
     -v $DEX_DOCKER_HOME:/dex/home \
