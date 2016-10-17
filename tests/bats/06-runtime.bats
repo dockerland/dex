@@ -66,7 +66,7 @@ teardown(){
   [[ $output == *"DEX_HOST_UID=$(id -un)"* ]]
   [[ $output == *"DEX_HOST_USER=$(id -un)"* ]]
 
-  [[ $output == *"DEX_IMAGE=debian"* ]]
+  [[ $output == *"DEX_IMAGE=$DEX_NAMESPACE/debian:latest"* ]]
   [[ $output == *"DEX_IMAGE_NAME=debian"* ]]
   [[ $output == *"DEX_IMAGE_TAG=latest"* ]]
 }
@@ -222,7 +222,7 @@ teardown(){
 @test "runtime suppresses tty flags when container output is piped" {
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
-  local out=$(DEX_RUNTIME=echo $DEX run imgtest/labels echo "foo" | sed 's/foo/bar/')
+  local out=$(DEX_DEBUG=true $DEX run imgtest/labels echo "foo" | sed 's/foo/bar/')
   [[ "$out" == *"--tty=false"* ]]
 
   local out=$($DEX run imgtest/labels echo "foo" | sed 's/foo/bar/')
@@ -232,7 +232,7 @@ teardown(){
 @test "runtime suppresses tty flags when container input is piped" {
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
-  local out=$(echo "foo" | DEX_RUNTIME=echo $DEX run imgtest/labels sed 's/foo/bar/')
+  local out=$(echo "foo" | DEX_DEBUG=true $DEX run imgtest/labels sed 's/foo/bar/')
   [[ "$out" == *"--tty=false"* ]]
 
   local out=$(echo "foo" | $DEX run imgtest/labels sed 's/foo/bar/')
