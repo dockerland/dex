@@ -8,12 +8,12 @@ display_help_vars(){
 Piping hot docker executables to your door.
 
 Variable Defaults:
-  DEX_API: v1
   DEX_HOME: ~/.dex
   DEX_BIN_DIR: '/usr/local/bin'
   DEX_BIN_PREFIX: 'd'
   DEX_NETWORK: true
-  : dex/$DEX_API
+  DEX_RUNTIME: v1
+  DEX_NAMESPACE: dex/$DEX_RUNTIME
 
 Usage: dex vars [var] [options]
 

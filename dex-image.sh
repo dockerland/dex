@@ -9,7 +9,7 @@
 #    ex: __imgstr="invalid-image-name" ; dex-image-build => 1: __built_images=( )
 
 dex-image-build(){
-  # when installing, we prefix with "dex/$DEX_API-install"
+  # when installing, we prefix with "dex/$DEX_RUNTIME-install"
   local namespace=${1:-$DEX_NAMESPACE}
   __built_images=()
 
@@ -50,7 +50,7 @@ dex-image-build(){
           pull="--pull"
 
         __local_docker build -t $tag $cachebust $pull \
-          --label=org.dockerland.dex.build-api=$DEX_API \
+          --label=org.dockerland.dex.build-api=$DEX_RUNTIME \
           --label=org.dockerland.dex.build-imgstr="$__imgstr" \
           --label=org.dockerland.dex.build-tag="$__image_tag" \
           --label=org.dockerland.dex.image=$image \

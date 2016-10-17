@@ -170,7 +170,6 @@ v1-runtime(){
   __deactivate_machine
 
   ${DEX_RUNTIME:-exec} docker run $__docker_flags \
-    -e DEX_API=$__api \
     -e DEX_DOCKER_HOME=$DEX_DOCKER_HOME \
     -e DEX_DOCKER_WORKSPACE=$DEX_DOCKER_WORKSPACE \
     -e DEX_HOST_GID=$DEX_HOST_GID \
@@ -179,6 +178,7 @@ v1-runtime(){
     -e DEX_HOST_UID=$DEX_HOST_UID \
     -e DEX_HOST_USER=$DEX_HOST_USER \
     -e DEX_HOST_HOME=$HOME \
+    -e DEX_IMAGE=$__image \
     -e DEX_IMAGE_NAME=$DEX_IMAGE_NAME \
     -e DEX_IMAGE_TAG=$__tag \
     -e HOME=/dex/home \

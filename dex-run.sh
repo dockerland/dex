@@ -26,10 +26,10 @@ dex-run(){
       "the $__image image is missing a org.dockerland.dex.api label" \
       "please ensure you're up to date, rebuild it, or consult image maintainer"
 
-    [ "$image_api" = "$DEX_API" ] || log \
+    [ "$image_api" = "$DEX_RUNTIME" ] || log \
       "warning, the $__image image is labeled for a different api." \
       "please ensure you're up to date, rebuild it, or consult image maintainer" \
-      "current api: $DEX_API" \
+      "current api: $DEX_RUNTIME" \
       "$__image api: $image_api"
   fi
 
