@@ -169,7 +169,8 @@ v1-runtime(){
   # deactivate docker-machine
   __deactivate_machine
 
-  ${DEX_RUNTIME:-exec} docker run $__docker_flags \
+  ${DEX_DEBUG:=false} && __exec="echo"
+  ${__exec:-exec} docker run $__docker_flags \
     -e DEX_DOCKER_HOME=$DEX_DOCKER_HOME \
     -e DEX_DOCKER_WORKSPACE=$DEX_DOCKER_WORKSPACE \
     -e DEX_HOST_GID=$DEX_HOST_GID \
