@@ -101,29 +101,12 @@ teardown(){
   [[ "$output" == *"TEST_B=test"* ]]
 }
 
-
 @test "runtime sets a unique home by default (DEX_HOME/homes/<image>-<tag>)" {
   rm -rf $DEX_HOME/homes/debian-latest
 
   run $DEX run imgtest/debian:latest
   [ $status -eq 0 ]
   [ -d $DEX_HOME/homes/debian-latest ]
-}
-
-@test "runtime ro-mounts host paths to coax common absolute path resolutions" {
-  cd $TMPDIR
-  $DEX run imgtest/debian ls $TMPDIR
-
-  run $DEX run imgtest/labels:disable-host_paths ls $TMPDIR
-  [ $status -eq 2 ]
-}
-
-@test "runtime respects ro-mounting of host users/groups" {
-  run $DEX run imgtest/debian whoami
-  [ $status -eq 1 ]
-
-  run $DEX run imgtest/labels:enable-host_users whoami
-  [ $status -eq 0 ]
 }
 
 @test "runtime respects docker_envars label" {
@@ -144,7 +127,6 @@ teardown(){
   run $DEX run --build imgtest/labels ls /dex/home/__exists__
   [ $status -eq 0 ]
 }
-
 
 @test "runtime expands ~ as real \$HOME in labels" {
   # imgtest/labels:home image ::
@@ -226,6 +208,40 @@ teardown(){
   run $DEX run imgtest/labels rm /tmp/ro/__exists__
   [ $status -eq 1 ]
 }
+
+@test "runtime ro-mounts host paths to coax common absolute path resolutions" {
+  cd $TMPDIR
+  $DEX run imgtest/debian ls $TMPDIR
+
+  run $DEX run imgtest/labels:disable-host_paths ls $TMPDIR
+  [ $status -eq 2 ]
+}
+
+@test "runtime respects host_users label for ro-mounting of host users/groups" {
+  run $DEX run imgtest/debian whoami
+  [ $status -eq 1 ]
+
+  run $DEX run imgtest/labels:enable-host_users whoami
+  [ $status -eq 0 ]
+}
+
+@test "runtime respects host_docker label for passthrough of host docker socket and vars" {
+  # test if host docker is [NOT!] exposed by default
+  run $DEX run imgtest/debian ls -l /var/run/docker.sock
+  [ $status -eq 2 ]
+
+  run $DEX run imgtest/labels:enable-host_docker ls -l /var/run/docker.sock
+  [ $status -eq 0 ]
+
+  # test polling of host docker
+  run $DEX run imgtest/labels:enable-host_docker docker info
+  [ $status -eq 0 ]
+
+  # test DOCKER_ envar passthrough
+  run DOCKER_TEST="test" $DEX run imgtest/labels:enable-host_docker
+  [[ $output == *"DOCKER_TEST=test"* ]]
+}
+
 
 @test "runtime suppresses tty flags when container output is piped" {
   # imgtest/labels image ::
