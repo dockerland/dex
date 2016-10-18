@@ -18,6 +18,7 @@ v1-runtime(){
   #  org.dockerland.dex.docker_home=~             (user's actual home)
   #  org.dockerland.dex.docker_volumes=/etc/hosts:/etc/hosts:ro
   #  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
+  #  org.dockerland.dex.host_docker=rw            (expose host's docker socket and passthru docker vars)
   #  org.dockerland.dex.host_paths=rw             (rw mount host HOME and CWD)
   #  org.dockerland.dex.host_users=ro             (ro mount host /etc/passwd|group)
   #  org.dockerland.dex.window=yes                (applies window/X11 flags)
@@ -29,12 +30,13 @@ v1-runtime(){
   __docker_home=$DEX_IMAGE_NAME-$__tag
   __docker_workspace=$DEX_HOST_PWD
   __docker_volumes=
+  __host_docker=
   __host_paths="ro"
   __host_users=
   __window=
 
   # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_paths host_users window ; do
+  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
     # @TODO reduce this to a single docker inspect command
     val=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
@@ -137,6 +139,15 @@ v1-runtime(){
   # map host /etc/passwd and /etc/group in container
   case $(echo "$__host_users" | awk '{print tolower($0)}') in rw|ro)
     __docker_volumes+=" /etc/passwd:/etc/passwd:$__host_users /etc/group:/etc/group:$__host_users"
+  esac
+
+  # map host docker socket and passthru docker vars
+  case $(echo "$__host_docker" | awk '{print tolower($0)}') in rw|ro)
+    docker_socket=/var/run/docker.sock
+    docker_group=$(if [[ "$OSTYPE" == darwin* ]] || [[ "$OSTYPE" == macos* ]]; then stat -f '%Dg' $docker_socket ; else stat -c '%g' $docker_socket ; fi)
+    __docker_volumes+=" $docker_socket:/var/run/docker.sock:$__host_docker $DOCKER_CERT_PATH $MACHINE_STORAGE_PATH"
+    __docker_flags+=" --group-add=$docker_group"
+    __docker_envars+=" DOCKER_* MACHINE_STORAGE_PATH"
   esac
 
   # mount specicified devices (only if they exist)
