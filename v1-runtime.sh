@@ -124,6 +124,21 @@ v1-runtime(){
       ;;
   esac
 
+  # mount typical host paths to coax common absolute path resolutions
+  case $(echo "$__host_paths" | awk '{print tolower($0)}') in rw|ro)
+    if [[ ! "$HOME" =~ ^($DEX_HOST_PWD|/dex/home)$ ]]; then
+      __docker_volumes+=" $HOME:$HOME:$__host_paths"
+    fi
+    if [[ ! "$DEX_HOST_PWD" =~ ^($HOME|/dex/workspace|/|/bin|/dev|/etc|/lib|/lib64|/opt|/proc|/sbin|/run|/sbin|/srv|/sys|/usr|/var)$ ]]; then
+      __docker_volumes+=" $DEX_HOST_PWD:$DEX_HOST_PWD:$__host_paths"
+    fi
+  esac
+
+  # map host /etc/passwd and /etc/group in container
+  case $(echo "$__host_users" | awk '{print tolower($0)}') in rw|ro)
+    __docker_volumes+=" /etc/passwd:/etc/passwd:$__host_users /etc/group:/etc/group:$__host_users"
+  esac
+
   # mount specicified devices (only if they exist)
   for path in $__docker_devices; do
     [ "${path:0:5}" = "/dev/" ] || path="/dev/$path"
@@ -157,22 +172,6 @@ v1-runtime(){
   for var in $__vars; do
     eval "[ -z \"\$$var\" ] || __docker_flags+=\" -e $var=\$$var\""
   done
-
-  # mount typical host paths in container to coax some absolute path resolutions
-  case $(echo "$__host_paths" | awk '{print tolower($0)}') in rw|ro)
-    if [[ ! "$HOME" =~ ^($DEX_HOST_PWD|/dex/home)$ ]]; then
-      [ -d $HOME ] && __docker_flags+=" -v $HOME:$HOME:$__host_paths"
-    fi
-    if [[ ! "$DEX_HOST_PWD" =~ ^($HOME|/dex/workspace|/|/bin|/dev|/etc|/lib|/lib64|/opt|/proc|/sbin|/run|/sbin|/srv|/sys|/usr|/var)$ ]]; then
-      __docker_flags+=" -v $DEX_HOST_PWD:$DEX_HOST_PWD:$__host_paths"
-    fi
-  esac
-
-  # map host /etc/passwd and /etc/group in container
-  case $(echo "$__host_users" | awk '{print tolower($0)}') in rw|ro)
-    [ -e /etc/passwd ] && __docker_flags+=" -v /etc/passwd:/etc/passwd:$__host_users"
-    [ -e /etc/group ] && __docker_flags+=" -v /etc/group:/etc/group:$__host_users"
-  esac
 
   # deactivate docker-machine
   __deactivate_machine
