@@ -14,15 +14,20 @@
 normalize_flags(){
   local fargs="$1"
   shift
-  for arg in $@; do
-    if [ "--" = ${arg:0:2} ]; then
+  while [ $# -ne 0 ]; do
+    arg="$1"
+    shift
+    if [ "--" = "$arg" ]; then
+      echo "-- $@"
+      break
+    elif [ "--" = ${arg:0:2} ]; then
       echo ${arg%=*}
       [[ "$arg" == *"="* ]] && echo ${arg#*=}
     elif [ "-" = ${arg:0:1} ]; then
       local i=1
       while read -n1 flag; do
         ((i++))
-        [ -z "$flag" ] || echo "-$flag"
+        [ -z "$flag" ] || printf "%s\n" "-$flag"
         if [[ "$fargs" == *"$flag"* ]]; then
           echo ${arg:$i}
           break
@@ -44,19 +49,26 @@ normalize_flags(){
 
 normalize_flags_first(){
   local fargs="$1"
-  local args=()
   shift
-  args=()
-  for arg in $(normalize_flags "$fargs" "$@"); do
-    if [ "-" = ${arg:0:1} ]; then
-      echo $arg
+  set -- $(normalize_flags "$fargs" "$@")
+  while [ $# -ne 0 ]; do
+    arg="$1"
+    shift
+    if [ "--" = "$arg" ]; then
+      for arg in ${args[@]}; do
+        printf "%s\n" "$arg"
+      done
+      echo "-- $@"
+      return
+    elif [ "-" = ${arg:0:1} ]; then
+      printf "%s\n" "$arg"
     else
       args+=( "$arg" )
     fi
   done
 
   for arg in ${args[@]}; do
-    echo $arg
+    printf "%s\n" "$arg"
   done
 }
 
