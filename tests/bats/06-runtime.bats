@@ -110,12 +110,20 @@ teardown(){
   [ -d $DEX_HOME/homes/debian-latest ]
 }
 
-@test "runtime ro-mounts typical host paths to coax absolute path resolution by default" {
+@test "runtime ro-mounts host paths to coax common absolute path resolutions" {
   cd $TMPDIR
   $DEX run imgtest/debian ls $TMPDIR
 
-  run $DEX run imgtest/labels:no-hostpaths ls $TMPDIR
+  run $DEX run imgtest/labels:disable-host_paths ls $TMPDIR
   [ $status -eq 2 ]
+}
+
+@test "runtime respects ro-mounting of host users/groups" {
+  run $DEX run imgtest/debian whoami
+  [ $status -eq 1 ]
+
+  run $DEX run imgtest/labels:enable-host_users whoami
+  [ $status -eq 0 ]
 }
 
 @test "runtime respects docker_envars label" {

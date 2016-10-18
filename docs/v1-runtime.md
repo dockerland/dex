@@ -21,7 +21,8 @@ lets talk about how to "dexify" your application...
 #  org.dockerland.dex.docker_home=~             (user's actual home)
 #  org.dockerland.dex.docker_volumes=/etc/hosts:/etc/hosts:ro
 #  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
-#  org.dockerland.dex.proxy_hostpaths=rw        (rw mount host HOME and CWD)
+#  org.dockerland.dex.host_paths=rw             (rw mount host HOME and CWD)
+#  org.dockerland.dex.host_users=ro             (ro mount host /etc/passwd|group)
 #  org.dockerland.dex.window=yes                (applies window/X11 flags)
 #
 ```

@@ -18,7 +18,8 @@ v1-runtime(){
   #  org.dockerland.dex.docker_home=~             (user's actual home)
   #  org.dockerland.dex.docker_volumes=/etc/hosts:/etc/hosts:ro
   #  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
-  #  org.dockerland.dex.proxy_hostpaths=rw        (rw mount host HOME and CWD)
+  #  org.dockerland.dex.host_paths=rw             (rw mount host HOME and CWD)
+  #  org.dockerland.dex.host_users=ro             (ro mount host /etc/passwd|group)
   #  org.dockerland.dex.window=yes                (applies window/X11 flags)
   #
   __docker_devices=
@@ -28,11 +29,12 @@ v1-runtime(){
   __docker_home=$DEX_IMAGE_NAME-$__tag
   __docker_workspace=$DEX_HOST_PWD
   __docker_volumes=
-  __proxy_hostpaths="ro"
+  __host_paths="ro"
+  __host_users=
   __window=
 
   # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes proxy_hostpaths window ; do
+  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_paths host_users window ; do
     # @TODO reduce this to a single docker inspect command
     val=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
@@ -157,13 +159,19 @@ v1-runtime(){
   done
 
   # mount typical host paths in container to coax some absolute path resolutions
-  case $(echo "$__proxy_hostpaths" | awk '{print tolower($0)}') in rw|ro)
+  case $(echo "$__host_paths" | awk '{print tolower($0)}') in rw|ro)
     if [[ ! "$HOME" =~ ^($DEX_HOST_PWD|/dex/home)$ ]]; then
-      [ -d $HOME ] && __docker_flags+=" -v $HOME:$HOME:$__proxy_hostpaths"
+      [ -d $HOME ] && __docker_flags+=" -v $HOME:$HOME:$__host_paths"
     fi
     if [[ ! "$DEX_HOST_PWD" =~ ^($HOME|/dex/workspace|/|/bin|/dev|/etc|/lib|/lib64|/opt|/proc|/sbin|/run|/sbin|/srv|/sys|/usr|/var)$ ]]; then
-      __docker_flags+=" -v $DEX_HOST_PWD:$DEX_HOST_PWD:$__proxy_hostpaths"
+      __docker_flags+=" -v $DEX_HOST_PWD:$DEX_HOST_PWD:$__host_paths"
     fi
+  esac
+
+  # map host /etc/passwd and /etc/group in container
+  case $(echo "$__host_users" | awk '{print tolower($0)}') in rw|ro)
+    [ -e /etc/passwd ] && __docker_flags+=" -v /etc/passwd:/etc/passwd:$__host_users"
+    [ -e /etc/group ] && __docker_flags+=" -v /etc/group:/etc/group:$__host_users"
   esac
 
   # deactivate docker-machine
