@@ -15,7 +15,10 @@ main_run(){
   if [ $# -eq 0 ]; then
     display_help 2
   else
-    set -- $(normalize_flags "" "$@")
+    echo $@
+    set -- $(normalize_flags_first "" "$@")
+    echo $@
+    exit
     while [ $# -ne 0 ]; do
       case $1 in
         -b|--build)     __build_flag=true ;;
