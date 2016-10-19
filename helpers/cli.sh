@@ -11,32 +11,36 @@
 #     => -a -b -c
 #   normalize_flags "om" "-abcooutput.txt" "--def=jam" "-mz"
 #     => -a -b -c -o output.txt --def jam -m z"
+#   normalize_flags "om" "-abcooutput.txt" "--def=jam" "-mz" "--" "-abcx" "-my"
+#     => -a -b -c -o output.txt --def jam -m z -- -abcx -my"
 normalize_flags(){
   local fargs="$1"
+  local passthru=false
+  local output=""
   shift
-  while [ $# -ne 0 ]; do
-    arg="$1"
-    shift
-    if [ "--" = "$arg" ]; then
-      echo "-- $@"
-      break
+  for arg in $@; do
+    if $passthru; then
+      output+=" $arg"
+    elif [ "--" = "$arg" ]; then
+      passthru=true
+      output+=" --"
     elif [ "--" = ${arg:0:2} ]; then
-      echo ${arg%=*}
-      [[ "$arg" == *"="* ]] && echo ${arg#*=}
+      output+=" ${arg%=*}"
+      [[ "$arg" == *"="* ]] && output+=" ${arg#*=}"
     elif [ "-" = ${arg:0:1} ]; then
-      local i=1
-      while read -n1 flag; do
-        ((i++))
-        [ -z "$flag" ] || printf "%s\n" "-$flag"
+      local p=1
+      while ((p++)); read -n1 flag; do
+        [ -z "$flag" ] || output+=" -$flag"
         if [[ "$fargs" == *"$flag"* ]]; then
-          echo ${arg:$i}
+          output+=" ${arg:$p}"
           break
         fi
       done < <(echo -n "${arg:1}")
     else
-      echo $arg
+      output+=" $arg"
     fi
   done
+  printf "%s" "${output:1}"
 }
 
 # normalize_flags_first - like normalize_flags, but outputs flags first.
@@ -46,30 +50,24 @@ normalize_flags(){
 # examples:
 #   normalize_flags_first "" "-abc command -xyz otro"
 #     => -a -b -c -x -y -z command otro
+#   normalize_flags_first "" "-abc command -xyz otro -- -def xyz"
+#     => -a -b -c -x -y -z command otro -- -def xyz
 
 normalize_flags_first(){
   local fargs="$1"
+  local output=""
+  local cmdstr=""
+  local passthru=false
   shift
-  set -- $(normalize_flags "$fargs" "$@")
-  while [ $# -ne 0 ]; do
-    arg="$1"
-    shift
-    if [ "--" = "$arg" ]; then
-      for arg in ${args[@]}; do
-        printf "%s\n" "$arg"
-      done
-      echo "-- $@"
-      return
-    elif [ "-" = ${arg:0:1} ]; then
-      printf "%s\n" "$arg"
-    else
-      args+=( "$arg" )
+  for arg in $(normalize_flags "$fargs" "$@"); do
+    [ "--" = "$arg" ] && passthru=true
+    if $passthru || [ ! "-" = ${arg:0:1} ]; then
+      cmdstr+=" $arg"
+      continue
     fi
+    output+=" $arg"
   done
-
-  for arg in ${args[@]}; do
-    printf "%s\n" "$arg"
-  done
+  printf "%s%s" "${output:1}" "$cmdstr"
 }
 
 runfunc(){
