@@ -39,7 +39,7 @@ v1-runtime(){
   __window=
 
   # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
+  for label in api add_host_user docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
     # @TODO reduce this to a single docker inspect command
     val=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
@@ -147,7 +147,7 @@ v1-runtime(){
   # add host user and group to container's /etc/passwd and /etc/group
   case $(echo "$__add_host_user" | awk '{print tolower($0)}') in true|yes|on)
     preconf-runtime $__image
-    __docker_volumes+=" $passwd_file:/etc/passwd:$__host_users $group_file:/etc/group:$__host_users"
+    __docker_volumes+=" $passwd_file:/etc/passwd $group_file:/etc/group"
   esac
 
   # map host docker socket and passthru docker vars
@@ -167,7 +167,7 @@ v1-runtime(){
 
   # mount specified volumes (only if they exist)
   for path in $__docker_volumes; do
-    IFS=":" read path_host path_container path_mode <<<$path
+    IFS=":" read path_host path_container path_mode <<< "$path"
     path_host=${path_host/#\~/$HOME}
     [ -e "$path_host" ] || continue
     __docker_flags+=" -v $path_host:${path_container:-$path_host}:${path_mode:-rw}"
