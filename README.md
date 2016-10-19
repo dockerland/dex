@@ -92,7 +92,7 @@ Dex consults source repositories for the Dockerfile to build application images 
 similar to how yum and apt consult package sources. Thus,
 __applications available to dex are dictated by source repository checkouts__.
 
-Source Repositories are defined one-per-line in `$DEX_HOME/sources.list` as `<name> <url>`. URLs may point to the  _remote URL_ or _local path_ of a [git repository](https://git-scm.com/) with an `dex-images/` tree containing applications . Use `dex source add` to add additional sources. `dex help source` for more.
+Source Repositories are defined one-per-line in `$DEX_HOME/sources.list` as `<name> <url>`. URLs may point to the  _remote URL_ or _local path_ of a [git repository](https://git-scm.com/) with a `dex-images/` tree containing applications. Use `dex source add` to add additional sources, and `dex help source` for additional information.
 
 [sources.list example](sources.list) - [repository example](https://github.com/dockerland/dex-dockerfiles-core)
 
@@ -122,7 +122,7 @@ DEX_RUNTIME | v1 | runtime api version
 
 #### dex runtime
 
-variables that effect dex executio, e.g.
+variables that effect dex execution, e.g.
 
 ```sh
 dex install ansible
@@ -135,7 +135,7 @@ v1 runtime vars | default | description
 --- | --- | ---
 DEX_DOCKER_CMD | _image_  | alternative command passed to docker run
 DEX_DOCKER_ENTRYPOINT | _image_  |  alternative entrypoint passed to docker run
-DEX_DOCKER_HOME | _image_  | host directory bind mounted as container's $HOME. Typically applications get their own home (`$DEX_HOME/homes/[image]-[tag]`) to avoid clobbering system-installed versions.
+DEX_DOCKER_HOME | _image_  | host directory bind mounted as container's `$HOME`. Typically applications get their own home (`$DEX_HOME/homes/[image]-[tag]`) to avoid clobbering system-installed versions.
 DEX_DOCKER_WORKSPACE | current pwd |  host directory bind mounted as container's CWD
 DEX_DOCKER_GID| current uid | host gid to run the container under
 DEX_DOCKER_UID| current gid | host uid to run the container under
