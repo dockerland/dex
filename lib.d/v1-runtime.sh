@@ -11,6 +11,7 @@ v1-runtime(){
   # label defaults -- images may provide a org.dockerland.dex.<var> label
   #  supplying a value that overrides these default values, examples are:
   #
+  #  org.dockerland.dex.add_host_user=yes         (adds host user/uid and group/gid to container's /etc/passwd and /etc/group)
   #  org.dockerland.dex.docker_devices=/dev/shm   (shm mounted as /dev/shm)
   #  org.dockerland.dex.docker_envars="LANG TERM !MYAPP_" (passthru LANG & TERM & MYAPP_*)
   #  org.dockerland.dex.docker_flags=-it          (interactive tty)
@@ -23,6 +24,8 @@ v1-runtime(){
   #  org.dockerland.dex.host_users=ro             (ro mount host /etc/passwd|group)
   #  org.dockerland.dex.window=yes                (applies window/X11 flags)
   #
+
+  __add_host_user=
   __docker_devices=
   __docker_envars="LANG TZ"
   __docker_flags=
@@ -139,6 +142,12 @@ v1-runtime(){
   # map host /etc/passwd and /etc/group in container
   case $(echo "$__host_users" | awk '{print tolower($0)}') in rw|ro)
     __docker_volumes+=" /etc/passwd:/etc/passwd:$__host_users /etc/group:/etc/group:$__host_users"
+  esac
+
+  # add host user and group to container's /etc/passwd and /etc/group
+  case $(echo "$__add_host_user" | awk '{print tolower($0)}') in true|yes|on)
+    preconf-runtime $__image
+    __docker_volumes+=" $passwd_file:/etc/passwd:$__host_users $group_file:/etc/group:$__host_users"
   esac
 
   # map host docker socket and passthru docker vars
