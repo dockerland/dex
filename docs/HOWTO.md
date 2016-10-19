@@ -2,7 +2,7 @@
 
 ## exec ____ instead of the contained application
 
-dex supports altering the default [docker entrypoint](https://docs.docker.com/engine/reference/builder/#/entrypoint) to run, for instance, a shell instead of the default application.
+Dex supports altering the default [docker entrypoint](https://docs.docker.com/engine/reference/builder/#/entrypoint), allowing a user to run applications other than the default, for instance, a shell.
 
 Override the entrypoint via:
   * passing a flag to `dex run`, or
@@ -24,7 +24,7 @@ DEX_DOCKER_ENTRYPOINT=sh DEX_DOCKER_FLAGS="-it" DEX_DOCKER_CMD= dansible-playboo
 
 ## containerize your application
 
-The process is no different than providing a regular Dockerfile for your application, except that
+The process is no different than providing a regular Dockerfile for your application, with the following exceptions:
 * dex uses _labels_ to specify runtime behavior and runtime version
 * dex uses a runtime script to execute your image (for consistency and convenience)
 
