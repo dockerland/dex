@@ -63,7 +63,7 @@ teardown(){
 
   [[ $output == *"DEX_HOST_GID=$(id -g)"* ]]
   [[ $output == *"DEX_HOST_GROUP=$(id -gn)"* ]]
-  [[ $output == *"DEX_HOST_UID=$(id -un)"* ]]
+  [[ $output == *"DEX_HOST_UID=$(id -u)"* ]]
   [[ $output == *"DEX_HOST_USER=$(id -un)"* ]]
 
   [[ $output == *"DEX_IMAGE=$DEX_NAMESPACE/debian:latest"* ]]
@@ -227,21 +227,18 @@ teardown(){
 
 @test "runtime respects host_docker label for passthrough of host docker socket and vars" {
   # test if host docker is [NOT!] exposed by default
-  run $DEX run imgtest/debian ls -l /var/run/docker.sock
-  [ $status -eq 2 ]
+  $DEX run imgtest/debian [ -S /var/run/docker.sock ] && false
 
-  run $DEX run imgtest/labels:enable-host_docker ls -l /var/run/docker.sock
-  [ $status -eq 0 ]
+  # test if /var/run/docker.sock gets exposed when host_docker label is set
+  $DEX run imgtest/labels:enable-host_docker [ -S /var/run/docker.sock ]
 
-  # test polling of host docker
-  run $DEX run imgtest/labels:enable-host_docker docker info
-  [ $status -eq 0 ]
+  # test polling of host docker (default command outputs `docker info`)
+  $DEX run imgtest/labels:enable-host_docker | grep -q Plugins
 
   # test DOCKER_ envar passthrough
-  run DOCKER_TEST="test" $DEX run imgtest/labels:enable-host_docker
+  run DOCKER_TEST="test" $DEX run imgtest/labels:enable-host_docker printenv
   [[ $output == *"DOCKER_TEST=test"* ]]
 }
-
 
 @test "runtime suppresses tty flags when container output is piped" {
   # imgtest/labels image ::

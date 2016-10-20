@@ -1,7 +1,6 @@
 FROM alpine:3.4
 
-RUN apk add --no-cache \
-  docker
+RUN apk add --no-cache curl
 
 #
 # v1 dex-api
@@ -15,4 +14,4 @@ LABEL \
 # debian image
 #
 
-CMD echo "ALPINE_RELEASE=$(cat /etc/alpine-release)" ; printenv
+CMD curl --unix-socket /var/run/docker.sock http://localhost/info
