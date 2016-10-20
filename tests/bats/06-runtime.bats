@@ -223,6 +223,7 @@ teardown(){
 
   run $DEX run imgtest/labels:enable-host_users whoami
   [ $status -eq 0 ]
+  [ "$output" = "$(id -un 2>/dev/null)" ]
 }
 
 @test "runtime respects host_docker label for passthrough of host docker socket and vars" {
