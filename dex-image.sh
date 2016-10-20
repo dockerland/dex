@@ -131,7 +131,7 @@ dex-image-rm(){
 #
 # usage: dex-image-build-container <image name> [force-recreate]
 dex-image-build-container(){
-  local name=$(docker_safe_name "$1" "build")
+  local name=$(docker_safe_name "$1" "dexbuild")
   local recreate=${2:-false}
   __image_container=
   (
