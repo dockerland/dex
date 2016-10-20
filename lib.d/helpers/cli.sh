@@ -70,6 +70,29 @@ normalize_flags_first(){
   printf "%s%s" "${output:1}" "$cmdstr"
 }
 
+# set_cmd: loops through a list of commands, prefering the "prefixed" version(s)
+#   sets `__cmd` to first-found matching command. uses __cmd_prefix
+#   returns 1 if no suitable command found.
+set_cmd(){
+  __cmd=
+  local path=
+  for lookup in $@; do
+    type ${__cmd_prefix}${lookup} &>/dev/null && {
+      __cmd=${__cmd_prefix}${lookup}
+      return 0
+    }
+  done
+
+  for lookup in $@; do
+    type $lookup &>/dev/null && {
+      __cmd=$lookup
+      return 0
+    }
+  done
+
+  return 1
+}
+
 runfunc(){
   [ "$(type -t $1)" = "function" ] || error \
     "$1 is not a valid runfunc target"
