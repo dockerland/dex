@@ -20,7 +20,7 @@ v1-runtime(){
   #  org.dockerland.dex.docker_workspace=/        (host root as /dex/workspace)
   #  org.dockerland.dex.host_docker=rw            (expose host's docker socket and passthru docker vars)
   #  org.dockerland.dex.host_paths=rw             (rw mount host HOME and CWD)
-  #  org.dockerland.dex.host_users=ro             (ro mount host /etc/passwd|group)
+  #  org.dockerland.dex.host_users=ro             (augment container's /etc/passwd and /etc/group files [in read-only mode] with current host's uid|gid)
   #  org.dockerland.dex.window=yes                (applies window/X11 flags)
   #
   __docker_devices=
@@ -33,6 +33,7 @@ v1-runtime(){
   __host_docker=
   __host_paths="ro"
   __host_users=
+
   __window=
 
   # augment defaults with image meta
@@ -138,7 +139,22 @@ v1-runtime(){
 
   # map host /etc/passwd and /etc/group in container
   case $(echo "$__host_users" | awk '{print tolower($0)}') in rw|ro)
-    __docker_volumes+=" /etc/passwd:/etc/passwd:$__host_users /etc/group:/etc/group:$__host_users"
+    container_sha=$(dex-image-build-container $__image) || {
+      echo "dex runtime failed to spawn a build container"
+      exit 1
+    }
+    container_dir=$DEX_HOME/build-containers/$container_sha
+    [ -d $container_dir ] || mkdir -p $container_dir
+    [ -e $container_dir/passwd ] || __local_docker cp $container_sha:/etc/passwd $container_dir/passwd
+    [ -e $container_dir/group ] || __local_docker cp $container_sha:/etc/group $container_dir/group
+
+    # augment /etc/passwd and /etc/group files with current user (if !already exists)
+    grep -q ":$DEX_HOST_UID:$DEX_HOST_GID:" $container_dir/passwd || \
+      echo "$DEX_HOST_USER:x:$DEX_HOST_UID:$DEX_HOST_UID:gecos:/dex/home:/bin/sh" >> $container_dir/passwd
+    grep -q ":$DEX_HOST_GID:" $container_dir/group || \
+      echo "$DEX_HOST_GROUP:x:$DEX_HOST_GID:" >> $container_dir/group
+
+    __docker_volumes+=" $container_dir/passwd:/etc/passwd:$__host_users $container_dir/group:/etc/group:$__host_users"
   esac
 
   # map host docker socket and passthru docker vars
