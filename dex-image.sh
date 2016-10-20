@@ -64,6 +64,8 @@ dex-image-build(){
 
   if [ ${#__built_images[@]} -gt 0 ]; then
     for __image in ${__built_images[@]}; do
+      # force re-create "build" container
+      dex-image-build-container $__image true &>/dev/null
       log "+ built $__image"
     done
     return 0
@@ -119,4 +121,25 @@ dex-image-rm(){
   }
 
   error "failed to remove any images matching $__imgstr"
+}
+
+# dex-image-build-container - ensure a container is accessible for an image
+#  expects image name, prints container sha or returns 1 if no missing.
+#
+#  build containers are useful for pulling files out of a container during
+#  runtime, e.g. to augment /etc/passwd. prints the sha of build container.
+#
+# usage: dex-image-build-container <image name> [force-recreate]
+dex-image-build-container(){
+  local name=$(docker_safe_name "$1" "build")
+  local recreate=${2:-false}
+  __image_container=
+  (
+    exec &>/dev/null
+    $recreate && __local_docker rm --force $name
+    __local_docker inspect $name || {
+      __local_docker run --entrypoint=false --name=$name $1
+    }
+  )
+  __local_docker inspect -f "{{ .Id }}" $name 2>/dev/null || return 1
 }
