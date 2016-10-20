@@ -131,7 +131,6 @@ setup(){
   [ ${#lines[@]} -eq 0 ]
 }
 
-
 @test "image build respects tags" {
   [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
 

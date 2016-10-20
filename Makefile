@@ -72,7 +72,7 @@ $(NAMESPACE):
 	)
 
 tests: dockerbuild-tests
-	@rm -rf $(CWD)/tests/bats/tmp/*
+	@rm -rf $(CWD)/tests/bats/tmp
 	docker run -it --rm -u $$(id -u):$$(id -g) $(DOCKER_FOR_MAC_WORKAROUND) \
     --group-add=$(DOCKER_GROUP_ID) \
     --device=/dev/tty0 --device=/dev/console \
@@ -81,7 +81,7 @@ tests: dockerbuild-tests
     -e SKIP_NETWORK_TEST=$(SKIP_NETWORK_TEST) \
 		--workdir $(CWD) \
 	    makefile-$(NAMESPACE)-tests bats tests/bats/$(TEST)
-	@rm -rf $(CWD)/tests/bats/tmp/*
+	rm -rf $(CWD)/tests/bats/tmp
 
 #
 # release targets

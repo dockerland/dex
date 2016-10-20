@@ -112,6 +112,12 @@ dex-image-rm(){
 
   QUIET_FLAG="-q"
   for image in $(dex-image-ls $namespace); do
+    # remove any 'build' containers
+    for container in $(__local_docker ps -aq --filter "ancestor=$image" --filter "name=_dexbuild"); do
+      __local_docker rm --force $container &>/dev/null
+    done
+
+    # remove image
     __local_docker rmi $force_flag $image && removed_image=true
   done
 
