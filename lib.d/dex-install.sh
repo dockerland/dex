@@ -23,6 +23,8 @@ dex-install(){
 
   for imgname in ${__built_images[@]}; do
 
+    preconf-install $imgname
+
     local api=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $imgname)
     local image=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.image\" }}" $imgname)
     local tag=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.build-tag\" }}" $imgname)
@@ -56,6 +58,9 @@ dex-install(){
         declare -f dex-image-build-container >> $bin
         declare -f docker_safe_name >> $bin
         declare -f get_group_id >> $bin
+        declare -f preconf-container-name >> $bin
+        declare -f preconf-init-temp-dir >> $bin
+        declare -f preconf-runtime >> $bin
         declare -f $runtimeFn >> $bin
         echo "__image=\"$imgname\"" >> $bin
         echo "$runtimeFn \$@" >> $bin

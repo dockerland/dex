@@ -11,6 +11,7 @@ v1-runtime(){
   # label defaults -- images may provide a org.dockerland.dex.<var> label
   #  supplying a value that overrides these default values, examples are:
   #
+  #  org.dockerland.dex.add_host_user=yes         (adds host user/uid and group/gid to container's /etc/passwd and /etc/group)
   #  org.dockerland.dex.docker_devices=/dev/shm   (shm mounted as /dev/shm)
   #  org.dockerland.dex.docker_envars="LANG TERM !MYAPP_" (passthru LANG & TERM & MYAPP_*)
   #  org.dockerland.dex.docker_flags=-it          (interactive tty)
@@ -23,6 +24,8 @@ v1-runtime(){
   #  org.dockerland.dex.host_users=ro             (augment container's /etc/passwd and /etc/group files [in read-only mode] with current host's uid|gid)
   #  org.dockerland.dex.window=yes                (applies window/X11 flags)
   #
+
+  __add_host_user=
   __docker_devices=
   __docker_envars="LANG TZ"
   __docker_flags=
@@ -37,7 +40,7 @@ v1-runtime(){
   __window=
 
   # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
+  for label in api add_host_user docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
     # @TODO reduce this to a single docker inspect command
     val=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
@@ -157,6 +160,12 @@ v1-runtime(){
     __docker_volumes+=" $container_dir/passwd:/etc/passwd:$__host_users $container_dir/group:/etc/group:$__host_users"
   esac
 
+  # add host user and group to container's /etc/passwd and /etc/group
+  case $(echo "$__add_host_user" | awk '{print tolower($0)}') in true|yes|on)
+    preconf-runtime $__image
+    __docker_volumes+=" $passwd_file:/etc/passwd $group_file:/etc/group"
+  esac
+
   # map host docker socket and passthru docker vars
   case $(echo "$__host_docker" | awk '{print tolower($0)}') in rw|ro)
     docker_socket=/var/run/docker.sock
@@ -174,7 +183,7 @@ v1-runtime(){
 
   # mount specified volumes (only if they exist)
   for path in $__docker_volumes; do
-    IFS=":" read path_host path_container path_mode <<<$path
+    IFS=":" read path_host path_container path_mode <<< "$path"
     path_host=${path_host/#\~/$HOME}
     [ -e "$path_host" ] || continue
     __docker_flags+=" -v $path_host:${path_container:-$path_host}:${path_mode:-rw}"
