@@ -29,6 +29,20 @@ setup(){
   [ ${#lines[@]} -eq 1 ]
 }
 
+@test "image build spawns a new 'build' container after building images" {
+  local __image="$DEX_NAMESPACE/alpine:latest"
+
+  run $DEX image build imgtest/alpine
+  [ $status -eq 0 ]
+  container1_sha=$($DEX runfunc dex-image-build-container $__image) || false
+
+  run $DEX image build imgtest/alpine
+  [ $status -eq 0 ]
+  container2_sha=$($DEX runfunc dex-image-build-container $__image) || false
+
+  [ "$container1_sha" != "$container2_sha" ]
+}
+
 @test "image build labels images according to the current DEX_RUNTIME" {
 
   local img=$(docker images -q $DEX_NAMESPACE/alpine:latest)
