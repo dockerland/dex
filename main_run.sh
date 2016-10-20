@@ -19,7 +19,7 @@ main_run(){
       case $1 in
         -b|--build)     __build_flag=true ;;
         -p|--pull)      __build_flag=true ; __pull_flag=true ;;
-        -i|-t)          __interactive_flag=true ;;
+        -i|-t|-it|--interactive) __interactive_flag=true ;;
         -h|--help)      display_help ;;
         --cmd)          DEX_DOCKER_CMD="$2" ; shift ;;
         --entrypoint)   DEX_DOCKER_ENTRYPOINT="$2" ; shift ;;
