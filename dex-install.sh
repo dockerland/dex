@@ -53,6 +53,8 @@ dex-install(){
         echo "#!/usr/bin/env bash" > $bin
         declare -f __local_docker >> $bin
         declare -f __deactivate_machine >> $bin
+        declare -f dex-image-build-container >> $bin
+        declare -f docker_safe_name >> $bin
         declare -f get_group_id >> $bin
         declare -f $runtimeFn >> $bin
         echo "__image=\"$imgname\"" >> $bin
