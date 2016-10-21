@@ -23,9 +23,9 @@ dex-install(){
 
   for imgname in ${__built_images[@]}; do
 
-    local api=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $imgname)
-    local image=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.image\" }}" $imgname)
-    local tag=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.build-tag\" }}" $imgname)
+    local api=$(__local_docker inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $imgname)
+    local image=$(__local_docker inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.image\" }}" $imgname)
+    local tag=$(__local_docker inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.build-tag\" }}" $imgname)
     local bin="$DEX_BIN_DIR/${DEX_BIN_PREFIX}${image}-${tag}"
     local runtimeFn="$api-runtime"
 

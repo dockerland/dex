@@ -143,9 +143,9 @@ dex-image-build-container(){
   (
     exec &>/dev/null
     $recreate && __local_docker rm --force $name
-    __local_docker inspect $name || {
+    __local_docker inspect --type container $name || {
       __local_docker run --entrypoint=false --name=$name $1
     }
   )
-  __local_docker inspect -f "{{ .Id }}" $name 2>/dev/null || return 1
+  __local_docker inspect -f "{{ .Id }}" --type container $name || return 1
 }
