@@ -39,7 +39,7 @@ v1-runtime(){
   # augment defaults with image meta
   for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
     # @TODO reduce this to a single docker inspect command
-    val=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
+    val=$(__local_docker inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
     eval "__$label=\"$val\""
   done

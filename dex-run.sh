@@ -14,7 +14,7 @@ dex-run(){
   [[ $__image == *"*"* ]] && error "dex-run does not allow wildcards"
 
   # build image if it is missing
-  image_api=$(__local_docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $__image)
+  image_api=$(__local_docker inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.api\" }}" $__image)
   if [ $? -ne 0 ] || $__build_flag ; then
     $__pull_flag && dex-source-pull "$__source_match"
     dex-image-build || error \
