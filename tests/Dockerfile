@@ -26,7 +26,14 @@ RUN mkdir -p $HOME && \
   git config --global user.name "Tests Docker" && \
   chmod -R 777 $HOME
 
+RUN chmod o+w /etc/passwd /etc/group && \
+  printf "#!/usr/bin/env sh\n\
+  echo \"$NAMESPACE:x:\$(id -u):$(id -g):gecos:$HOME:/bin/sh\" >> /etc/passwd\n\
+  echo \"$NAMESPACE:x:\$(id -g):\" >> /etc/group\n\
+  exec \$@\n" > /entrypoint.sh && chmod +x /entrypoint.sh
+
 VOLUME $HOME
 WORKDIR /$NAMESPACE
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD bats tests/bats/
