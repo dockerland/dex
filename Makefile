@@ -63,8 +63,8 @@ $(NAMESPACE):
 	  mkdir -p $(CWD)/bin ; \
 	  sed \
 	    -e '/\@start/,/\@end/d' \
-		  -e 's/@VERSION@/$(RELEASE_TAG)/' \
-		  -e 's/@BUILD@/$(shell echo "$(RELEASE_SHA)" | cut -c1-7)/' \
+		  -e 's|@VERSION@|$(RELEASE_TAG)|' \
+		  -e 's|@BUILD@|$(shell echo "$(RELEASE_SHA)" | cut -c1-7)|' \
 		  $(CWD)/dex.sh > $(CWD)/bin/$(NAMESPACE) ; \
 	  find $(CWD)/lib.d/ -type f -name "*.sh" -exec cat {} >> $(CWD)/bin/$(NAMESPACE) + ; \
 	  echo 'main "$$@"' >> $(CWD)/bin/$(NAMESPACE) ; \
