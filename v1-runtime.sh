@@ -174,7 +174,7 @@ v1-runtime(){
 
   # mount specified volumes (only if they exist)
   for path in $__docker_volumes; do
-    IFS=":" read path_host path_container path_mode <<<$path
+    IFS=":" read path_host path_container path_mode <<< "$path"
     path_host=${path_host/#\~/$HOME}
     [ -e "$path_host" ] || continue
     __docker_flags+=" -v $path_host:${path_container:-$path_host}:${path_mode:-rw}"
