@@ -24,9 +24,11 @@ DEX_DOCKER_ENTRYPOINT=sh DEX_DOCKER_FLAGS="-it" DEX_DOCKER_CMD= dansible-playboo
 
 ## containerize your application
 
-The process is no different than providing a regular Dockerfile for your application, with the following exceptions:
-* dex uses _labels_ to specify runtime behavior and runtime version
-* dex uses a runtime script to execute your image (for consistency and convenience)
+If you have already containerized your application, all you need to do is add
+[label(s)](https://docs.docker.com/engine/reference/builder/#/label) to support dex. The process is no different than providing a regular
+Dockerfile for your application, with the following exceptions:
+* dex uses _[special labels](v1-runtime.md)_ to specify runtime behavior and version
+* dex generates a runtime script to execute your image (for consistency and convenience). It applies the working directory, users, groups, devices, volumes, variables, &c. needed to run your application.
 
 
 For instance, setting the `org.dockerland.dex.docker_devices=/dev/shm`
@@ -59,27 +61,65 @@ Refer to [v1-runtime documentation](v1-runtime.md) for a list of behavior-changi
 #### getting started
 
 
-To execute your application with dex, the Dockerfile must be in a [source repository](../README.md#source-repositories).
-
-
-
 ##### create a local source repository
 
-Lets create a local development repository. Alternatively you can start
-working directly from a repository checkout (in `$DEX_HOME/checkouts/`).
+To run your application with dex, its Dockerfile must be in a [source repository](../README.md#source-repositories).
+
+Lets create a local development repository. _Alternatively_ you can start
+working directly from a repository that's already checked out (e.g. `$DEX_HOME/checkouts/core`).
 
 ```sh
-
-# initialize local repository with Dockerfile for "my-app"
+# initialize local repository
 mkdir -p /path/to/my/local-repo
 cd /path/to/my/local-repo
 git init
+```
+
+##### add your application's Dockerfile
+
+Lets pretend your application is named "my-app". We'll create a Dockerfile
+in `dex-images/my-app/`. Dex uses this Dockerfile to build your application
+image, for instance on `dex run my-app`.
+
+```sh
+# use /path/to/my-app/Dockerfile for my application
+cd /path/to/my/local-repo
 mkdir -p dex-images/my-app
 cp /path/to/my-app/Dockerfile dex-images/my-app/Dockerfile
 echo "LABEL org.dockerland.dex.api=\"v1\"" >> dex-images/my-app/Dockerfile
 git add dex-images
 git commit -m "dexified my-app"
+```
 
+Refer to [v1-runtime documentation](v1-runtime.md) for a list of behavior-changing
+ labels and conventions.
+
+##### add a tagged Dockerfile [optional]
+
+You may provide different versions of your application by naming the
+Dockerfile `Dockerfile-<tag>`. For instance, provide a "debian-sid" version of your app by naming your Dockerfile `Dockerfile-debian-sid`. Users execute this version via `dex run my-app:debian-sid` &c.
+
+> For applications with different versions, the Dockerfile is often a _symlink_
+to a versioned Dockerfile acting as the default.
+
+```sh
+# tag my application as "debian-sid"
+cd /path/to/my/local-repo/dex-images/my-app
+mv Dockerfile Dockerfile-debian-sid
+
+# make "debian-sid" the default version
+ln -s Dockerfile-debian-sid Dockerfile
+
+git add Dockerfile Dockerfile-debian-sid
+git commit -m "versioned my-app"
+```
+
+##### register your local source repository
+
+Before dex can execute `my-app`, we must first add our local source repository.
+Skip this step if you're working from an existing checkout.
+
+```sh
 # add local repository to dex
 dex source add local /path/to/my/local-repo
 ```
@@ -87,16 +127,16 @@ dex source add local /path/to/my/local-repo
 the "local" repository is now checked out to `~/.dex/checkouts/local/`
 
 
-##### testing / running your application
+##### run and test your application
 
 > To speed up development, it is recommended to work within a checkout of a source repository. This way you do not need to
 commit and --pull changes whenever they're made -- the changes are immediately
 available.
 
-example of testing changes _from a checkout_
+example of testing changes _from a checkout_ (preferred)
 
 ```sh
-cd ~/.dex/checkouts/local/my-app
+cd ~/.dex/checkouts/local/dex-images/my-app
 echo "# my changes" >> Dockerfile
 dex run --build local/my-app
 ```
@@ -104,7 +144,7 @@ dex run --build local/my-app
 example of testing changes  _from a repository_ (requires intermittent commit)
 
 ```sh
-cd /path/to/my/local-repo
+cd /path/to/my/local-repo/dex-images/my-app
 echo "# my changes" >> Dockerfile
 git commit -am "my changes"
 dex run --pull local/my-app

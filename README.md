@@ -2,8 +2,9 @@
 
 [![Build Status](https://travis-ci.org/dockerland/dex.svg?branch=master)](https://travis-ci.org/dockerland/dex)
 
-Dex runs applications _without_ the need to install them or their dependencies by leveraging [docker](https://www.docker.com/). Dex also makes it [easier](docs/HOWTO.md#containerize-your-application) to containerize and _consistently_ execute
-applications, no matter the OS.
+Dex runs applications _without_ the need to install them or their dependencies by leveraging [docker](https://www.docker.com/). Dex also makes it easier to containerize and _consistently_ execute
+applications, no matter the OS. See our [HOWTO](docs/HOWTO.md#containerize-your-application) to learn about containing
+your application for dex.
 
 Windowed/X11 applications are supported, so expect `dex run firefox`. [Pipes](https://en.wikipedia.org/wiki/Redirection_%28computing%29#Piping)
 and [redirection](https://en.wikipedia.org/wiki/Redirection_%28computing%29) behave, so expect _pong_ from `echo 'ping' | docker run sed 's/ping/pong/'`.
@@ -146,7 +147,11 @@ DEX_WINDOW_FLAGS | _runtime_ | applied to windowed containers, typically `-v /tm
 
 ### containerize your application
 
-**work in progress** see [docs/HOWTO.md](docs/HOWTO.md#containerize-your-application)
+The process is no different than providing a regular
+Dockerfile that includes your application and its dependencies. If you have already containerized your application, all you need to do is add dex specific [label(s)](https://docs.docker.com/engine/reference/builder/#/label). 
+
+See [docs/HOWTO.md](docs/HOWTO.md#containerize-your-application) for details
+
 
 ### contributing to dex
 
