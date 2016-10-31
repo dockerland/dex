@@ -76,7 +76,7 @@ v1-runtime(){
   DEX_WINDOW_FLAGS=${DEX_WINDOW_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
 
   [ -z "$__api" ] && \
-    { "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
+    { echo "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
 
   # if home is not an absolute path, make relative to $DEX_HOME/homes/
   [ "${DEX_DOCKER_HOME:0:1}" != '/' ] && \
@@ -159,10 +159,13 @@ v1-runtime(){
 
   # map host docker socket and passthru docker vars
   case $(echo "$__host_docker" | awk '{print tolower($0)}') in rw|ro)
-    docker_socket=/var/run/docker.sock
-    docker_group=$(if [[ "$OSTYPE" == darwin* ]] || [[ "$OSTYPE" == macos* ]]; then stat -f '%Dg' $docker_socket ; else stat -c '%g' $docker_socket ; fi)
-    __docker_volumes+=" $docker_socket:/var/run/docker.sock:$__host_docker $DOCKER_CERT_PATH $MACHINE_STORAGE_PATH"
-    __docker_flags+=" --group-add=$docker_group"
+    __docker_socket=${DOCKER_SOCKET:-/var/run/docker.sock}
+    [ -S $__docker_socket ] || {
+      echo "image requests docker, but $__docker_socket is not a valid socket"
+      exit 1
+    }
+    __docker_volumes+=" $__docker_socket:/var/run/docker.sock:$__host_docker $DOCKER_CERT_PATH $MACHINE_STORAGE_PATH"
+    __docker_flags+=" --group-add=$(ls -ln $__docker_socket | awk '{print $4}')"
     __docker_envars+=" DOCKER_* MACHINE_STORAGE_PATH"
   esac
 

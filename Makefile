@@ -47,7 +47,7 @@ RELEASE_TAG ?= $(shell git rev-parse --abbrev-ref HEAD)
 RELEASE_SHA ?= $(shell git rev-parse --short HEAD)
 
 DOCKER_SOCKET ?= /var/run/docker.sock
-DOCKER_GROUP_ID ?= $(shell if [[ "$$OSTYPE" == darwin* ]] || [[ "$$OSTYPE" == macos* ]]; then stat -f '%Dg' $(DOCKER_SOCKET) ; else stat -c '%g' $(DOCKER_SOCKET) ; fi)
+DOCKER_GROUP_ID ?= $(shell ls -ln $(DOCKER_SOCKET) | awk '{print $$4}')
 
 # for docker-for-mac, we also add group-id of 50 ("authedusers") as moby seems to auto bind-mount /var/run/docker.sock w/ this ownership
 # @TODO investigate and remove this docker-for-mac kludge
