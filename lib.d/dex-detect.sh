@@ -13,25 +13,21 @@ dex-detect-imgstr(){
 
   [ -z "$1" ] && return 1
 
-  IFS='/'
-  read -r source imagestr <<< "$1"
-  unset IFS
+  IFS="/" read -r repo imagestr <<< "$1"
 
   if [ -z "$imagestr" ]; then
     __source_match="*"
     __image_match="$1"
   else
-    __source_match="$source"
+    __source_match="$repo"
     __image_match="$imagestr"
 
     if [ ! -d $DEX_HOME/checkouts/$__source_match ]; then
-      log "warning, $source is not checked out."
+      log "warning, $repo is not checked out."
     fi
   fi
 
-  IFS=':'
-  read -r image tag <<< "$__image_match"
-  unset IFS
+  IFS=":" read -r image tag <<< "$__image_match"
 
   if [ -z "$tag" ]; then
     __image_tag="latest"

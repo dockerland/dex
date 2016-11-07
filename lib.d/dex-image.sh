@@ -19,46 +19,55 @@ dex-image-build(){
   dex-detect-imgstr $__imgstr || error "lookup failed to parse $__imgstr"
 
 
-  log "* building $__source_match/$__image_match images..."
+  log "* finding $__source_match/$__image_match images..."
 
   for repo_dir in $(ls -d $DEX_HOME/checkouts/$__source_match 2>/dev/null); do
     for image_dir in $(ls -d $repo_dir/dex-images/$__image_match 2>/dev/null); do
-      if [ "$__image_tag" = "latest" ]; then
-        dockerfile="Dockerfile"
-      else
-        dockerfile="Dockerfile-$__image_tag"
+
+      dockerfiles="Dockerfile-$__image_tag"
+      if [ ! -e $image_dir/$dockerfiles ] && [ "$__image_tag" = "latest" ]; then
+        dockerfiles="Dockerfile"
+        [ ! -e $image_dir/$dockerfiles ] && [ "$__image_match" = "*" ] && {
+          # if __image_match is a wildcard and no latest provided, then install all detected tags
+          # @TODO will error if non-dockerfiles are named Dockerfile-blah, e.g. Dockerfile-v1.vars (variables used for rendering template)
+          dockerfiles=$(cd $image_dir ; echo Dockerfile-*)
+        }
       fi
-      [ -e $image_dir/$dockerfile ] || continue
 
-      local image=$(basename $image_dir)
-      local source=$(basename $repo_dir)
-      local tag="$namespace/$image:$__image_tag"
-      local random=$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)
-      local cachebust=
-      local pull=
+      for dockerfile in $dockerfiles; do
+        [ -e $image_dir/$dockerfile ] || continue
+        local image=$(basename $image_dir)
+        local source=$(basename $repo_dir)
+        local tag=${dockerfile//Dockerfile-/}
+        [ "$tag" = "Dockerfile" ] && tag="latest"
+        tag="$namespace/$image:$tag"
 
-      log "- building $tag"
-      (
-        set -e
-        cd $image_dir
+        local random=$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)
+        local cachebust=
+        local pull=
 
-        # add cachebusting argument if requested/used in Dockerfile
-        grep -q "^ARG CACHE_BUST" $dockerfile &&  \
-          cachebust="--build-arg CACHE_BUST=$random"
+        log "- building $tag"
+        (
+          set -e
+          cd $image_dir
 
-        $__pull_flag && \
-          pull="--pull"
+          # add cachebusting argument if requested/used in Dockerfile
+          grep -q "^ARG CACHE_BUST" $dockerfile &&  \
+            cachebust="--build-arg CACHE_BUST=$random"
 
-        __local_docker build -t $tag $cachebust $pull \
-          --label=org.dockerland.dex.build-api=$DEX_RUNTIME \
-          --label=org.dockerland.dex.build-imgstr="$__imgstr" \
-          --label=org.dockerland.dex.build-tag="$__image_tag" \
-          --label=org.dockerland.dex.image=$image \
-          --label=org.dockerland.dex.namespace=$namespace \
-          --label=org.dockerland.dex.source=$source \
-          -f $dockerfile .
-      ) && __built_images+=( "$tag" )
+          $__pull_flag && \
+            pull="--pull"
 
+          __local_docker build -t $tag $cachebust $pull \
+            --label=org.dockerland.dex.build-api=$DEX_RUNTIME \
+            --label=org.dockerland.dex.build-imgstr="$__imgstr" \
+            --label=org.dockerland.dex.build-tag="$__image_tag" \
+            --label=org.dockerland.dex.image=$image \
+            --label=org.dockerland.dex.namespace=$namespace \
+            --label=org.dockerland.dex.source=$source \
+            -f $dockerfile .
+        ) && __built_images+=( "$tag" )
+      done
     done
   done
 
