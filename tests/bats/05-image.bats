@@ -17,6 +17,21 @@ setup(){
   mk-imgtest
 }
 
+@test "image build respects repo wildcardXXs" {
+  [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
+
+  rm-images
+  $DEX image build imgtest/*
+
+  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/dex-images/* | wc -l)
+
+  # wildcard image provides 3 images, and no latest. lets increment by 2
+  ((repo_image_count+=2))
+
+  run docker images -q $IMAGES_FILTER
+  [ ${#lines[@]} -eq $repo_image_count ]
+}
+
 @test "image build creates an image from checkouts" {
   [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
 

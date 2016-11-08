@@ -96,14 +96,14 @@ dex-image-ls(){
     dex-detect-imgstr $__imgstr
 
     [ ! "$__source_match" = "*" ] && \
-      filters="$filters --filter=label=org.dockerland.dex.source=$__source_match"
+      filters+=" --filter=label=org.dockerland.dex.source=$__source_match"
 
     #@TODO support wildcards in image_match by switching to repository:tag form
     [ ! "$__image_match" = "*" ] && \
-      filters="$filters --filter=label=org.dockerland.dex.image=$__image_match"
+      filters+=" --filter=label=org.dockerland.dex.image=$__image_match"
 
     [ ! "$__image_tag" = "*" ] && \
-      filters="$filters --filter=label=org.dockerland.dex.build-tag=$__image_tag"
+      filters+=" --filter=label=org.dockerland.dex.build-tag=$__image_tag"
   fi
 
   __local_docker images $QUIET_FLAG $filters
