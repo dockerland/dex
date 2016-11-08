@@ -1,4 +1,4 @@
-FROM debian:sid
+FROM debian:jessie
 
 #
 # v1 dex-api
@@ -12,6 +12,7 @@ LABEL org.dockerland.dex.api="v1"
 # LABEL org.dockerland.dex.docker_workspace="\$(pwd)"
 # LABEL org.dockerland.dex.docker_flags="-i \$DEX_X11_FLAGS"
 #
+
 
 #
 # debian image
