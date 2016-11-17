@@ -14,23 +14,18 @@ get_group_id(){
 # sed_inplace : in place file substitution
 ############################################
 #
-# usage: sed_inplace "file" "sed substitution"
-#    ex: sed_inplace "/tmp/file" "s/CLIENT_CODE/BA/g"
+# usage: sed_inplace "file" "sed regex pattern"
+#    ex: sed_inplace "/tmp/file" "s/CLIENT_CODE/ACME/g"
+#    ex: sed_inplace "/tmp/file" "/pattern_to_remove/d"
 #
 sed_inplace(){
-  # linux
-  local __sed="sed"
+  local sed=
+  local sed_flags="-r -i"
 
-  if [[ "$OSTYPE" == darwin* ]] || [[ "$OSTYPE" == macos* ]] ; then
-    if $(type gsed >/dev/null 2>&1); then
-      local __sed="gsed"
-    elif $(type /usr/local/bin/sed >/dev/null 2>&1); then
-      local __sed="/usr/local/bin/sed"
-    else
-      sed -i '' -E "$2" $1
-      return
-    fi
-  fi
+  for sed in gsed /usr/local/bin/sed sed; do
+    type $sed &>/dev/null && break
+  done
 
-  $__sed -r -i "$2" $1
+  [ "$sed" = "sed" ] && [[ "$OSTYPE" =~ darwin|macos* ]] && sed_flags="-i '' -E"
+  $sed $sed_flags "$2" $1
 }
