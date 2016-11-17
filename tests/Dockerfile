@@ -1,7 +1,7 @@
 FROM alpine:3.4
 
 RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories ; \
-  apk add --update \
+  apk add --no-cache \
     bash \
     bats@testing \
     curl \
@@ -11,8 +11,7 @@ RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/
     make \
     mksh \
     openssl \
-    zsh \
-  && rm -rf /var/cache/apk/*
+    zsh
 
 RUN curl -L https://github.com/docker/machine/releases/download/v0.8.1/docker-machine-Linux-x86_64 >/usr/local/bin/docker-machine && \
   chmod +x /usr/local/bin/docker-machine
