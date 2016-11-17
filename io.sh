@@ -33,11 +33,19 @@ warn(){
   printf "\e[35m%b\n\e[0m" "$@" >&2
 }
 
+# prompt_echo - helper for assigning variable values
+# usage: prompt_echo <prompt> [default fallback]
+# example: 
+#   name=$(prompt_echo "name to encrypt")
+#   port=$(prompt_echo "port [8080]" 8080)
+
 prompt_echo() {
   while true; do
     # read always from /dev/tty, use `if [ -t 0 ]` upstream to avoid prompt
     read -r -p "  ${1:-input} : " INPUT </dev/tty
     [ -z "$INPUT" ] || { echo "$INPUT" ; return 0 ; }
+    [ -z "$2" ] || { echo "$2" ; return 0 ; }
+    
     printf "  \033[31m%s\033[0m\n" "invalid input" >&2
   done
 }
