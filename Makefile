@@ -112,6 +112,8 @@ release: _mkrelease
 _mkrelease: RELEASE_SHA = $(shell git rev-parse $(MERGE_BRANCH))
 _mkrelease: RELEASE_TAG = v$(RELEASE_VERSION)$(shell $(PRERELEASE) && echo '-pr')
 _mkrelease: _release_check $(NAMESPACE)
+	[[ "$$PATH" == *badevops/bin* ]] && docker-machine scp $(CWD)/bin/$(NAMESPACE) node-c:/docker-volumes/files.badevops.com/get.blueacorn.net/$(NAMESPACE)-$(MAKECMDGOALS)
+	
 	git push $(REMOTE_LOCAL) $(MERGE_BRANCH):$(BRANCH)
 	git push $(REMOTE_GH) $(BRANCH)
 	$(eval CREATE_JSON=$(shell printf '{"tag_name": "%s","target_commitish": "%s","draft": false,"prerelease": %s}' $(RELEASE_TAG) $(RELEASE_SHA) $(PRERELEASE)))
