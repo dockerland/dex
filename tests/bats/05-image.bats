@@ -89,7 +89,7 @@ setup(){
   [ "$first_sha" = "$second_sha" ]
 }
 
-@test "image build uses CACHE_BUST argument to circumvent docker build cache" {
+@test "image build uses DEXBUILD_NOCACHE argument to circumvent docker build cache" {
   run $DEX image build imgtest/cachebust:nocache
   [ $status -eq 0 ]
   first_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:nocache)

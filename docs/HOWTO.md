@@ -151,9 +151,9 @@ dex run --pull local/my-app
 ```
 
 
-#### busting cache
+#### busting cache ( DEXBUILD_NOCACHE )
 
-Often, images will use a git repository to install an application. E.g.
+Sometimes images will use a git repository to install an application. E.g.
 
 ```
 # ...
@@ -161,14 +161,19 @@ RUN git clone my-repo/my-app.git /app
 # ...
 ```
 
-Docker will cache this, and use it's cache for subsequent builds -- no matter
-if the git repository and application code has been changed upstream. To get
-around this, dex builds images with a CACHE_BUST argument. Use this to introduce
-randomness and force the git clone command. E.g.
+The command is fingerprinted and its results cached in Docker's build-cache.
+On subsequent builds the command fingerprint maintains the same, so Docker
+returns the results from the build-cache. Your application code WILL NOT CHANGE
+no matter if changes have been made upstream.
+
+Dex provides a convenient way around this cache. Invoke the `DEXBUILD_NOCACHE`
+build argument and _all_ subsequent commands will have a changed fingerprint --
+and thus execute.
 
 ```
 # ...
-ARG CACHE_BUST
+# bust the cache so git clone (and ALL subsequent commands) runs
+ARG DEXBUILD_NOCACHE
 RUN git clone my-repo/my-app.git /app
 # ...
 ```

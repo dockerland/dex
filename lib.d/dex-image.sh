@@ -43,8 +43,8 @@ dex-image-build(){
         cd $image_dir
 
         # add cachebusting argument if requested/used in Dockerfile
-        grep -q "^ARG CACHE_BUST" $dockerfile &&  \
-          cachebust="--build-arg CACHE_BUST=$random"
+        grep -q "^ARG DEXBUILD_NOCACHE" $dockerfile &&  \
+          cachebust="--build-arg DEXBUILD_NOCACHE=$random"
 
         $__pull_flag && \
           pull="--pull"
