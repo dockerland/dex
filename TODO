@@ -1,0 +1,5 @@
+* importance of avoiding real user home -- 
+  * allows for quick distribution of your configurations, for instance through
+    a "dotfiles" repo
+  > if using defaults, all application homes get written to ~/.dex/homes
+
