@@ -1,34 +1,33 @@
-#
-# lib.d/display_help.sh for dex -*- shell-script -*-
-#
-
-display_help_main(){
+display_help_main() {
   cat <<-EOF
 
-Piping hot docker executables to your door.
+dex - run applications without installing them or their dependencies.
 
-Usage: dex <command> [options]
+Usage:
+  dex <command> [options...]
 
-  dex run --pull sed
-  dex run sed s/foo/bar/ <(echo 'foo')
-  dex run sed:macos -h
+Examles:
+  # edit (from DOS!)
+  dex run --pull edit a.txt
 
-Commands:
-
-  help <command>                Display help for a particular command
-  image <command> [options]     Build and maintain images
-  install <imgstr>* [options]   Install a dexecutable to \$DEX_BIN_DIR
-  source <command> [options]    Manage source repositories
-  run <imgstr>* [options]       Execute an image
-  uninstall <imgstr>* [options] Uninstall a dexecutable
-  vars [options]                print configuration variables (and/or defaults)
-
-* <imgstr> is a multi-form string defined as "[source/]<image[*]>[:tag]" and is
-  used to lookup image(s), optionally filtering by source name and/or tag
+  # piping to SED (from darwin/macos)
+  echo "foo" | dex run sed:macos s/foo/bar/
 
 Options:
+  -h|--help
+    Displays help
 
-  -h|--help                    Display help
+  -v|--version|version
+    Print version and exit
+
+Commands:
+  conf      Prints configurations
+  help      Display help for a particulat command
+  image     Build and maintain images from source repositories
+  install   Installs an image to \$DEX_BIN_DIR
+  ls        Lists available images from source repositories
+  repo      Manage source repositories
+  run       Executes an image
 
 EOF
 }
