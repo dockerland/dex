@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# shell-helpers downstreamer version v1
+#   https://github.com/briceburg/shell-helpers
+# Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
+
+#  * requires curl
+#
+# place in the directory containing shell-helpers library files and execute to
+# fetch the latest release of all shell-helpers files.
+#
+# alternatively pass the path of directory containing shell-helpers files, e.g.
+# ./downstream-helpers /path/to/shell-helper-files/
+#
+# an example at bottom demonstrates hardcoding the helpers path
+#
+
+main(){
+  set -eo pipefail
+  readonly CWD="$( cd $(dirname $0) ; pwd -P )"
+  local workdir="${1:-$CWD}"
+  local pattern="# @shell-helpers_UPDATE_URL="
+  local match=
+  local file=
+  local url=
+
+  cd "$workdir"
+  for file in *.sh; do
+    echo "tyring $workdir/$file"
+    match=$(grep -m1 "^$pattern" "$file") || continue
+    url=${match//$pattern/}
+    echo "  updating $file from $url ..."
+    curl --silent -LfO $url || echo "  ! failed to download $url"
+  done
+  exit
+}
+
+# :: example hardcoding of workdir [uncomment below lines]
+# readonly SCRIPT_CWD=$( cd $(dirname "${BASH_SOURCE[0]}") ; pwd -P )
+# main "$SCRIPT_CWD/common/lib.d/helpers"
+
+main "$@"
