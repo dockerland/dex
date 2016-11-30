@@ -36,8 +36,6 @@ main(){
     esac
     shift
   done
-
-  exit $?
 }
 
 #@start dev-mode
