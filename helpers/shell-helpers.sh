@@ -184,7 +184,7 @@ shell/evaluable_entrypoint(){
 shell/execfn(){
   is/fn "$1" || die/exception "$1 is not a target function"
 
-  eval "$@"
+  "$@"
   exit $?
 }
 # shell-helpers - file/fs manipulation
