@@ -1,7 +1,17 @@
 display_help() {
-  [ "$(type -t display_help_$__cmd)" = "function" ] || error \
-    "missing helpfile for $__cmd" "is $__cmd a valid command?"
+  local cmd="$2"
+  [ -z "$cmd" ] && {
+    for fn in "${FUNCNAME[@]}"; do
+      [ "main" = "${fn:0:4}" ] && {
+        cmd="${fn//main_/}"
+        break
+      }
+    done
+  }
 
-  display_help_$__cmd
+  is/fn "display_help_$cmd" || die/exception "missing helpfile for $cmd" \
+    "is $cmd a valid command?"
+
+  display_help_$cmd
   exit $1
 }

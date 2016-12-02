@@ -6,7 +6,6 @@
 
 main(){
   set -eo pipefail
-  __cmd="main"
   readonly CWD="$( pwd -P )"
   readonly SCRIPT_CWD="$( cd $(dirname ${BASH_SOURCE[0]}) ; pwd -P )"
   readonly SCRIPT_BUILD="@BUILD@"
@@ -24,15 +23,15 @@ main(){
       -h|--help)
         display_help ;;
       help)
-        __cmd=${2:-$__cmd} ; display_help ;;
+        display_help 0 ${2:-main} ;;
       conf|image|install|ls|repo|run)
-        __cmd="$1" ; cli/fn main_"$@" ;;
-      __fn)
-        shift ; cli/fn "$@" ;;
+        shell/execfn main_"$@" ;;
+      runfunc)
+        shift ; shell/execfn "$@" ;;
       -*)
-        unrecognized_flag "$1" ;;
+        args/unknown "$1" "flag" ;;
       *)
-        unrecognized_arg "$1" ;;
+        args/unknown "$1" "command" ;;
     esac
     shift
   done
