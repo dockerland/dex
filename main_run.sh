@@ -30,7 +30,7 @@ main_run(){
         --uid|--user)   DEX_DOCKER_UID="$2" ; shift ;;
         --workspace)    DEX_DOCKER_WORKSPACE="$2" ; shift ;;
         --)             shift ; operand_args="$@" ; break ;;
-        -*)             unrecognized_flag $1 ;;
+        -*)             args/unknown "$1" "flag" ;;
         *)              __imgstr="$1"
                         shift
                         operand="dex-run"
