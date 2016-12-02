@@ -19,7 +19,7 @@ main(){
   while [ $# -ne 0 ]; do
     case "$1" in
       -v|--version|version)
-        log "Dex version $SCRIPT_VERSION build $SCRIPT_BUILD" ; exit ;;
+        echo "Dex version $SCRIPT_VERSION build $SCRIPT_BUILD" ; exit ;;
       -h|--help)
         display_help ;;
       help)
