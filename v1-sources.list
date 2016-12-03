@@ -1,0 +1,7 @@
+#
+# dex sources.list
+# @aardvark
+#
+
+core git@github.com:dockerland/dex-dockerfiles-core.git
+extra git@github.com:dockerland/dex-dockerfiles-extra.git
