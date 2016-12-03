@@ -1,8 +1,6 @@
 main_repo(){
   local operand
   local list=()
-  __defaults=false
-  __force=false
 
   [ $# -eq 0 ] && display_help 1
   set -- $(args/normalize_flags_first "" "$@")
@@ -29,12 +27,11 @@ main_repo(){
   done
 
   # seed sources list if it's missing
-  [ -e "$__sources" ]  || (
-    __force=true
-    dex/repo-reset
-    dex/repo-pull
-  )
-
+  [ -e "$__sources" ]  || {
+    __force=true dex/repo-reset
+    __force=true dex/repo-pull
+  }
+  
   shell/execfn "$operand" "${list[@]}"
 }
 

@@ -36,7 +36,11 @@ dex/conf-init(){
   # bootstrap internal vars
   __checkouts="$DEX_HOME/checkouts"
   __sources="$DEX_HOME/sources.list"
-  __sources_url="${DEX_SOURCES_URL:-https://raw.githubusercontent.com/dockerland/dex/master/${DEX_RUNTIME}-sources.list}"
+  __sources_url="$DEX_SOURCES_URL:-https://raw.githubusercontent.com/dockerland/dex/master/${DEX_RUNTIME}-sources.list}"
+  
+  __defaults=false
+  __force=false
+  __pull=false
 }
 
 dex/conf-print(){
