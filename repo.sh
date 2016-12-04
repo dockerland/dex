@@ -26,12 +26,6 @@ main_repo(){
     shift
   done
 
-  # seed sources list if it's missing
-  [ -e "$__sources" ]  || {
-    __force=true dex/repo-reset
-    __force=true dex/repo-pull
-  }
-
   shell/execfn "$operand" "${list[@]}"
 }
 
@@ -67,6 +61,11 @@ dex/repo-reset(){
     io/warn "failed fetching $__sources"
     return 2
   }
+  local repo
+  for repo in $(dex/repo-ls); do
+    rm -rf $__checkouts/$repo
+  done
+  dex/repo-pull
   io/success "reset $__sources"
 }
 
