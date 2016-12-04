@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
 v1-runtime(){
+  # deactivate docker-machine
+  docker/deactivate_machine
+
   DEX_HOME=${DEX_HOME:-~/.dex}
   [ -z "$__image" ] && { echo "missing runtime image" ; exit 1 ; }
   IFS=":" read -r __name __tag <<< "$__image"
 
   read -d "\n" DEX_HOST_UID DEX_HOST_GID DEX_HOST_USER DEX_HOST_GROUP DEX_HOST_PWD DEX_IMAGE_NAME < <(
-    exec 2>/dev/null ; id -u ; id -g ; id -un ; id -gn ; pwd ; basename $__name )
+    exec 2>/dev/null ; id -u ; id -g ; id -un ; id -gn ; pwd ; basename $__name ) || true
 
   # label defaults -- images may provide a org.dockerland.dex.<var> label
   #  supplying a value that overrides these default values, examples are:
@@ -37,21 +40,19 @@ v1-runtime(){
   __window=
 
   # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
+  for label in runtime docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
     # @TODO reduce this to a single docker inspect command
-    val=$(__local_docker inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
+    val=$(docker inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
     [ -z "$val" ] && continue
     eval "__$label=\"$val\""
   done
-
-  ${__interactive_flag:-false} && __docker_flags+=" --tty --interactive"
-  ${__persist_flag:-false} || __docker_flags+=" --rm"
 
   # rutime defaults -- override these by passing run flags, or through
   # exporting the following vars:
   #
   # DEX_DOCKER_CMD - alternative command passed to docker run
   # DEX_DOCKER_ENTRYPOINT - alternative entrypoint passed to docker run
+  # DEX_DOCKER_FLAGS - additional flags passed to docker
   #
   # DEX_DOCKER_HOME - host directory mounted as the container's $HOME
   # DEX_DOCKER_WORKSPACE - host directory mounted as the container's CWD
@@ -64,6 +65,7 @@ v1-runtime(){
   #
   DEX_DOCKER_CMD=${DEX_DOCKER_CMD:-}
   DEX_DOCKER_ENTRYPOINT=${DEX_DOCKER_ENTRYPOINT:-}
+  DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-}
 
   DEX_DOCKER_HOME=${DEX_DOCKER_HOME:-$__docker_home}
   DEX_DOCKER_HOME=${DEX_DOCKER_HOME/#\~/$HOME}
@@ -74,9 +76,10 @@ v1-runtime(){
 
   DEX_DOCKER_LOG_DRIVER=${DEX_DOCKER_LOG_DRIVER:-'none'}
   DEX_WINDOW_FLAGS=${DEX_WINDOW_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
+  DEX_PERSIST=${DEX_PERSIST:-false}
 
-  [ -z "$__api" ] && \
-    { echo "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
+  [ -z "$__runtime" ] && \
+    { echo "$__image did not specify an org.dockerland.dex.runtime label!" ; exit 1 ; }
 
   # if home is not an absolute path, make relative to $DEX_HOME/homes/
   [ "${DEX_DOCKER_HOME:0:1}" != '/' ] && \
@@ -90,6 +93,11 @@ v1-runtime(){
 
   [ -z "$DEX_DOCKER_ENTRYPOINT" ] || \
     __docker_flags+=" --entrypoint=$DEX_DOCKER_ENTRYPOINT"
+
+  [ -z "$DEX_DOCKER_FLAGS" ] || \
+    __docker_flags+=" --entrypoint=$DEX_DOCKER_FLAGS"
+
+  $DEX_PERSIST || __docker_flags+=" --rm"
 
   # piping to|from a container requires interactive, non-tty input
   if [ ! -t 1 ] || ! tty -s > /dev/null 2>&1 ; then
@@ -145,8 +153,8 @@ v1-runtime(){
     }
     container_dir=$DEX_HOME/build-containers/$container_sha
     [ -d $container_dir ] || mkdir -p $container_dir
-    [ -e $container_dir/passwd ] || __local_docker cp $container_sha:/etc/passwd $container_dir/passwd
-    [ -e $container_dir/group ] || __local_docker cp $container_sha:/etc/group $container_dir/group
+    [ -e $container_dir/passwd ] || docker cp $container_sha:/etc/passwd $container_dir/passwd
+    [ -e $container_dir/group ] || docker cp $container_sha:/etc/group $container_dir/group
 
     # augment /etc/passwd and /etc/group files with current user (if !already exists)
     grep -q ":$DEX_HOST_UID:$DEX_HOST_GID:" $container_dir/passwd || \
@@ -202,9 +210,6 @@ v1-runtime(){
   for var in $__vars; do
     eval "[ -z \"\$$var\" ] || __docker_flags+=\" -e $var=\$$var\""
   done
-
-  # deactivate docker-machine
-  __deactivate_machine
 
   ${DEX_DEBUG:=false} && __exec="echo"
   ${__exec:-exec} docker run $__docker_flags \

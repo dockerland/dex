@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build d0bc056
+# shell-helpers version v2.0.0-pr build 61d5da1
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -147,7 +147,7 @@ find/dockerfiles(){
 
   (
     found=false
-    cd $path 2>/dev/null
+    cd $path
 
     for Dockerfile in Dockerfile* ; do
       [ -e "$Dockerfile" ] || continue
@@ -424,9 +424,7 @@ network/fetch(){
   local url="$1"
   local target="$2"
   prompt/overwrite "$target" || return 1
-
   network/print "$url" > "$target"
-  [ -e $target ]
 }
 
 # usage: network/print <url>
@@ -435,6 +433,11 @@ network/print(){
   local url="$1"
   local wget=${WGET_PATH:-wget}
   local curl=${CURL_PATH:-curl}
+
+  is/url "$url" || {
+    io/warn "refusing to fetch $url"
+    return 1
+  }
 
   if is/cmd $wget ; then
     $wget -qO - $url
@@ -587,9 +590,9 @@ prompt/overwrite(){
   local target="$1"
   local prompt="${2:-overwrite $target ?}"
   local force=${__force:-false}
-  if [[ -e "$target" && ! $force ]]; then
-    prompt/confirm "$prompt" || return 1
-  fi
-  rm -rf "$target"
+  [ ! -e "$target" ] || {
+    $force || prompt/confirm "$prompt" || return 1
+    rm -rf "$target"
+  }
 }
 # @shell-helpers_UPDATE_URL=http://get.iceburg.net/shell-helpers/latest-v2/shell-helpers.sh
