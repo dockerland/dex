@@ -2,6 +2,7 @@ main_image(){
   local operand
   local list=()
   local quiet=false
+  local all=false
 
   [ $# -eq 0 ] && display_help 1
   set -- $(args/normalize_flags_first "" "$@")
@@ -9,6 +10,8 @@ main_image(){
     case "$1" in
       -h|--help)
         display_help  ;;
+      -a|--all)
+        all=true ;;
       -f|--force)
         __force=true ;;
       -p|--pull)
@@ -123,9 +126,15 @@ dex/image-ls(){
   local tag
   IFS="/:" read repo image tag <<< "$(dex/find-repostr $1)"
 
-  local flags=(
-    "--filter=label=org.dockerland.dex.namespace"
-  )
+  if $all; then
+    local flags=(
+      "--filter=label=org.dockerland.dex.namespace"
+    )
+  else
+    local flags=(
+      "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+    )
+  fi
   [ -n "$image" ] && flags+=( "--filter=label=org.dockerland.dex.image=$image" )
   [ -n "$repo" ] && flags+=( "--filter=label=org.dockerland.dex.repo=$repo" )
   [ -n "$tag" ] && flags+=( "--filter=label=org.dockerland.dex.tag=$tag" )
