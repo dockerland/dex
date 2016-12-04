@@ -48,7 +48,7 @@ dex/image-build(){
   local Dockerfile
   local Dockerfiles
   for repostr in "$@"; do
-    Dockerfiles=( $(dex/find-dockerfiles "$repostr") ) || {
+    Dockerfiles=( $(dex/find-dockerfiles "$repostr" "latest") ) || {
       io/warn "skipping $repostr (unable to find a match in sources)"
       continue
     }
