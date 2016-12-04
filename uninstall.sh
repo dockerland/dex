@@ -21,6 +21,8 @@ main_uninstall(){
     done
   fi
 
+  die "uninstall not yet implemented"
+
   $operand $operand_args
   exit $?
 
