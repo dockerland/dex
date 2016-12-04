@@ -9,6 +9,8 @@ main_image(){
     case "$1" in
       -h|--help)
         display_help  ;;
+      -f|--force)
+        __force=true ;;
       -p|--pull)
         __pull=true ;;
       -q|--quiet)
@@ -115,11 +117,6 @@ dex/image-build-container(){
   )
 }
 
-
-dex/image-inspect(){
-  die
-}
-
 dex/image-ls(){
   local repo
   local image
@@ -139,5 +136,15 @@ dex/image-ls(){
 
 
 dex/image-rm(){
-  die
+  local image
+  local container
+  local flags=()
+  $__force && flags+=( "--force" )
+  for image in $(quiet=true dex/image-ls "$@"); do
+    $__force || prompt/confirm "remove $image ?" || continue
+    for container in $(docker/local ps -q --filter ancestor=$image); do
+      docker/local rm ${flags[@]} $container
+    done
+    docker/local rmi ${flags[@]} $image
+  done
 }
