@@ -12,6 +12,6 @@ display_help() {
   is/fn "display_help_$cmd" || die/exception "missing helpfile for $cmd" \
     "is $cmd a valid command?"
 
-  display_help_$cmd
+  display_help_$cmd >&2
   exit $1
 }

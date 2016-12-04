@@ -94,15 +94,14 @@ dex/repo-pull(){
   local repo
   local url
   local path
-
   # we use fd9 to allow for nested reads/prompts
   while read -u9 repo url ; do
     io/log "pulling $repo repository..."
     path="$__checkouts/$repo"
     if [ -d "$path" ]; then
-      git/pull "$path" || return 1
+      git/pull "$path" >&2 || return 1
     else
-      git/clone "$url" "$path" || return 1
+      git/clone "$url" "$path" >&2 || return 1
     fi
     io/success "pulled $repo repository"
   done 9< <(dex/repo-ls "$@")

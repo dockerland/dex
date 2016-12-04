@@ -42,7 +42,7 @@ dex/conf-init(){
   __force=false
   __pull=false
 
-  mkdir -p $DEX_HOME || die "unable to create DEX_HOME - $DEX_HOME"
+  mkdir -p $__checkouts || die "unable to create DEX_HOME - $__checkouts"
 
   # seed sources list if it's missing
   [ -e "$__sources" ]  || {

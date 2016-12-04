@@ -69,6 +69,7 @@ dex/image-build(){
       __image="$DEX_NAMESPACE/$repo/$image:$tag"
 
       (
+        exec >&2
         cd $(dirname $Dockerfile) || exit 1
         Dockerfile=$(basename $Dockerfile)
         while [ -L "$Dockerfile" ]; do
