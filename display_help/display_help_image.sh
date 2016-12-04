@@ -1,46 +1,57 @@
-#
-# lib.d/display_help.sh for dex -*- shell-script -*-
-#
-
 display_help_image(){
   cat <<-EOF
 
-Piping hot docker executables to your door.
+dex - run applications without installing them or their dependencies.
 
-images don't make themselves, dex will.
+About image:
+  The image command is a plumbing command to build and maintain images. It's
+  used by the dex 'run' and 'install' commands.
 
-Usage: dex image <command> [options]
-
-  # build the macos version of sed from any repository (first found)
-  dex build sed:macos
-
-  # build 'sed' from the "extras" repository
-  dex image build extras/sed
-
-  # build all images from the "extras" repository
-  dex image build extras/*
-
-Commands:
-
-  build <imgstr>*        Builds an image. Optionally slash-pass repository.
-  rm <imgstr>*           Remove an image. Optionally slash-pass repository.
-  ls                     Lists images dex has built.
-
-* <imgstr> is a multi-form string defined as "[source/]<image[*]>[:tag]" and is
-  used to lookup image(s), optionally filtering by source name and/or tag
+Usage:
+  dex image [options...] <command>
 
 Options:
+  -h|--help
+    Displays help
 
-  -h|--help|help        Display help
+Commands:
+  build [-p|--pull] <[repository]/image[:tag]...>
+    Build image(s) from source repositories. Use [repository]/ prefix to specify
+    a repository. If no repository is specified, dex builds first match found.
 
-  -a|--all              Return images from all namespaces (all api versions,
-                        all installed states) when searching for images
+    Build all images in a repository by leaving off image name.
 
-  -f|--force            When removing, persisted runs will be deleted.
-                        When building, ignore API version check.
+    Examles:
+      dex image build sed:macos ansible edit
+      dex image build extra/sed
 
-  -q|--quiet            When listing images, only show numeric IDS
+      # build all images in the "extra" repository (following are equivalent)
+      dex image build extra/
 
+  inspect <[repository]/image[:tag]>
+    Inspect the specified image
+
+    Examples:
+      dex inspect sed:macos
+      dex inspect extra/ansible
+
+  ls [-q|--quiet] [[repository]/image[:tag]...]
+    List built image(s). Use [repository]/ prefix to specify a repository.
+    --quiet limits output to name only.
+
+    Examples:
+      dex image ls -q
+      dex image ls extra/
+
+  rm <[repository]/image[:tag]...>
+    Removes built image(s). Use [repository]/ prefix to specify a repository.
+    Remove all images built from a repository by leaving off image name.
+
+    Examples:
+      dex image rm sed:macos ansible edit
+
+      # removes all images built from the "extra" repository
+      dex image rm extra/
 
 EOF
 }
