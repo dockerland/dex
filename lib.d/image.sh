@@ -17,7 +17,7 @@ main_image(){
         shift ; list=( "$@" ) ; break ;;
       -*)
         args/unknown "$1" "flag" ;;
-      build|inspect|ls|rm)
+      build|ls|rm)
         operand="dex/image-$1" ;;
       *)
         [ -z "$operand" ] && args/unknown "$1"
@@ -45,16 +45,11 @@ dex/image-build(){
     }
 
     for Dockerfile in "${Dockerfiles[@]}"; do
-      repostr=$(dex/find-repostr-from-dockerfile $Dockerfile)
+      repostr=$(dex/find-repostr-from-dockerfile $Dockerfile) || continue
       local repo=
       local image=
       local tag=
       IFS="/:" read repo image tag <<< "$repostr"
-
-      [[ -z "$repo" || -z "$image" || -z "$tag" ]] && {
-        io/warn "failed determining repostr from $Dockerfile"
-        continue
-      }
 
       (
         io/log "building \e[1m$repostr\e[21m ..."
@@ -72,26 +67,24 @@ dex/image-build(){
 
         imagetag="$DEX_NAMESPACE/$image:$tag"
         random="$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)" || true
-        cachebust=
-        pull=
 
-        # pass cachebusing arg if dockerfile uses it
-        grep -q "^ARG DEXBUILD_NOCACHE" $Dockerfile &&  \
-          cachebust="--build-arg DEXBUILD_NOCACHE=$random"
+        local flags=(
+          "-t $imagetag"
+          "-f $Dockerfile"
+          "--label=\"org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+          "--label=\"org.dockerland.dex.runtime=$DEX_RUNTIME\""
+          "--label=\"org.dockerland.dex.image=$image\""
+          "--label=\"org.dockerland.dex.repo=$repo\""
+          "--label=\"org.dockerland.dex.tag=$tag\""
+        )
 
-        $__pull && pull="--pull"
+        $__pull && flags+=( "--pull" )
+        is/in_file "$Dockerfile" "^ARG DEXBUILD_NOCACHE" && flags+=( "--build-arg DEXBUILD_NOCACHE=$random" )
 
-        docker build $pull $cachebust \
-          -t "$imagetag" \
-          --label=org.dockerland.dex.namespace=$DEX_NAMESPACE \
-          --label=org.dockerland.dex.runtime="$DEX_RUNTIME" \
-          --label=org.dockerland.dex.image="$image" \
-          --label=org.dockerland.dex.repo="$repo" \
-          --label=org.dockerland.dex.tag="$tag" \
-          -f $Dockerfile . || {
-            io/warn "failed building $Dockerfile"
-            exit
-          }
+        docker build ${flags[@]} . || {
+          io/warn "failed building $Dockerfile"
+          exit
+        }
 
         # force re-create "build" container
         dex/image-build-container $imagetag true &>/dev/null || {
@@ -111,7 +104,7 @@ dex/image-build-container(){
   local recreate=${2:-false}
   local name=$(docker/safe_name "$image" "dexbuild")
   (
-    #exec &>/dev/null
+    exec &>/dev/null
     docker/deactivate_machine
     $recreate && docker rm --force $name
     docker inspect --type container $name || {
@@ -128,7 +121,20 @@ dex/image-inspect(){
 }
 
 dex/image-ls(){
-  die
+  local repo
+  local image
+  local tag
+  IFS="/:" read repo image tag <<< "$(dex/find-repostr $1)"
+
+  local flags=(
+    "--filter=label=org.dockerland.dex.namespace"
+  )
+  [ -n "$image" ] && flags+=( "--filter=label=org.dockerland.dex.image=$image" )
+  [ -n "$repo" ] && flags+=( "--filter=label=org.dockerland.dex.repo=$repo" )
+  [ -n "$tag" ] && flags+=( "--filter=label=org.dockerland.dex.tag=$tag" )
+  $quiet && flags+=( "-q" )
+
+  docker/local images ${flags[@]}
 }
 
 

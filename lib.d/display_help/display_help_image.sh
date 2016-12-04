@@ -24,18 +24,9 @@ Commands:
     Examles:
       dex image build sed:macos ansible edit
       dex image build extra/sed
-
-      # build all images in the "extra" repository (following are equivalent)
       dex image build extra/
 
-  inspect <[repository]/image[:tag]>
-    Inspect the specified image
-
-    Examples:
-      dex inspect sed:macos
-      dex inspect extra/ansible
-
-  ls [-q|--quiet] [[repository]/image[:tag]...]
+  ls [-q|--quiet]
     List built image(s). Use [repository]/ prefix to specify a repository.
     --quiet limits output to name only.
 
@@ -49,8 +40,6 @@ Commands:
 
     Examples:
       dex image rm sed:macos ansible edit
-
-      # removes all images built from the "extra" repository
       dex image rm extra/
 
 EOF
