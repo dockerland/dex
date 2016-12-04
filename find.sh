@@ -1,40 +1,10 @@
 # dex helpers
 
 dex/find-dockerfiles(){
-  local repostr="$1"
-  local imagestr
   local repo
   local image
   local tag
-  local junk
-
-  #
-  # process repostr (e.g. extra/ extra/sed extra/sed:macos sed ) => repo, image
-  #
-
-  IFS="/" read repo imagestr junk <<< "$repostr"
-
-  [ -n "$junk" ] && {
-    io/warn "malformed repostr $repostr"
-    return 2
-  }
-
-  [[ -z "$imagestr" && "$repostr" != "$repo/" ]] && {
-    # no repo was specified.
-    imagestr="$repo"
-    repo=
-  }
-
-  #
-  # process imagestr (e.g. sed:macos | sed ) => image, tag
-  #
-
-  IFS=":" read image tag junk <<< "$imagestr"
-
-  [ -n "$junk" ] && {
-    io/warn "malformed imagestr $imagestr"
-    return 2
-  }
+  IFS="/:" read repo image tag <<< "$(dex/find-repostr $1)"
 
   local found=false
   local search_image
@@ -58,6 +28,38 @@ dex/find-dockerfiles(){
   return 127
 }
 
+# normalizes a repostr
+dex/find-repostr(){
+  local repostr="$1"
+  local imagestr
+  local repo
+  local image
+  local tag
+  local junk
+
+  IFS="/" read repo imagestr junk <<< "$repostr"
+
+  [ -n "$junk" ] && {
+    io/warn "malformed repostr $repostr"
+    return 2
+  }
+
+  [[ -z "$imagestr" && "$repostr" != "$repo/" ]] && {
+    # no repo was specified.
+    imagestr="$repo"
+    repo=
+  }
+
+  IFS=":" read image tag junk <<< "$imagestr"
+
+  [ -n "$junk" ] && {
+    io/warn "malformed imagestr $imagestr"
+    return 2
+  }
+
+  echo "$repo/$image:$tag"
+}
+
 # given a Dockerfile path in checkouts, print a fully qualified repostr
 dex/find-repostr-from-dockerfile(){
   local Dockerfile="$1"
@@ -66,6 +68,11 @@ dex/find-repostr-from-dockerfile(){
   repo=${repo%%/*}
   local image=${Dockerfile//$__checkouts\/$repo\/dex-images\//}
   image=${image%%/*}
+
+  [[ -z "$repo" || -z "$image" || -z "$tag" ]] && {
+    io/warn "failed determining repostr from $Dockerfile"
+    return 1
+  }
 
   echo "$repo/$image:$tag"
 }
