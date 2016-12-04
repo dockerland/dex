@@ -25,7 +25,7 @@ Commands:
   help      Display help for a particulat command
   image     Build and maintain images from source repositories
   install   Installs an image to \$DEX_BIN_DIR
-  ls        Lists available images from source repositories
+  ls        Lists images avaialbe in source repositories
   repo      Manage source repositories
   run       Executes an image
 

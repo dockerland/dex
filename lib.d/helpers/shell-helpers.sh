@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 61d5da1
+# shell-helpers version v2.0.0-pr build ae3d8b0
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -147,7 +147,7 @@ find/dockerfiles(){
 
   (
     found=false
-    cd $path
+    cd $path 2>/dev/null
 
     for Dockerfile in Dockerfile* ; do
       [ -e "$Dockerfile" ] || continue

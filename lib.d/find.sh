@@ -1,6 +1,8 @@
 # dex helpers
 
 dex/find-dockerfiles(){
+  local repostr="$1"
+  local default_tag="$2"
   local repo
   local image
   local tag
@@ -13,12 +15,12 @@ dex/find-dockerfiles(){
   for search_repo in $(__format="\$name" dex/repo-ls $repo); do
     if [ -n "$image" ]; then
       local path="$__checkouts/$search_repo/dex-images/$image"
-      find/dockerfiles "$path" "${tag:-latest}" || continue
+      find/dockerfiles "$path" "${tag:-$default_tag}" || continue
       found=true
     else
       for search_image in $(find/dirs "$__checkouts/$search_repo/dex-images"); do
         local path="$__checkouts/$search_repo/dex-images/$search_image"
-        find/dockerfiles "$path" || continue
+        find/dockerfiles "$path" "${tag:-$default_tag}" || continue
         found=true
       done
     fi
