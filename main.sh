@@ -13,7 +13,6 @@ main(){
   readonly SCRIPT_VERSION="@VERSION@"
 
   dex/conf-init
-  mkdir -p $DEX_HOME || die "unable to create DEX_HOME - $DEX_HOME"
 
   [ $# -eq 0 ] && display_help 2
 

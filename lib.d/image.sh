@@ -42,7 +42,7 @@ dex/image-build(){
 
   # keep track of pulled repositories
   local pulled_repos=()
-  local built=false
+  __built_images=()
 
   local repostr
   local Dockerfile
@@ -65,9 +65,11 @@ dex/image-build(){
         pulled_repos+=( "$repo" )
       }
 
+      io/log "building \e[1m$repostr\e[21m ..."
+      __image="$DEX_NAMESPACE/$repo/$image:$tag"
+
       (
-        io/log "building \e[1m$repostr\e[21m ..."
-        cd $(dirname $Dockerfile)
+        cd $(dirname $Dockerfile) || exit 1
         Dockerfile=$(basename $Dockerfile)
         while [ -L "$Dockerfile" ]; do
           Dockerfile=$(readlink $Dockerfile)
@@ -79,9 +81,7 @@ dex/image-build(){
         # deactivate machine so we execute local docker engine
         docker/deactivate_machine
 
-        __image="$DEX_NAMESPACE/$repo/$image:$tag"
         random="$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)" || true
-
         local flags=(
           "-t $__image"
           "-f $Dockerfile"
@@ -95,25 +95,25 @@ dex/image-build(){
         $__pull && flags+=( "--pull" )
         is/in_file "$Dockerfile" "^ARG DEXBUILD_NOCACHE" && flags+=( "--build-arg DEXBUILD_NOCACHE=$random" )
 
-        docker build ${flags[@]} . || {
-          io/warn "failed building $Dockerfile"
-          exit
-        }
+        docker build ${flags[@]} . || exit 1
 
         # force re-create "build" container
         dex/image-build-container $__image true &>/dev/null || {
           io/warn "failed creating build container for $__image"
-          exit
+          exit 1
         }
+      ) || {
+        io/error "failed building $Dockerfile"
+        continue
+      }
 
-        io/success "built \e[1m$repostr\e[21m"
-        built=true
-      )
+      __built_images+=( "$__image" )
+      io/success "built \e[1m$repostr\e[21m"
 
     done
   done
-  
-  $built
+
+  [ ${#__built_images[@]} -gt 0 ]
 }
 
 dex/image-build-container(){
