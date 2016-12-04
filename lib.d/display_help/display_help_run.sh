@@ -1,47 +1,56 @@
-#
-# lib.d/display_help.sh for dex -*- shell-script -*-
-#
-
 display_help_run(){
   cat <<-EOF
 
-Piping hot docker executables to your door.
+dex - run applications without installing them or their dependencies.
 
-'dex run <imagestr>' executes images as if the contained application was locally
-installed. We call these images "docker executables" or "dexecutables".
+About run:
 
-Images are built from Dockerfiles kept in "source repositories" in the
-\$DEX_HOME/sources.list file and managed by the 'dex source' command.
+Dex searches repository checkouts for a matching image and executes the first
+found. Limit searching by passing a repo and/or tag.
 
-Dex run searches images from source checkouts matching <imgstr> and executes the
-first found. Limit searching by slash-passing a source and/or tag. Using
-'dex install' will bypass it entirely.
+Dex builds images the first time they are run -- introducing a delay. Use 'dex
+install' to circumvent this. Force a re-build by passing --build or --pull.
 
-'dex run' will automatically build the matching image from its Dockerfile on
-first run -- introducing a delay. Use 'dex image' to build and maintain images.
-
-Usage: dex run <imgstr>* [options]
-
-  # Run a dexecutable (below examples run sed)
-  dex run sed
-  echo 'foo' | dex run sed s/foo/bar/
-  dex run sed s/foo/bar/ <(echo 'foo')
-
-  # Run a tagged version of a dexecutable (below maps to sed/Dockerfile.macos)
-  dex run sed:macos -h
-
-  # Run a dexecutable from a particular source repository
-  dex run extra/gitk
-
-* <imgstr> is a multi-form string defined as "[source/]<image[*]>[:tag]" and is
-  used to lookup image(s), optionally filtering by source name and/or tag
+Usage:
+  dex run [options...] <[repository]/image[:tag]...>
 
 Options:
+  -h|--help
+    Displays help
+  -b|--build
+    Force a re-build
+  -p|--pull
+    Force a rebuild, and pull (refresh) repositories.
+  --persist
+    Persist the container (do not remove it after it exits)
+  -i|-t|-it|--interactive
+    Force an interactive TTY
+  --cmd <cmd>
+    Provide an alternative CMD
+  --entrypoint <entrypoint>
+    Provide an alternative ENTRYPOINT
+  --home <path>
+    Provide an alternative home directory (on the host machine)
+    Defaults to $DEX_HOME/homes/<image> (or what is provided by container label)
+  --log-driver <driver>
+    Provide an alternative log driver
+    Defaults to none (or what is provided by container label)
+  --gid|--group <gid>
+    Provide an alternative GID to run container as
+  --uid|--user <uid>
+    Provide an alternative UID to run container as
+  --workspace <path>
+    Provide an alternative workspace directory (on the host machine)
+    Defaults to CWD ($(pwd))
+    
+Examples:
+  dex run debian ls
+  dex run ag "the quick brown fox"
+  dex run extra/gitk
+  dex run sed:macos -h
 
-  -h|--help             Display help
-  -b|--build            Always build the image before executing
-  -p|--pull             Refresh checkout(s) before executing, implies --build
-  --persist             Persist the container after it exits
-
+  # piping and redirection
+  echo 'foo' | dex run sed s/foo/bar/
+  dex run sed s/foo/bar/ <(echo 'foo')
 EOF
 }

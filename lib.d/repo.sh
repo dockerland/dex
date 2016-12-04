@@ -44,7 +44,7 @@ dex/repo-add(){
   }
 
   dex/repo-exists $repo && {
-    io/confirm "$repo already exists. overwrite?" || return 1
+    prompt/confirm "$repo already exists. overwrite?" || return 1
     __force=true dex/repo-rm "$repo"
   }
 
@@ -63,7 +63,10 @@ dex/repo-exists(){
 
 dex/repo-reset(){
   io/warn "reseting $__sources"
-  network/fetch "$__sources_url" "$__sources"
+  network/fetch "$__sources_url" "$__sources" || {
+    io/warn "failed fetching $__sources"
+    return 2
+  }
   io/success "reset $__sources"
 }
 
@@ -102,7 +105,7 @@ dex/repo-pull(){
     else
       git/clone "$url" "$path" || return 1
     fi
-    io/log "pulled $repo"
+    io/success "pulled $repo repository"
   done 9< <(dex/repo-ls "$@")
 }
 
@@ -113,7 +116,7 @@ dex/repo-rm(){
   # we use fd3 to allow for nested reads/prompts
   for repo in $(__format="\$name" dex/repo-ls "$@"); do
     if ! $__force; then
-      io/confirm "remove \e[1m$repo\e[21m from $__sources ?" || continue
+      prompt/confirm "remove \e[1m$repo\e[21m from $__sources ?" || continue
     fi
     file/sed_inplace "$__sources" "/^$repo /d"
     io/log "removing $repo from $__sources"
