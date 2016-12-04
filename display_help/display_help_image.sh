@@ -26,7 +26,7 @@ Commands:
       dex image build extra/sed
       dex image build extra/
 
-  ls [-q|--quiet]
+  ls [-q|--quiet] [[repository]/image[:tag]...]
     List built image(s). Use [repository]/ prefix to specify a repository.
     --quiet limits output to name only.
 
@@ -34,13 +34,15 @@ Commands:
       dex image ls -q
       dex image ls extra/
 
-  rm <[repository]/image[:tag]...>
+  rm [-f|--force] [[repository]/image[:tag]...]
     Removes built image(s). Use [repository]/ prefix to specify a repository.
     Remove all images built from a repository by leaving off image name.
+    Force skips prompts and force removes images.
 
     Examples:
       dex image rm sed:macos ansible edit
       dex image rm extra/
+      yes "y" | dex image rm
 
 EOF
 }
