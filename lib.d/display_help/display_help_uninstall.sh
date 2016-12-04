@@ -4,7 +4,6 @@
 
 display_help_uninstall(){
   cat <<-EOF
-Piping hot docker executables to your door.
 
 Leave not a trace
 
