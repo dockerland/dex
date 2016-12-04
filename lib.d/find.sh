@@ -1,0 +1,71 @@
+# dex helpers
+
+dex/find-dockerfiles(){
+  local repostr="$1"
+  local imagestr
+  local repo
+  local image
+  local tag
+  local junk
+
+  #
+  # process repostr (e.g. extra/ extra/sed extra/sed:macos sed ) => repo, image
+  #
+
+  IFS="/" read repo imagestr junk <<< "$repostr"
+
+  [ -n "$junk" ] && {
+    io/warn "malformed repostr $repostr"
+    return 2
+  }
+
+  [[ -z "$imagestr" && "$repostr" != "$repo/" ]] && {
+    # no repo was specified.
+    imagestr="$repo"
+    repo=
+  }
+
+  #
+  # process imagestr (e.g. sed:macos | sed ) => image, tag
+  #
+
+  IFS=":" read image tag junk <<< "$imagestr"
+
+  [ -n "$junk" ] && {
+    io/warn "malformed imagestr $imagestr"
+    return 2
+  }
+
+  local found=false
+  local search_image
+  local search_repo
+
+  for search_repo in $(__format="\$name" dex/repo-ls $repo); do
+    if [ -n "$image" ]; then
+      local path="$__checkouts/$search_repo/dex-images/$image"
+      find/dockerfiles "$path" "${tag:-latest}" || continue
+      found=true
+    else
+      for search_image in $(find/dirs "$__checkouts/$search_repo/dex-images"); do
+        local path="$__checkouts/$search_repo/dex-images/$search_image"
+        find/dockerfiles "$path" || continue
+        found=true
+      done
+    fi
+  done
+
+  $found && return 0
+  return 127
+}
+
+# given a Dockerfile path in checkouts, print a fully qualified repostr
+dex/find-repostr-from-dockerfile(){
+  local Dockerfile="$1"
+  local tag=$(find/dockerfile-tag $Dockerfile)
+  local repo=${Dockerfile//$__checkouts\//}
+  repo=${repo%%/*}
+  local image=${Dockerfile//$__checkouts\/$repo\/dex-images\//}
+  image=${image%%/*}
+
+  echo "$repo/$image:$tag"
+}

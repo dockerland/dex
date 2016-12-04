@@ -31,14 +31,17 @@ main_repo(){
     __force=true dex/repo-reset
     __force=true dex/repo-pull
   }
-  
+
   shell/execfn "$operand" "${list[@]}"
 }
 
 dex/repo-add(){
   local repo="$1"
   local url="$2"
-  [[ -z "$repo" || -z "$url" ]] && die "please provide a repo name and url"
+  [[ -z "$repo" || -z "$url" ]] && {
+    io/shout "please provide a repo name and url"
+    display_help 2
+  }
 
   dex/repo-exists $repo && {
     io/confirm "$repo already exists. overwrite?" || return 1

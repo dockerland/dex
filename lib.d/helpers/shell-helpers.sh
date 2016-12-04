@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 7df9aae
+# shell-helpers version v2.0.0-pr build d0bc056
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -132,6 +132,61 @@ docker/safe_name(){
   set -- "${name:0:1}" "${name:1}"
   printf "%s%s" "${1//[^a-zA-Z0-9]/0}" "${2//[^a-zA-Z0-9_.-]/_}"
 }
+
+
+
+# print Dockerfiles found in a path. filter by tag and/or extension.
+#  follows symlinks to resolve extension validity. legal default examples;
+#    /path/Dockerfile
+#    /path/Dockerfile-1.2.0
+#    /path/Dockerfile-1.3.0.j2
+find/dockerfiles(){
+  local path="${1:-.}" ; shift
+  local filter_tag="$1" ; shift
+  local filter_extensions=( "${@:-j2 Dockerfile}" )
+
+  (
+    found=false
+    cd $path 2>/dev/null
+
+    for Dockerfile in Dockerfile* ; do
+      [ -e "$Dockerfile" ] || continue
+
+      filename="$Dockerfile"
+      tag="$(find/dockerfile-tag $Dockerfile)"
+
+      # skip tags not matching our filter
+      [[ -n "$filter_tag" && "$tag" != "$filter_tag" ]] && continue
+
+      # resolve extension
+      extension="${filename##*.}"
+      while [ -L "$path/$filename" ]; do
+        filename=$(readlink $path/$filename)
+        extension=${filename##*.}
+      done
+
+      # skip files not matching our extension filter
+      [ -n "$extension" ] && is/in_list "$extension" "${filter_extensions[@]}" && continue
+
+      echo "$path/$Dockerfile"
+      found=true
+    done
+
+    $found
+  )
+
+}
+
+# print the tag of a passed Dockerfile path
+#  /path/to/Dockerfile => latest
+#  Dockerfile-1.2.0 => 1.2.0
+find/dockerfile-tag(){
+  local Dockerfile="$(basename $1)"
+  local filename=${Dockerfile%.*}
+  local tag=${filename//Dockerfile-/}
+  tag=${tag//Dockerfile/latest}
+  echo "$tag"
+}
 # shell-helpers - file/fs manipulation
 #   https://github.com/briceburg/shell-helpers
 
@@ -223,7 +278,7 @@ find/gid_from_name(){
 find/gid_from_path(){
   ls -ldn "$1" 2>/dev/null | awk '{print $4}'
 }
-# shell-helpers - git thingers (also see is/dirty)
+# shell-helpers - git thingers
 #   https://github.com/briceburg/shell-helpers
 
 
@@ -231,7 +286,7 @@ find/gid_from_path(){
 git/clone(){
   local url="$1"
   local target="$2"
-  prepare/overwrite "$target" || return 1
+  prompt/overwrite "$target" || return 1
 
   [ -w $(dirname $target) ] || {
     io/warn "$target parent directory not writable"
@@ -253,19 +308,33 @@ git/clone(){
 
 # usage: git/pull <repo path>
 git/pull(){
-  local path="${1:.}"
+  local path="${1:-.}"
   (
     cd "$path"
     if is/dirty && ! $__force ; then
-      io/confirm "overwrite working copy changes in $path ?" || return 1
+      prompt/confirm "overwrite working copy changes in $path ?" || return 1
     fi
     git reset --hard HEAD
     git pull
   )
 }
+
+# is/dirty [path to git repository]
+is/dirty(){
+  local path="${1:-.}"
+  [ -d "$path/.git" ] || {
+    io/warn "$path is not a git repository."
+    return 0
+  }
+
+  (
+    set -e
+    cd "$path"
+    [ -n "$(git status -uno --porcelain)" ]
+  )
+}
 # shell-helpers - you put your left foot in, your right foot out.
 #   https://github.com/briceburg/shell-helpers
-
 
 #
 # printf outputs
@@ -303,7 +372,6 @@ io/header(){
   printf "========== \e[1m$1\e[21m ==========\n"
 }
 
-
 io/blockquote(){
   local escape="$1" ; shift
   local prefix="$1" ; shift
@@ -315,68 +383,6 @@ io/blockquote(){
     shift
   done
 }
-
-
-#
-# user input
-#
-
-
-# io/prompt - prompt for input, useful for assigning variiable values
-# usage: io/prompt <prompt message> [fallback value*]
-#   * uses fallback value if no input recieved or a tty is not available
-# example:
-#   name=$(io/prompt  "name to encrypt")
-#   port=$(io/prompt  "port" 8080)
-io/prompt(){
-  local input=
-  local prompt="${1:-value}"
-  local default="$2"
-  [ -z "$default" ] || prompt+=" [$default]"
-
-  # convert escape sequences in prompt to ansi codes
-  prompt="$(echo -e -n "$prompt : ")"
-
-  while [ -z "$input" ]; do
-    if [ -t 0 ]; then
-      # user input
-      read -p "$prompt" input </dev/tty
-    else
-      # piped input
-      read input
-    fi
-
-    [[ -n "$default" && -z "$input" ]] && input="$default"
-    [ -z "$input" ] && io/warn "invalid input"
-
-  done
-  echo "$input"
-}
-
-# io/confirm - pause before continuing
-# usage: io/confirm [message]
-# examples:
-#  io/confirm "really?" || exit 0
-io/confirm() {
-  while true; do
-    case $(io/prompt "${@:-Continue?} [y/n]") in
-      [yY]) return 0 ;;
-      [nN]) return 1 ;;
-      *) io/warn "invalid input"
-    esac
-  done
-}
-
-# prepare/overwrite - prepare a path to be overwritten
-prepare/overwrite(){
-  local target="$1"
-  local prompt="${2:-overwrite $target ?}"
-  local force=${__force:-false}
-  if [[ -e "$target" && ! $force ]]; then
-    io/confirm "$prompt" || return 1
-  fi
-  rm -rf "$target"
-}
 # shell-helpers - you put your left foot in, your right foot out.
 #   https://github.com/briceburg/shell-helpers
 
@@ -386,21 +392,6 @@ is/absolute(){
 
 is/cmd(){
   type "$1" &>/dev/null
-}
-
-# is/dirty [path to git repository]
-is/dirty(){
-  local path="${1:-.}"
-  [ -d "$path/.git" ] || {
-    io/warn "$path is not a git repository."
-    return 0
-  }
-
-  (
-    set -e
-    cd "$path"
-    [ -n "$(git status -uno --porcelain)" ]
-  )
 }
 
 # is/url <string> - returns true on [protocol]://... or user@host:...
@@ -416,6 +407,15 @@ is/fn(){
 is/in_file(){
   grep -q "$1" "$2" 2>/dev/null
 }
+
+is/in_list(){
+  local match="$1" ; shift
+  local item
+  for item in "$@"; do
+    [ "$item" = "$match" ] && return 0
+  done
+  return 1
+}
 # shell-helpers - a series of tubes and pipes provided by al gore
 #   https://github.com/briceburg/shell-helpers
 
@@ -423,7 +423,7 @@ is/in_file(){
 network/fetch(){
   local url="$1"
   local target="$2"
-  prepare/overwrite "$target" || return 1
+  prompt/overwrite "$target" || return 1
 
   network/print "$url" > "$target"
   [ -e $target ]
@@ -536,5 +536,60 @@ shell/execfn(){
 
   "$@"
   exit $?
+}
+# prompt - prompt for input, useful for assigning variiable values
+# usage: prompt <prompt message> [fallback value*]
+#   * uses fallback value if no input recieved or a tty is not available
+# example:
+#   name=$(prompt  "name to encrypt")
+#   port=$(prompt  "port" 8080)
+prompt(){
+  local input=
+  local prompt="${1:-value}"
+  local default="$2"
+  [ -z "$default" ] || prompt+=" [$default]"
+
+  # convert escape sequences in prompt to ansi codes
+  prompt="$(echo -e -n "$prompt : ")"
+
+  while [ -z "$input" ]; do
+    if [ -t 0 ]; then
+      # user input
+      read -p "$prompt" input </dev/tty
+    else
+      # piped input
+      read input
+    fi
+
+    [[ -n "$default" && -z "$input" ]] && input="$default"
+    [ -z "$input" ] && io/warn "invalid input"
+
+  done
+  echo "$input"
+}
+
+# prompt/confirm - pause before continuing
+# usage: prompt/confirm [message]
+# examples:
+#  prompt/confirm "really?" || exit 0
+prompt/confirm() {
+  while true; do
+    case $(prompt "${@:-Continue?} [y/n]") in
+      [yY]) return 0 ;;
+      [nN]) return 1 ;;
+      *) io/warn "invalid input"
+    esac
+  done
+}
+
+# prompt/overwrite - prompt before removing a path
+prompt/overwrite(){
+  local target="$1"
+  local prompt="${2:-overwrite $target ?}"
+  local force=${__force:-false}
+  if [[ -e "$target" && ! $force ]]; then
+    prompt/confirm "$prompt" || return 1
+  fi
+  rm -rf "$target"
 }
 # @shell-helpers_UPDATE_URL=http://get.iceburg.net/shell-helpers/latest-v2/shell-helpers.sh
