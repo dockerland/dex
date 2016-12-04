@@ -3,7 +3,6 @@ main_run(){
   local list=()
   local build=false
   DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-}
-  __image=
 
   [ $# -eq 0 ] && display_help 1
   while [ $# -ne 0 ]; do
@@ -48,21 +47,21 @@ main_run(){
 
 dex/run(){
   local repostr="$1" ; shift
-  local repo
-  local image
-  local tag
-  IFS="/:" read repo image tag <<< "$(dex/find-repostr $repostr)"
-
-  [ -z "$image" ] && {
+  [ -z "$repostr" ] && {
     io/shout "an image must be specified to run"
     display_help 2
   }
+  __image="$(dex/find-image "$repostr")"
 
-  __image="$DEX_NAMESPACE/$image:${tag:-latest}"
-  api=$(docker/local inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.runtime\" }}" $__image)
-  [ -z "$api" ] && build=true
-  $build && {
+  if $build || [ -z "$__image" ]; then
     dex/image-build "$repostr" || return 1
+    __image="$(dex/find-image "$repostr")"
+  fi
+
+  api="$(docker/local inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.runtime\" }}" $__image)"
+  [ -z "$api" ] && {
+    die/exception "failed determing runtime for $repostr from $__image image"
   }
+
   shell/execfn ${api:-$DEX_RUNTIME}-runtime "$@"
 }

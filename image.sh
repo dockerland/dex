@@ -42,6 +42,7 @@ dex/image-build(){
 
   # keep track of pulled repositories
   local pulled_repos=()
+  local built=false
 
   local repostr
   local Dockerfile
@@ -78,11 +79,11 @@ dex/image-build(){
         # deactivate machine so we execute local docker engine
         docker/deactivate_machine
 
-        imagetag="$DEX_NAMESPACE/$image:$tag"
+        __image="$DEX_NAMESPACE/$repo/$image:$tag"
         random="$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)" || true
 
         local flags=(
-          "-t $imagetag"
+          "-t $__image"
           "-f $Dockerfile"
           "--label=\"org.dockerland.dex.namespace=$DEX_NAMESPACE\""
           "--label=\"org.dockerland.dex.runtime=$DEX_RUNTIME\""
@@ -100,16 +101,19 @@ dex/image-build(){
         }
 
         # force re-create "build" container
-        dex/image-build-container $imagetag true &>/dev/null || {
-          io/warn "failed creating build container for $imagetag"
+        dex/image-build-container $__image true &>/dev/null || {
+          io/warn "failed creating build container for $__image"
           exit
         }
 
         io/success "built \e[1m$repostr\e[21m"
+        built=true
       )
 
     done
   done
+  
+  $built
 }
 
 dex/image-build-container(){

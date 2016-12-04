@@ -28,6 +28,28 @@ dex/find-dockerfiles(){
   return 127
 }
 
+# return first found built image matching repostr
+dex/find-image(){
+  local repo
+  local image
+  local tag
+  IFS="/:" read repo image tag <<< "$(dex/find-repostr $1)"
+
+  [ -z "$image" ] && return 2
+
+  local flags=(
+    "-q"
+    "--filter \"dangling=false\""
+    "--filter \"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+    "--filter \"label=org.dockerland.dex.image=$image\""
+  )
+
+  [ -n "$repo" ] && flags+=( "--filter=\"label=org.dockerland.dex.repo=$repo\"" )
+  [ -n "$tag" ] && flags+=( "--filter=\"label=org.dockerland.dex.repo=$tag\"" )
+
+  docker/local images ${flags[@]} | head -n1
+}
+
 # normalizes a repostr
 dex/find-repostr(){
   local repostr="$1"
