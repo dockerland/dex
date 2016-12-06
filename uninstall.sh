@@ -9,13 +9,13 @@ main_uninstall(){
   if [ $# -eq 0 ]; then
     display_help 2
   else
-    set -- $(normalize_flags_first "" "$@")
+    set -- $(args/normalize_flags_first "" "$@")
     while [ $# -ne 0 ]; do
       case $1 in
         -h|--help)         display_help ;;
         --)                shift ; operand_args="$@" ; break ;;
-        -*)                unrecognized_flag $1 ;;
-        *)                 unrecognized_arg "$1" ;;
+        -*)                args/unknown "$1" "flag" ;;
+        *)                 args/unknown "$1" "command" ;;
       esac
       shift
     done

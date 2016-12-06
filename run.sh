@@ -1,5 +1,5 @@
 main_run(){
-  local operand
+  local operand="dex/run"
   local list=()
   local build=false
   DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-}
@@ -36,8 +36,8 @@ main_run(){
       -*)
         args/unknown "$1" "flag" ;;
       *)
-        operand="dex/run"
-        list+=( "$1" )
+        list+=( "$@" )
+        break
         ;;
     esac
     shift
@@ -51,9 +51,14 @@ dex/run(){
     io/shout "an image must be specified to run"
     display_help 2
   }
-  __image="$(dex/find-image "$repostr")"
 
-  if $build || [ -z "$__image" ]; then
+  # ensure :latest if no image tag is passed
+  repostr="$(dex/find-repostr "$repostr" "latest")" || {
+    die "bad repostr ($repostr) passed to run"
+  }
+
+  # build
+  if $build || [ -z "${__image:=$(dex/find-image "$repostr")}" ]; then
     dex/image-build "$repostr" || return 1
     __image="$(dex/find-image "$repostr")"
   fi

@@ -17,7 +17,7 @@ main_conf(){
       vars)
         operand="dex/conf-print" ;;
       *)
-        args/unknown "$1" "command" ;;
+        args/unknown "$1" ;;
     esac
     shift
   done
@@ -42,7 +42,7 @@ dex/conf-init(){
   __force=false
   __pull=false
 
-  mkdir -p $__checkouts || die "unable to create DEX_HOME - $__checkouts"
+  mkdir -p $__checkouts || die/perms "unable to create DEX_HOME - $__checkouts"
 
   # seed sources list if it's missing
   [ -e "$__sources" ]  || {

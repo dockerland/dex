@@ -49,6 +49,14 @@ dex/install(){
   (
     export DEX_NAMESPACE="${DEX_NAMESPACE}-install"
     for repostr in "$@"; do
+
+      # ensure :latest if no image tag is passed
+      repostr="$(dex/find-repostr "$repostr" "latest")" || {
+        io/error "bad repostr ($repostr) passed to install"
+        continue
+      }
+
+
       dex/image-build "$repostr" || {
         io/warn "failed building $repostr"
         continue

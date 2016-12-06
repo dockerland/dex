@@ -48,7 +48,17 @@ dex/image-build(){
   local Dockerfile
   local Dockerfiles
   for repostr in "$@"; do
-    Dockerfiles=( $(dex/find-dockerfiles "$repostr" "latest") ) || {
+    local repo=
+    local image=
+    local tag=
+    IFS="/:" read repo image tag <<< "$repostr"
+
+    $__pull &&  ! is/in_list "$repo" "${pulled_repos[@]}" && {
+      dex/repo-pull "$repo"
+      pulled_repos+=( "$repo" )
+    }
+
+    Dockerfiles=( $(dex/find-dockerfiles "$repostr") ) || {
       io/warn "skipping $repostr (unable to find a match in sources)"
       continue
     }
@@ -59,11 +69,6 @@ dex/image-build(){
       local image=
       local tag=
       IFS="/:" read repo image tag <<< "$repostr"
-
-      $__pull && ! is/in_list "$repo" "${pulled_repos[@]}" && {
-        dex/repo-pull $repo
-        pulled_repos+=( "$repo" )
-      }
 
       io/log "building \e[1m$repostr\e[21m ..."
       __image="$DEX_NAMESPACE/$repo/$image:$tag"

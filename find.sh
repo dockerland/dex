@@ -35,7 +35,7 @@ dex/find-image(){
   local repo
   local image
   local tag
-  IFS="/:" read repo image tag <<< "$(dex/find-repostr $1)"
+  IFS="/:" read repo image tag <<< "$(dex/find-repostr "$1")"
 
   [ -z "$image" ] && return 2
 
@@ -55,6 +55,7 @@ dex/find-image(){
 # normalizes a repostr
 dex/find-repostr(){
   local repostr="$1"
+  local default_tag="$2"
   local imagestr
   local repo
   local image
@@ -80,6 +81,9 @@ dex/find-repostr(){
     io/warn "malformed imagestr $imagestr"
     return 2
   }
+
+  # tag images with default tag if image is specified and tag is empty
+  [[ -z "$tag" && -n "$image" ]] && tag=$default_tag
 
   echo "$repo/$image:$tag"
 }

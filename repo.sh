@@ -55,12 +55,29 @@ dex/repo-exists(){
   [ -n "$(dex/repo-ls $1)" ]
 }
 
-dex/repo-reset(){
-  io/warn "reseting $__sources"
-  network/fetch "$__sources_url" "$__sources" || {
+dex/repo-defaults(){
+  if $DEX_NETWORK; then
+    network/fetch "$__sources_url" "$__sources" && return
     io/warn "failed fetching $__sources"
-    return 2
-  }
+  else
+    io/warn "refusing to fetch \e[1m$__sources\e[21m" "networking is disabled"
+  fi
+
+  io/comment "loading build $SCRIPT_BUILD defaults..."
+  cat << EOF > $__sources
+#
+# dex sources.list - $SCRIPT_BUILD defaults
+#
+
+core https://github.com/dockerland/dex-dockerfiles-core.git
+extra https://github.com/dockerland/dex-dockerfiles-extra.git
+EOF
+}
+
+dex/repo-reset(){
+  io/notice "reseting $__sources"
+  dex/repo-defaults || die/exception "unable to reset $__sources"
+
   local repo
   for repo in $(dex/repo-ls); do
     rm -rf $__checkouts/$repo
@@ -84,7 +101,7 @@ dex/repo-ls(){
     [[ -z "$name" || -z "$url" || "#" = "$name" ]] && continue
 
     # skip lines not matching our filter
-    [[ ${#@} -gt 0 && " $name " != *" $filter "* ]] && continue
+    [[ -n "$filter" && " $name " != *" $filter "* ]] && continue
 
     eval "printf \"$format\n\""
   done
@@ -95,9 +112,15 @@ dex/repo-pull(){
   local url
   local path
   # we use fd9 to allow for nested reads/prompts
-  while read -u9 repo url ; do
+  while read -u9 repo url ; do\
     io/log "pulling $repo repository..."
     path="$__checkouts/$repo"
+
+    ! $DEX_NETWORK && is/url "$url" && {
+      io/warn "refusing to fetch \e[1m$repo\e[21m from $url" "networking is disabled"
+      continue
+    }
+
     if [ -d "$path" ]; then
       git/pull "$path" >&2 || return 1
     else
