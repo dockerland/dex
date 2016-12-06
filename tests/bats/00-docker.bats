@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 #
-# 00 - dependencies
+# 00 - test dependencies
 #
 
 load helpers

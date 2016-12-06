@@ -1,16 +1,16 @@
 #!/usr/bin/env bats
 
 #
-# 07 - runtime
+# 70 - test command after-effects
 #
 
-load dex
+load app
 
 export DEX_NAMESPACE="dex/v1-tests"
 export DEX_BIN_DIR=$TMPDIR/usr/local/bin/installs
 
 setup(){
-  [ -e $DEX ] || install_dex
+  [ -e $APP ] || install_dex
   [ -d $DEX_BIN_DIR ] || mkdir -p $DEX_BIN_DIR
   mk-imgtest
 }
@@ -27,24 +27,24 @@ imgcount(){
 @test "install errors if it cannot write(126)|access(127) DEX_BIN_DIR" {
 
   chmod 000 $DEX_BIN_DIR
-  run $DEX install imgtest/alpine
+  run $APP install imgtest/alpine
   [ $status -eq 126 ]
 
   chmod 755 $DEX_BIN_DIR && rm -rf $DEX_BIN_DIR
-  run $DEX install imgtest/alpine
+  run $APP install imgtest/alpine
   [ $status -eq 127 ]
 }
 
 @test "install errors if it cannot match any image(s)" {
-  run $DEX install imgtest/certainly-missing
+  run $APP install imgtest/certainly-missing
   [ $status -eq 2 ]
 }
 
 @test "install adds tagged runtime to DEX_BIN_DIR and a prefixed link to it" {
   [ $(imgcount) -eq 0 ]
-  eval $($DEX vars DEX_BIN_PREFIX)
+  eval $($APP vars DEX_BIN_PREFIX)
 
-  run $DEX install imgtest/alpine:latest
+  run $APP install imgtest/alpine:latest
 
   [ $status -eq 0 ]
   [ $(imgcount) -eq 2 ]
@@ -57,8 +57,8 @@ imgcount(){
   export TMPDIR=$TMPDIR
   mkdir -p $TMPDIR/label-test/{home,vol,workspace}
 
-  eval $($DEX vars DEX_BIN_PREFIX)
-  run $DEX install imgtest/labels
+  eval $($APP vars DEX_BIN_PREFIX)
+  run $APP install imgtest/labels
 
   [ $status -eq 0 ]
   [ -x $DEX_BIN_DIR/${DEX_BIN_PREFIX}labels ]
@@ -76,14 +76,14 @@ imgcount(){
 
   local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/dex-images/* | wc -l)
 
-  run $DEX install imgtest/*
+  run $APP install imgtest/*
   [ $status -eq 0 ]
   [ $(imgcount) -eq $(($repo_image_count + $repo_image_count)) ]
 }
 
 @test "install adds symlink to runtime script when --global flag is passed" {
-  eval $($DEX vars DEX_BIN_PREFIX)
-  run $DEX install --global imgtest/alpine
+  eval $($APP vars DEX_BIN_PREFIX)
+  run $APP install --global imgtest/alpine
 
   [ $status -eq 0 ]
   [ -e $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine ]
@@ -92,15 +92,15 @@ imgcount(){
 
 @test "install will not overwrite existing files, except when --force is passed" {
 
-  eval $($DEX vars DEX_BIN_PREFIX)
+  eval $($APP vars DEX_BIN_PREFIX)
   touch $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine
   touch $DEX_BIN_DIR/alpine
 
-  run $DEX install --global imgtest/alpine
+  run $APP install --global imgtest/alpine
   [[ $output = *"$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine exists"* ]]
   [[ $output = *"skipped linking alpine to ${DEX_BIN_PREFIX}alpine-latest"* ]]
 
-  run $DEX install --global --force imgtest/alpine
+  run $APP install --global --force imgtest/alpine
   [ -L $DEX_BIN_DIR/dalpine ]
   [ -L $DEX_BIN_DIR/alpine ]
 }

@@ -14,7 +14,7 @@ main(){
 
   dex/conf-init
 
-  [ $# -eq 0 ] && display_help 2
+  [ $# -eq 0 ] && display_help 1
 
   while [ $# -ne 0 ]; do
     case "$1" in

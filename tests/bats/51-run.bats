@@ -1,16 +1,15 @@
 #!/usr/bin/env bats
 
 #
-# 07 - runtime
+# 50 - runtime command behavior
 #
 
-
 export DEX_NAMESPACE="dex/v1-tests"
-load dex
+load app
 
 
 setup(){
-  [ -e $DEX ] || install_dex
+  [ -e $APP ] || install_dex
   mk-imgtest
   __containers=()
 }
@@ -36,13 +35,13 @@ teardown(){
 }
 
 @test "run errors if it cannot find an image" {
-  run $DEX run imgtest/certainly-missing
+  run $APP run imgtest/certainly-missing
   [ $status -eq 1 ]
 }
 
 @test "run automatically builds (and runs) image" {
-  run $DEX image --force rm imgtest/*
-  run $DEX run imgtest/debian
+  run $APP image --force rm imgtest/*
+  run $APP run imgtest/debian
   [ $status -eq 0 ]
   [[ $output == *"built $DEX_NAMESPACE/debian"* ]]
   [[ $output == *"DEBIAN_RELEASE"* ]]
@@ -52,7 +51,7 @@ teardown(){
   rm -rf $DEX_HOME/checkouts/
   [ ! -d $DEX_HOME/checkouts/imgtest ]
 
-  run $DEX run --pull imgtest/debian
+  run $APP run --pull imgtest/debian
   [ $status -eq 0 ]
   [ -d $DEX_HOME/checkouts/imgtest ]
   [[ $output == *"DEBIAN_RELEASE"* ]]
@@ -62,7 +61,7 @@ teardown(){
 @test "run supports persisting a container after it exits" {
   [ ${#__containers[@]} -eq 0 ]
 
-  run $DEX run --persist imgtest/debian
+  run $APP run --persist imgtest/debian
   [ $status -eq 0 ]
 
   get_containers
@@ -70,31 +69,31 @@ teardown(){
 }
 
 @test "run supports passing of arguments to container's command" {
-  run $DEX run imgtest/debian echo 'ping-pong'
+  run $APP run imgtest/debian echo 'ping-pong'
   [ $status -eq 0 ]
   [ $output = "ping-pong" ]
 }
 
 @test "run returns exit code from container's command" {
-  run $DEX run imgtest/debian ls /no-dang-way
+  run $APP run imgtest/debian ls /no-dang-way
   [ $status -eq 2 ]
 }
 
 @test "run allows passing alternative CMD and entrypoint" {
-  run $DEX run --entrypoint "echo" --cmd "ping-pong" imgtest/debian
+  run $APP run --entrypoint "echo" --cmd "ping-pong" imgtest/debian
   [ $status -eq 0 ]
   [ $output = "ping-pong" ]
 }
 
 @test "run allows passing alternative UID and GID" {
-  [ $($DEX run --uid 1 imgtest/debian id -u) -eq 1 ]
-  [ $($DEX run --gid 1 imgtest/debian id -g) -eq 1 ]
+  [ $($APP run --uid 1 imgtest/debian id -u) -eq 1 ]
+  [ $($APP run --gid 1 imgtest/debian id -g) -eq 1 ]
 }
 
 @test "run allows passing alternative HOME and CWD" {
   rm -rf $TMPDIR/alt-home/ ; mkdir -p $TMPDIR/alt-home/abc
-  [ $($DEX run --workspace $TMPDIR/alt-home/ imgtest/debian ls) = "abc" ]
-  [ $($DEX run --home $TMPDIR/alt-home/ imgtest/debian ls /dex/home) = "abc" ]
+  [ $($APP run --workspace $TMPDIR/alt-home/ imgtest/debian ls) = "abc" ]
+  [ $($APP run --home $TMPDIR/alt-home/ imgtest/debian ls /dex/home) = "abc" ]
 }
 
 @test "run allows passing alternative log-driver and persist flag" {
@@ -102,7 +101,7 @@ teardown(){
   get_containers
   [ ${#__containers[@]} -eq 0 ]
 
-  run $DEX run --persist --log-driver json-file imgtest/debian
+  run $APP run --persist --log-driver json-file imgtest/debian
   [ $status -eq 0 ]
 
   get_containers

@@ -1,13 +1,13 @@
 #!/usr/bin/env bats
 
 #
-# 02 - configuration
+# 30 - initialization and configuration
 #
 
-load dex
+load app
 
 setup(){
-  [ -e $DEX ] || install_dex
+  [ -e $APP ] || install_dex
   reset_vars
 }
 
@@ -55,24 +55,24 @@ compare_defaults(){
 }
 
 @test "vars prints helpful output matching our fixture" {
-  diff <(cat_fixture help-vars.txt) <($DEX vars --help)
-  diff <(cat_fixture help-vars.txt) <($DEX vars -h)
-  diff <(cat_fixture help-vars.txt) <($DEX help vars)
+  diff <(cat_fixture help-vars.txt) <($APP vars --help)
+  diff <(cat_fixture help-vars.txt) <($APP vars -h)
+  diff <(cat_fixture help-vars.txt) <($APP help vars)
 }
 
 @test "vars prints a single variable, reflecting its default value" {
-  run $DEX vars DEX_BIN_DIR
+  run $APP vars DEX_BIN_DIR
   [ $status -eq 0 ]
   [ $output = "DEX_BIN_DIR=/usr/local/bin" ]
 }
 
 @test "vars exits with status code 2 on invalid configuration variable lookups" {
-  run $DEX vars INVALID_VAR
+  run $APP vars INVALID_VAR
   [ $status -eq 2 ]
 }
 
 @test "vars prints evaluable lines matching configuration defaults" {
-  run $DEX vars all
+  run $APP vars all
 
   [ $status -eq 0 ]
   for line in "${lines[@]}"; do
@@ -84,7 +84,7 @@ compare_defaults(){
 @test "vars prints evaluable lines reflecting registration of exported configuration" {
 
   set_vars
-  run $DEX vars all
+  run $APP vars all
 
   [ $status -eq 0 ]
   for line in "${lines[@]}"; do
@@ -102,14 +102,14 @@ compare_defaults(){
 @test "vars --defaults prints evaluable lines resetting configuration to defaults" {
 
   set_vars
-  run $DEX vars --defaults all
+  run $APP vars --defaults all
 
   [ $status -eq 0 ]
   for line in "${lines[@]}"; do
     eval $line
   done
 
-  run $DEX vars all
+  run $APP vars all
   compare_defaults "${lines[@]}"
 }
 
@@ -118,7 +118,7 @@ compare_defaults(){
   local ivars=( __checkouts __version __build )
 
   for var in ${ivars[@]}; do
-    run $DEX runfunc dex-vars-print $var
+    run $APP runfunc dex-vars-print $var
 
     var=${output%%=*}
     val=${output#*=}

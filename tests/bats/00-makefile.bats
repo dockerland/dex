@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 #
-# 00 - dependencies
+# 00 - test dependencies
 #
 
 load helpers
@@ -10,23 +10,23 @@ setup() {
   cd $REPO_ROOT
 }
 
-@test "makefile compiles dex" {
-  rm -rf $REPO_ROOT/bin/dex
+@test "makefile compiles $NAMESPACE" {
+  rm -rf $REPO_ROOT/dist/$NAMESPACE
   make
-  [ -e $REPO_ROOT/bin/dex ]
+  [ -e $REPO_ROOT/dist/$NAMESPACE ]
 }
 
-@test "makefile installs an executable dex" {
+@test "makefile installs $NAMESPACE" {
   make DESTDIR=$TMPDIR install
-  [ -x $TMPDIR/usr/local/bin/dex ]
+  [ -e $TMPDIR/usr/local/bin/$NAMESPACE ]
 }
 
-@test "makefile uninstalls dex" {
+@test "makefile uninstalls $NAMESPACE" {
   make DESTDIR=$TMPDIR uninstall
-  [ ! -e $TMPDIR/usr/local/bin/dex ]
+  [ ! -e $TMPDIR/usr/local/bin/$NAMESPACE ]
 }
 
 @test "makefile cleans up" {
   make clean
-  [ ! -e $REPO_ROOT/bin/dex ]
+  [ ! -e $REPO_ROOT/dist ]
 }

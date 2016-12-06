@@ -1,19 +1,19 @@
 #!/usr/bin/env bats
 
 #
-# 06 - runtime
+# 50 - runtime command behavior
 #
 
 #@TODO test build --pull
 #@TODO test building packages
 #@TODO betters tests
 
-load dex
+load app
 
 export DEX_NAMESPACE="dex/v1-tests"
 
 setup(){
-  [ -e $DEX ] || install_dex
+  [ -e $APP ] || install_dex
   mk-imgtest
 }
 
@@ -21,7 +21,7 @@ setup(){
   [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
 
   rm-images
-  run $DEX image build imgtest/alpine
+  run $APP image build imgtest/alpine
   [ $status -eq 0 ]
 
   run docker images -q $DEX_NAMESPACE/alpine:latest
@@ -32,13 +32,13 @@ setup(){
 @test "image build spawns a new 'build' container after building images" {
   local __image="$DEX_NAMESPACE/alpine:latest"
 
-  run $DEX image build imgtest/alpine
+  run $APP image build imgtest/alpine
   [ $status -eq 0 ]
-  container1_sha=$($DEX runfunc dex-image-build-container $__image) || false
+  container1_sha=$($APP runfunc dex-image-build-container $__image) || false
 
-  run $DEX image build imgtest/alpine
+  run $APP image build imgtest/alpine
   [ $status -eq 0 ]
-  container2_sha=$($DEX runfunc dex-image-build-container $__image) || false
+  container2_sha=$($APP runfunc dex-image-build-container $__image) || false
 
   [ "$container1_sha" != "$container2_sha" ]
 }
@@ -46,7 +46,7 @@ setup(){
 @test "image build labels images according to the current DEX_RUNTIME" {
 
   local img=$(docker images -q $DEX_NAMESPACE/alpine:latest)
-  local api_version=$($DEX vars DEX_RUNTIME | sed 's/DEX_RUNTIME=//')
+  local api_version=$($APP vars DEX_RUNTIME | sed 's/DEX_RUNTIME=//')
 
   [ ! -z "$img" ]
   [ ! -z "$api_version" ]
@@ -75,13 +75,13 @@ setup(){
   # @TODO file bug
   skip
 
-  run $DEX image build imgtest/cachebust:cache
+  run $APP image build imgtest/cachebust:cache
   [ $status -eq 0 ]
   echo $output
   first_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:cache)
 
 
-  run $DEX image build imgtest/cachebust:cache
+  run $APP image build imgtest/cachebust:cache
   [ $status -eq 0 ]
   echo $output
   second_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:cache)
@@ -90,11 +90,11 @@ setup(){
 }
 
 @test "image build uses DEXBUILD_NOCACHE argument to circumvent docker build cache" {
-  run $DEX image build imgtest/cachebust:nocache
+  run $APP image build imgtest/cachebust:nocache
   [ $status -eq 0 ]
   first_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:nocache)
 
-  run $DEX image build imgtest/cachebust:nocache
+  run $APP image build imgtest/cachebust:nocache
   [ $status -eq 0 ]
   second_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:nocache)
 
@@ -102,13 +102,13 @@ setup(){
 }
 
 @test "image ls prints built images in 'docker images' format" {
-  run $DEX image ls
+  run $APP image ls
   [ "$(echo ${lines[0]} | awk '{print $1}')" = "$(docker images $IMAGES_FILTER | head -n1 | awk '{print $1}')" ]
   [[ "$output" == *"$DEX_NAMESPACE/alpine"* ]]
 }
 
 @test "image ls supports quiet flag akin to 'docker images -q'" {
-  run $DEX image ls -q
+  run $APP image ls -q
   [ ! "$(echo ${lines[0]} | awk '{print $1}')" = "$(docker images $IMAGES_FILTER | head -n1 | awk '{print $1}')" ]
   [[ ! "$output" == *"$DEX_NAMESPACE/alpine"* ]]
   [ "${lines[0]}" = "$(docker images -q $IMAGES_FILTER | head -n1)" ]
@@ -116,7 +116,7 @@ setup(){
 
 
 @test "image rm errors if it cannot find images to remove" {
-  run $DEX image rm imgtest/zzz
+  run $APP image rm imgtest/zzz
   [ $status -eq 1 ]
 }
 
@@ -125,7 +125,7 @@ setup(){
   [ $status -eq 0 ]
   [ ${#lines[@]} -eq 1 ]
 
-  run $DEX image rm imgtest/alpine
+  run $APP image rm imgtest/alpine
   run docker images -q $DEX_NAMESPACE/alpine:latest
   [ $status -eq 0 ]
   [ ${#lines[@]} -eq 0 ]
@@ -135,8 +135,8 @@ setup(){
   [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
 
   rm-images
-  $DEX image build imgtest/alpine:3.2
-  $DEX image build imgtest/alpine:edge
+  $APP image build imgtest/alpine:3.2
+  $APP image build imgtest/alpine:edge
 
   run docker images -q $IMAGES_FILTER --filter=label=org.dockerland.dex.image=alpine
   echo $output
@@ -147,7 +147,7 @@ setup(){
   [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
 
   rm-images
-  $DEX image build imgtest/*
+  $APP image build imgtest/*
 
   local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/dex-images/* | wc -l)
   run docker images -q $IMAGES_FILTER
@@ -158,7 +158,7 @@ setup(){
   local image_count=$(docker images -q $IMAGES_FILTER | wc -l)
   [ $image_count -ne 0 ]
 
-  run $DEX image rm imgtest/*
+  run $APP image rm imgtest/*
   [ $status -eq 0 ]
 
   image_count=$(docker images -q $IMAGES_FILTER | wc -l)
@@ -175,16 +175,16 @@ setup(){
     export DOCKER_MACHINE_NAME=invalid-host
 
     # test build
-    run $DEX image build imgtest/alpine
+    run $APP image build imgtest/alpine
     [ $status -eq 0 ]
 
     # test ls
-    run $DEX image ls
+    run $APP image ls
     [ $status -eq 0 ]
     [[ "$output" == *"$DEX_NAMESPACE/alpine"* ]]
 
     # test rm
-    run $DEX image rm imgtest/alpine
+    run $APP image rm imgtest/alpine
     [ $status -eq 0 ]
   )
 

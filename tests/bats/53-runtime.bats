@@ -1,14 +1,14 @@
 #!/usr/bin/env bats
 
 #
-# 07 - runtime
+# 50 - runtime command behavior
 #
 
 export DEX_NAMESPACE="dex/v1-tests"
-load dex
+load app
 
 setup(){
-  [ -e $DEX ] || install_dex
+  [ -e $APP ] || install_dex
   mk-imgtest
   mkdir -p $TMPDIR/label-test/{home,vol,workspace}
   __containers=()
@@ -36,23 +36,23 @@ teardown(){
 }
 
 @test "runtime properly sets \$HOME as /dex/home" {
-  run $DEX run imgtest/debian printenv HOME
+  run $APP run imgtest/debian printenv HOME
   [ "$output" = "/dex/home" ]
 }
 
 @test "runtime properly sets cwd as /dex/workspace" {
-  run $DEX run imgtest/debian pwd
+  run $APP run imgtest/debian pwd
   [ "$output" = "/dex/workspace" ]
 }
 
 @test "runtime supports piping of stdin" {
-  local out=$(echo "foo" | $DEX run imgtest/debian sed 's/foo/bar/')
+  local out=$(echo "foo" | $APP run imgtest/debian sed 's/foo/bar/')
   [ $? -eq 0 ]
   [ "$out" = "bar" ]
 }
 
 @test "runtime assigns default v1 vars" {
-  run $DEX run imgtest/debian
+  run $APP run imgtest/debian
 
   # v1 vars
   for line in ${lines[@]}; do echo $line ; done
@@ -76,7 +76,7 @@ teardown(){
   export LANG="test"
   export TZ="test"
 
-  run $DEX run imgtest/debian
+  run $APP run imgtest/debian
 
   # v1 passthrough
   [[ "$output" == *"LANG=test"* ]]
@@ -90,7 +90,7 @@ teardown(){
   export TEST_A="test"
   export TEST_B="test"
 
-  run $DEX run imgtest/labels:passthru
+  run $APP run imgtest/labels:passthru
 
   # v1 passthrough
   [[ "$output" == *"LANG=test"* ]]
@@ -104,7 +104,7 @@ teardown(){
 @test "runtime sets a unique home by default (DEX_HOME/homes/<image>-<tag>)" {
   rm -rf $DEX_HOME/homes/debian-latest
 
-  run $DEX run imgtest/debian:latest
+  run $APP run imgtest/debian:latest
   [ $status -eq 0 ]
   [ -d $DEX_HOME/homes/debian-latest ]
 }
@@ -114,8 +114,8 @@ teardown(){
   # LABEL org.dockerland.dex.docker_envars="BATS_TESTVAR"
 
   export BATS_TESTVAR="abc"
-  $DEX run imgtest/labels printenv -0 BATS_TESTVAR
-  [ "$($DEX run imgtest/labels printenv -0 BATS_TESTVAR)" = "abc" ]
+  $APP run imgtest/labels printenv -0 BATS_TESTVAR
+  [ "$($APP run imgtest/labels printenv -0 BATS_TESTVAR)" = "abc" ]
 }
 
 @test "runtime supports variable expansion in docker_home label" {
@@ -124,7 +124,7 @@ teardown(){
   mkdir -p $TMPDIR/label-test/home
   touch $TMPDIR/label-test/home/__exists__
 
-  run $DEX run --build imgtest/labels ls /dex/home/__exists__
+  run $APP run --build imgtest/labels ls /dex/home/__exists__
   [ $status -eq 0 ]
 }
 
@@ -134,8 +134,8 @@ teardown(){
   # LABEL org.dockerland.dex.docker_volumes="~:/realhome:ro"
   touch $DEX_HOME/.dex_realhome_test
 
-  HOME=$DEX_HOME $DEX run --build imgtest/labels:home ls /dex/home/.dex_realhome_test
-  HOME=$DEX_HOME $DEX run imgtest/labels:home ls /realhome/.dex_realhome_test
+  HOME=$DEX_HOME $APP run --build imgtest/labels:home ls /dex/home/.dex_realhome_test
+  HOME=$DEX_HOME $APP run imgtest/labels:home ls /realhome/.dex_realhome_test
 
   rm -rf $DEX_HOME/.dex_realhome_test
 }
@@ -145,7 +145,7 @@ teardown(){
   # LABEL org.dockerland.dex.docker_workspace="\$TMPDIR/label-test/workspace"
   touch $TMPDIR/label-test/workspace/__exists__
 
-  run $DEX run imgtest/labels ls __exists__
+  run $APP run imgtest/labels ls __exists__
   [ $status -eq 0 ]
 }
 
@@ -153,17 +153,17 @@ teardown(){
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
 
-  [ "$($DEX run imgtest/labels printenv -0 TESTVAR)" = "TEST" ]
+  [ "$($APP run imgtest/labels printenv -0 TESTVAR)" = "TEST" ]
 }
 
 @test "runtime respects docker_groups label, maps to host group ID" {
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_groups="tty"
 
-  host_gid=$($DEX runfunc get_group_id tty)
+  host_gid=$($APP runfunc find/gid_from_name tty)
   found=false
 
-  for gid in $($DEX run imgtest/labels id -G); do
+  for gid in $($APP run imgtest/labels id -G); do
     # trim trailing null character
     gid=$(echo $gid | tr -d '[:space:]')
     echo "comparing container gid: $gid to host gid: $host_gid"
@@ -179,18 +179,18 @@ teardown(){
 @test "runtime respects docker_devices label" {
   # imgtest/labels image ::
   # LABEL org.dockerland.dex.docker_devices="tty0 /dev/console"
-  run $DEX run imgtest/debian ls /dev/tty0
+  run $APP run imgtest/debian ls /dev/tty0
   [ $status -eq 2 ]
 
-  run $DEX run imgtest/debian ls /dev/console
+  run $APP run imgtest/debian ls /dev/console
   [ $status -eq 2 ]
 
-  run $DEX run imgtest/labels ls /dev/tty0
+  run $APP run imgtest/labels ls /dev/tty0
   echo $output
-  $DEX run imgtest/labels ls /dev/
+  $APP run imgtest/labels ls /dev/
   [ $status -eq 0 ]
 
-  run $DEX run imgtest/labels ls /dev/console
+  run $APP run imgtest/labels ls /dev/console
   [ $status -eq 0 ]
 }
 
@@ -199,30 +199,30 @@ teardown(){
   # LABEL org.dockerland.dex.docker_volumes="\$TMPDIR/label-test/vol \$TMPDIR/label-test/vol:/tmp/ro:ro"
   touch $TMPDIR/label-test/vol/__exists__
 
-  run $DEX run imgtest/labels ls $TMPDIR/label-test/vol/__exists__
+  run $APP run imgtest/labels ls $TMPDIR/label-test/vol/__exists__
   [ $status -eq 0 ]
 
-  run $DEX run imgtest/labels ls /tmp/ro/__exists__
+  run $APP run imgtest/labels ls /tmp/ro/__exists__
   [ $status -eq 0 ]
 
-  run $DEX run imgtest/labels rm /tmp/ro/__exists__
+  run $APP run imgtest/labels rm /tmp/ro/__exists__
   [ $status -eq 1 ]
 }
 
 @test "runtime ro-mounts host paths to coax common absolute path resolutions" {
   cd $TMPDIR
-  $DEX run imgtest/debian ls $TMPDIR
+  $APP run imgtest/debian ls $TMPDIR
 
-  run $DEX run imgtest/labels:disable-host_paths ls $TMPDIR
+  run $APP run imgtest/labels:disable-host_paths ls $TMPDIR
   [ $status -eq 2 ]
 }
 
 @test "runtime respects host_users label for ro-mounting of host users/groups" {
-  run $DEX run imgtest/debian whoami
+  run $APP run imgtest/debian whoami
   [ $status -eq 1 ]
 
-  $DEX image build imgtest/labels:enable-host_users
-  run $DEX run imgtest/labels:enable-host_users whoami
+  $APP image build imgtest/labels:enable-host_users
+  run $APP run imgtest/labels:enable-host_users whoami
   for line in ${lines[@]}; do
     echo "$line"
   done
@@ -232,36 +232,36 @@ teardown(){
 
 @test "runtime respects host_docker label for passthrough of host docker socket and vars" {
   # test if host docker is [NOT!] exposed by default
-  $DEX run imgtest/debian [ -S /var/run/docker.sock ] && false
+  $APP run imgtest/debian [ -S /var/run/docker.sock ] && false
 
   # test if /var/run/docker.sock gets exposed when host_docker label is set
-  $DEX run imgtest/labels:enable-host_docker [ -S /var/run/docker.sock ]
+  $APP run imgtest/labels:enable-host_docker [ -S /var/run/docker.sock ]
 
   # test polling of host docker (default command outputs `docker info`)
-  $DEX run imgtest/labels:enable-host_docker | grep -q Plugins
+  $APP run imgtest/labels:enable-host_docker | grep -q Plugins
 
   # test DOCKER_ envar passthrough
-  run DOCKER_TEST="test" $DEX run imgtest/labels:enable-host_docker printenv
+  run DOCKER_TEST="test" $APP run imgtest/labels:enable-host_docker printenv
   [[ $output == *"DOCKER_TEST=test"* ]]
 }
 
 @test "runtime suppresses tty flags when container output is piped" {
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
-  local out=$(DEX_DEBUG=true $DEX run imgtest/labels echo "foo" | sed 's/foo/bar/')
+  local out=$(DEX_DEBUG=true $APP run imgtest/labels echo "foo" | sed 's/foo/bar/')
   [[ "$out" == *"--tty=false"* ]]
 
-  local out=$($DEX run imgtest/labels echo "foo" | sed 's/foo/bar/')
+  local out=$($APP run imgtest/labels echo "foo" | sed 's/foo/bar/')
   [ "$out" = "bar" ]
 }
 
 @test "runtime suppresses tty flags when container input is piped" {
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
-  local out=$(echo "foo" | DEX_DEBUG=true $DEX run imgtest/labels sed 's/foo/bar/')
+  local out=$(echo "foo" | DEX_DEBUG=true $APP run imgtest/labels sed 's/foo/bar/')
   [[ "$out" == *"--tty=false"* ]]
 
-  local out=$(echo "foo" | $DEX run imgtest/labels sed 's/foo/bar/')
+  local out=$(echo "foo" | $APP run imgtest/labels sed 's/foo/bar/')
   [ "$out" = "bar" ]
 }
 
@@ -281,16 +281,16 @@ teardown(){
   export DEX_DOCKER_WORKSPACE=$DEX_DOCKER_HOME/ping-pong
   mkdir -p $DEX_DOCKER_HOME/ping-pong/deux
 
-  run $DEX run imgtest/debian ls /dex/home/
+  run $APP run imgtest/debian ls /dex/home/
   [ "$output" = "ping-pong" ]
 
-  run $DEX run imgtest/debian ls
+  run $APP run imgtest/debian ls
   [ "$output" = "deux" ]
 
 
   export DEX_DOCKER_ENTRYPOINT=/bin/echo
   export DEX_DOCKER_CMD="entrypoint-cmd-test"
-  run $DEX run imgtest/debian
+  run $APP run imgtest/debian
   [ "$output" = "entrypoint-cmd-test" ]
 
 
@@ -302,7 +302,7 @@ teardown(){
   export DEX_DOCKER_GID=$(id root -g)
   export DEX_DOCKER_LOG_DRIVER="json-file"
 
-  run $DEX run --persist imgtest/debian
+  run $APP run --persist imgtest/debian
   [ $status -eq 0 ]
 
   get_containers
@@ -314,8 +314,8 @@ teardown(){
 @test "runtime respects window label and DEX_WINDOW_FLAGS envar" {
   (
     export DEX_WINDOW_FLAGS="-e WINDOW_FLAG=abc"
-    [ "$($DEX run imgtest/labels:x11 printenv -0 WINDOW_FLAG)" = "abc" ]
-    [ "$($DEX run imgtest/labels:x11 printenv -0 DEX_WINDOW)" = "true" ]
+    [ "$($APP run imgtest/labels:x11 printenv -0 WINDOW_FLAG)" = "abc" ]
+    [ "$($APP run imgtest/labels:x11 printenv -0 DEX_WINDOW)" = "true" ]
   ) || return 1
 }
 
@@ -329,7 +329,7 @@ teardown(){
     export DOCKER_HOST=an.invalid-host.tld
     export DOCKER_MACHINE_NAME=invalid-host
 
-    run $DEX run --persist imgtest/debian
+    run $APP run --persist imgtest/debian
     [ $status -eq 0 ]
   )
 
