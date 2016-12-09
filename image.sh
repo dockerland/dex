@@ -36,7 +36,7 @@ main_image(){
 
 dex/image-build(){
   [ $# -eq 0 ] && {
-    io/shout "please provide an image to build"
+    p/shout "please provide an image to build"
     display_help 2
   }
 
@@ -51,7 +51,7 @@ dex/image-build(){
     IFS="/:" read repo image tag <<< "$repostr"
 
     Dockerfiles=( $(dex/find-dockerfiles "$repostr") ) || {
-      io/warn "skipping $repostr (unable to find a match in sources)"
+      p/warn "skipping $repostr (unable to find a match in sources)"
       continue
     }
 
@@ -62,7 +62,7 @@ dex/image-build(){
       local tag=
       IFS="/:" read repo image tag <<< "$repostr"
 
-      io/log "building \e[1m$repostr\e[21m ..."
+      p/log "building \e[1m$repostr\e[21m ..."
       __image="$DEX_NAMESPACE/$repo/$image:$tag"
 
       (
@@ -74,7 +74,7 @@ dex/image-build(){
         done
 
         # @TODO support templated [j2] builds as per buildchain
-        io/comment "using $(pwd)/$Dockerfile"
+        p/comment "using $(pwd)/$Dockerfile"
 
         # deactivate machine so we execute local docker engine
         docker/deactivate_machine
@@ -97,16 +97,16 @@ dex/image-build(){
 
         # force re-create "build" container
         dex/image-build-container $__image true &>/dev/null || {
-          io/warn "failed creating build container for $__image"
+          p/warn "failed creating build container for $__image"
           exit 1
         }
       ) || {
-        io/error "failed building $Dockerfile"
+        p/error "failed building $Dockerfile"
         continue
       }
 
       __built_images+=( "$__image" )
-      io/success "built \e[1m$repostr\e[21m"
+      p/success "built \e[1m$repostr\e[21m"
 
     done
   done

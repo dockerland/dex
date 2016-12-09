@@ -33,7 +33,7 @@ dex/repo-add(){
   local repo="$1"
   local url="$2"
   [[ -z "$repo" || -z "$url" ]] && {
-    io/shout "please provide a repo name and url"
+    p/shout "please provide a repo name and url"
     display_help 2
   }
 
@@ -42,13 +42,13 @@ dex/repo-add(){
     __force=true dex/repo-rm "$repo"
   }
 
-  io/notice "adding \e[1m$repo\e[21m ..."
+  p/notice "adding \e[1m$repo\e[21m ..."
   file/interpolate "$__sources" "^$repo " "$repo $url"
   dex/repo-pull "$repo" || {
     __force=true dex/repo-rm "$repo"
     die/exception "failed to add $repo"
   }
-  io/success "added \e[1m$repo\e[21m"
+  p/success "added \e[1m$repo\e[21m"
 }
 
 dex/repo-exists(){
@@ -58,12 +58,12 @@ dex/repo-exists(){
 dex/repo-defaults(){
   if $DEX_NETWORK; then
     network/fetch "$__sources_url" "$__sources" && return
-    io/warn "failed fetching $__sources"
+    p/warn "failed fetching $__sources"
   else
-    io/warn "refusing to fetch \e[1m$__sources\e[21m" "networking is disabled"
+    p/warn "refusing to fetch \e[1m$__sources\e[21m" "networking is disabled"
   fi
 
-  io/comment "loading build $SCRIPT_BUILD defaults..."
+  p/comment "loading build $SCRIPT_BUILD defaults..."
   cat << EOF > $__sources
 #
 # dex sources.list - $SCRIPT_BUILD defaults
@@ -75,7 +75,7 @@ EOF
 }
 
 dex/repo-reset(){
-  io/notice "reseting $__sources"
+  p/notice "reseting $__sources"
   dex/repo-defaults || die/exception "unable to reset $__sources"
 
   local repo
@@ -83,7 +83,7 @@ dex/repo-reset(){
     rm -rf $__checkouts/$repo
   done
   dex/repo-pull
-  io/success "reset $__sources"
+  p/success "reset $__sources"
 }
 
 dex/repo-ls(){
@@ -116,11 +116,11 @@ dex/repo-pull(){
     is/in_list "$repo" "${__pulled_repos[@]}" && continue
     pulled_repos+=( "$repo" )
 
-    io/log "pulling $repo repository..."
+    p/log "pulling $repo repository..."
     path="$__checkouts/$repo"
 
     ! $DEX_NETWORK && is/url "$url" && {
-      io/warn "refusing to fetch \e[1m$repo\e[21m from $url" "networking is disabled"
+      p/warn "refusing to fetch \e[1m$repo\e[21m from $url" "networking is disabled"
       continue
     }
 
@@ -131,7 +131,7 @@ dex/repo-pull(){
     fi
 
 
-    io/success "pulled $repo repository"
+    p/success "pulled $repo repository"
   done 9< <(dex/repo-ls "$@")
 }
 
@@ -145,10 +145,10 @@ dex/repo-rm(){
       prompt/confirm "remove \e[1m$repo\e[21m from $__sources ?" || continue
     fi
     file/sed_inplace "$__sources" "/^$repo /d"
-    io/log "removing $repo from $__sources"
+    p/log "removing $repo from $__sources"
 
     path="$__checkouts/$repo"
     prepare/overwrite "$path" "remove checkout $path ?" && \
-      io/log "removed checkout $path"
+      p/log "removed checkout $path"
   done
 }

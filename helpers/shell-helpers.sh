@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build ae3d8b0
+# shell-helpers version v2.0.0-pr build 8999c9e
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -8,15 +8,15 @@
 
 
 # args/normalize - normalize POSIX short and long flags for easier parsing
-# usage: args/normalize_flags <fargs> [<flags>...]
+# usage: args/normalize <fargs> [<flags>...]
 #   <fargs>: string of short flags requiring an argument.
 #   <flags>: flag string(s) to normalize, typically passed as "$@"
 # examples:
-#   normalize_flags "" "-abc"
+#   args/normalize "" "-abc"
 #     => -a -b -c
-#   normalize_flags "om" "-abcooutput.txt" "--def=jam" "-mz"
+#   args/normalize "om" "-abcooutput.txt" "--def=jam" "-mz"
 #     => -a -b -c -o output.txt --def jam -m z"
-#   normalize_flags "om" "-abcooutput.txt" "--def=jam" "-mz" "--" "-abcx" "-my"
+#   args/normalize "om" "-abcooutput.txt" "--def=jam" "-mz" "--" "-abcx" "-my"
 #     => -a -b -c -o output.txt --def jam -m z -- -abcx -my"
 args/normalize(){
   local fargs="$1"
@@ -76,14 +76,14 @@ args/normalize_flags_first(){
 }
 
 args/unknown(){
-  io/shout "\e[1m$1\e[21m is an unrecognized ${2:-argument}"
+  p/shout "\e[1m$1\e[21m is an unrecognized ${2:-argument}"
   display_help 2
 }
 # shell-helpers - the art of killing your script
 #   https://github.com/briceburg/shell-helpers
 
 die(){
-  io/error "${@:-halting...}"
+  p/error "${@:-halting...}"
   exit ${__exit_code:-1}
 }
 
@@ -153,7 +153,7 @@ find/dockerfiles(){
       [ -e "$Dockerfile" ] || continue
 
       filename="$Dockerfile"
-      tag="$(find/dockerfile-tag $Dockerfile)"
+      tag="$(get/dockerfile-tag $Dockerfile)"
 
       # skip tags not matching our filter
       [[ -n "$filter_tag" && "$tag" != "$filter_tag" ]] && continue
@@ -180,7 +180,7 @@ find/dockerfiles(){
 # print the tag of a passed Dockerfile path
 #  /path/to/Dockerfile => latest
 #  Dockerfile-1.2.0 => 1.2.0
-find/dockerfile-tag(){
+get/dockerfile-tag(){
   local Dockerfile="$(basename $1)"
   local filename=${Dockerfile%.*}
   local tag=${filename//Dockerfile-/}
@@ -192,9 +192,9 @@ find/dockerfile-tag(){
 
 
 # file/sed_inplace - cross-platform sed "in place" file substitution
-# usage: sed_inplace "file" "sed regex pattern"
-#    ex: sed_inplace "/tmp/file" "s/CLIENT_CODE/ACME/g"
-#    ex: sed_inplace "/tmp/file" "/pattern_to_remove/d"
+# usage: file/sed_inplace "file" "sed regex pattern"
+#    ex: file/sed_inplace "/tmp/file" "s/CLIENT_CODE/ACME/g"
+#    ex: file/sed_inplace "/tmp/file" "/pattern_to_remove/d"
 file/sed_inplace(){
   local sed=
   local sed_flags="-r -i"
@@ -222,35 +222,12 @@ file/interpolate(){
 # shell-helpers - look up. climb tree. look down. look around.
 #   https://github.com/briceburg/shell-helpers
 
-# find/cmd - return first usable command, preferring __cmd_prefix versions
-# usage: find/cmd <command(s)...>
-# example:
-#  ansible=$(__cmd_prefix=badevops- find/cmd ansible dansible) =>
-#   1. "badevops-ansible"
-#   2. "badevops-dansible"
-#   3. "ansible"
-#   4. "dansible"
-#   5. "" - returns 127
-find/cmd(){
-  local cmd=
-  for cmd in "$@"; do
-    type ${__cmd_prefix}${cmd} &>/dev/null && {
-      echo "${__cmd_prefix}${cmd}"
-      return 0
-    }
-  done
+#
+# get/ returns single-value string
+# find/ returns multi-value lists
+#
 
-  for cmd in "$@"; do
-    type $cmd &>/dev/null && {
-      echo "$cmd"
-      return 0
-    }
-  done
-
-  return 127
-}
-
-# usage: find/dirs <path> [filter]
+# usage: get/dirs <path> [filter]
 find/dirs(){
   local path="$1"
   local filter="$2"
@@ -260,23 +237,6 @@ find/dirs(){
     cd "$path"
     ls -1d $filter/ 2>/dev/null | sed 's|/$||'
   )
-}
-
-
-# usage: find/gid_from_name <group name>
-find/gid_from_name(){
-  if is/cmd getent ; then
-    getent group "$1" | cut -d: -f3
-  elif is/cmd dscl ; then
-    dscl . -read "/Groups/$1" PrimaryGroupID 2>/dev/null | awk '{ print $2 }'
-  else
-    python -c "import grp; print(grp.getgrnam(\"$1\").gr_gid)" 2>/dev/null
-  fi
-}
-
-# usage: find/gid_from_file <path>
-find/gid_from_path(){
-  ls -ldn "$1" 2>/dev/null | awk '{print $4}'
 }
 # shell-helpers - git thingers
 #   https://github.com/briceburg/shell-helpers
@@ -289,14 +249,14 @@ git/clone(){
   prompt/overwrite "$target" || return 1
 
   [ -w $(dirname $target) ] || {
-    io/warn "$target parent directory not writable"
+    p/warn "$target parent directory not writable"
     return 126
   }
 
   local flags=""
   if ! is/url "$url"; then
     [ -d "$url/.git" ] || {
-      io/warn "$url is not a git repository"
+      p/warn "$url is not a git repository"
       return 2
     }
     flags+=" --shared"
@@ -323,7 +283,7 @@ git/pull(){
 is/dirty(){
   local path="${1:-.}"
   [ -d "$path/.git" ] || {
-    io/warn "$path is not a git repository."
+    p/warn "$path is not a git repository."
     return 0
   }
 
@@ -336,52 +296,41 @@ is/dirty(){
 # shell-helpers - you put your left foot in, your right foot out.
 #   https://github.com/briceburg/shell-helpers
 
+
+# io/cat - support variadic input (either arguments or piped stdin), and
+#          normalize output. arguments are output one per line.
 #
-# printf outputs
+#          this is a helper fn used by other io/ commands, e.g.
+#          io/trim supports trimming arguments or the contents of a file.
+# examples:
+#   cat my-file | io/cat   =>
+#     <contents of my-file...>
 #
-
-io/error(){
-  io/blockquote "\e[31m" "✖ " "$@" >&2
+#   io/cat "hello" "world" =>
+#     hello
+#     world
+io/cat(){
+  if [ -t 0 ]; then
+    local line
+    for line; do echo $line; done
+  else
+    cat
+  fi
 }
 
-io/success(){
-  io/blockquote "\e[32m" "✔ " "$@" >&2
+# strips comments and blank lines
+io/no-comments(){
+  io/no-empty "$@" | sed -e '/^\s*[#;].*$/d'
 }
 
-io/notice(){
-  io/blockquote "\e[33m" "➜ " "$@" >&2
+# strips blank lines
+io/no-empty(){
+  io/cat "$@" | sed -e '/^\s*$/d'
 }
 
-io/log(){
-  io/blockquote "\e[34m" "• " "$@" >&2
-}
-
-io/warn(){
-  io/blockquote "\e[35m" "⚡ " "$@" >&2
-}
-
-io/comment(){
-  printf '\e[90m# %b\n\e[0m' "$@" >&2
-}
-
-io/shout(){
-  printf '\e[33m⚡\n⚡ %b\n⚡\n\e[0m' "$@" >&2
-}
-
-io/header(){
-  printf "========== \e[1m$1\e[21m ==========\n"
-}
-
-io/blockquote(){
-  local escape="$1" ; shift
-  local prefix="$1" ; shift
-  local indent="$(printf '%*s' ${#prefix})"
-
-  while [ $# -ne 0 ]; do
-    printf "$escape$prefix%b\n\e[0m" "$1"
-    prefix="$indent"
-    shift
-  done
+# strips blank lines, as well as leading and trailing whitespace
+io/trim(){
+  io/cat "$@" | awk '{$1=$1};1'
 }
 # shell-helpers - you put your left foot in, your right foot out.
 #   https://github.com/briceburg/shell-helpers
@@ -435,7 +384,7 @@ network/print(){
   local curl=${CURL_PATH:-curl}
 
   is/url "$url" || {
-    io/warn "refusing to fetch $url"
+    p/warn "refusing to fetch $url"
     return 1
   }
 
@@ -444,15 +393,15 @@ network/print(){
   elif is/cmd $curl ; then
     $curl -Lfs $url
   else
-    io/warn "unable to fetch $url" "missing both curl and wget"
+    p/warn "unable to fetch $url" "missing both curl and wget"
     return 1
   fi
 }
 
-# shell_detect - detect user's shell and sets
+# shell/detect - detect user's shell and sets
 #  __shell (user's shell, e.g. 'fish', 'bash', 'zsh')
 #  __shell_file (shell configuration file, e.g. '~/.bashrc')
-# usage: shell_detect [shell (skips autodetect)]
+# usage: shell/detect [shell (skips autodetect)]
 shell/detect(){
   # https://github.com/rbenv/rbenv/wiki/Unix-shell-initialization
   __shell=${1:-$(basename $SHELL | awk '{print tolower($0)}')}
@@ -480,7 +429,7 @@ shell/detect(){
   done
 
   __shell_file=~/.profile
-  io/warn "failed detecting shell config file, falling back to $__shell_file"
+  p/warn "failed detecting shell config file, falling back to $__shell_file"
   return 1
 }
 
@@ -525,7 +474,7 @@ shell/evaluable_entrypoint(){
 
   [ -z "$__shell_file" ] && shell/detect
 
-  io/comment \
+  p/comment \
     "To configure your shell, run:" \
     "  ${pre}${SCRIPT_ENTRYPOINT}${post}" \
     "To remember your configuration in subsequent shells, run:" \
@@ -540,13 +489,13 @@ shell/execfn(){
   "$@"
   exit $?
 }
-# prompt - prompt for input, useful for assigning variiable values
-# usage: prompt <prompt message> [fallback value*]
+# prompt/user - prompt for input, useful for assigning variiable values
+# usage: prompt/user <prompt message> [fallback value*]
 #   * uses fallback value if no input recieved or a tty is not available
 # example:
-#   name=$(prompt  "name to encrypt")
-#   port=$(prompt  "port" 8080)
-prompt(){
+#   name=$(prompt/user "name to encrypt")
+#   port=$(prompt/user "port" 8080)
+prompt/user(){
   local input=
   local prompt="${1:-value}"
   local default="$2"
@@ -565,7 +514,7 @@ prompt(){
     fi
 
     [[ -n "$default" && -z "$input" ]] && input="$default"
-    [ -z "$input" ] && io/warn "invalid input"
+    [ -z "$input" ] && p/warn "invalid input"
 
   done
   echo "$input"
@@ -577,10 +526,10 @@ prompt(){
 #  prompt/confirm "really?" || exit 0
 prompt/confirm() {
   while true; do
-    case $(prompt "${@:-Continue?} [y/n]") in
+    case $(prompt/user "${@:-Continue?} [y/n]") in
       [yY]) return 0 ;;
       [nN]) return 1 ;;
-      *) io/warn "invalid input"
+      *) p/warn "invalid input"
     esac
   done
 }
@@ -594,5 +543,106 @@ prompt/overwrite(){
     $force || prompt/confirm "$prompt" || return 1
     rm -rf "$target"
   }
+}
+# shell-helpers - look up. climb tree. look down. look around.
+#   https://github.com/briceburg/shell-helpers
+
+#
+# get/ returns single-value string
+# find/ returns multi-value lists
+#
+
+# get/cmd - return first usable command, preferring __cmd_prefix versions
+# usage: get/cmd <command(s)...>
+# example:
+#  ansible=$(__cmd_prefix=badevops- get/cmd ansible dansible) =>
+#   1. "badevops-ansible"
+#   2. "badevops-dansible"
+#   3. "ansible"
+#   4. "dansible"
+#   5. "" - returns 127
+get/cmd(){
+  local cmd=
+  for cmd in "$@"; do
+    type ${__cmd_prefix}${cmd} &>/dev/null && {
+      echo "${__cmd_prefix}${cmd}"
+      return 0
+    }
+  done
+
+  for cmd in "$@"; do
+    type $cmd &>/dev/null && {
+      echo "$cmd"
+      return 0
+    }
+  done
+
+  return 127
+}
+
+# usage: get/gid_from_name <group name>
+get/gid_from_name(){
+  if is/cmd getent ; then
+    getent group "$1" | cut -d: -f3
+  elif is/cmd dscl ; then
+    dscl . -read "/Groups/$1" PrimaryGroupID 2>/dev/null | awk '{ print $2 }'
+  else
+    python -c "import grp; print(grp.getgrnam(\"$1\").gr_gid)" 2>/dev/null
+  fi
+}
+
+# usage: get/gid_from_file <path>
+get/gid_from_path(){
+  ls -ldn "$1" 2>/dev/null | awk '{print $4}'
+}
+# shell-helpers - taming of the print
+#   https://github.com/briceburg/shell-helpers
+
+#
+# printf outputs
+#
+
+p/error(){
+  p/blockquote "\e[31m" "✖ " "$@" >&2
+}
+
+p/success(){
+  p/blockquote "\e[32m" "✔ " "$@" >&2
+}
+
+p/notice(){
+  p/blockquote "\e[33m" "➜ " "$@" >&2
+}
+
+p/log(){
+  p/blockquote "\e[34m" "• " "$@" >&2
+}
+
+p/warn(){
+  p/blockquote "\e[35m" "⚡ " "$@" >&2
+}
+
+p/comment(){
+  printf '\e[90m# %b\n\e[0m' "$@" >&2
+}
+
+p/shout(){
+  printf '\e[33m⚡\n⚡ %b\n⚡\n\e[0m' "$@" >&2
+}
+
+p/header(){
+  printf "========== \e[1m$1\e[21m ==========\n"
+}
+
+p/blockquote(){
+  local escape="$1" ; shift
+  local prefix="$1" ; shift
+  local indent="$(printf '%*s' ${#prefix})"
+
+  while [ $# -ne 0 ]; do
+    printf "$escape$prefix%b\n\e[0m" "$1"
+    prefix="$indent"
+    shift
+  done
 }
 # @shell-helpers_UPDATE_URL=http://get.iceburg.net/shell-helpers/latest-v2/shell-helpers.sh
