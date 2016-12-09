@@ -95,10 +95,13 @@ dex/repo-ls(){
   local cmd="cat $__sources"
   $__defaults && cmd="network/print $__sources_url"
 
-  $cmd | while read name url junk ; do
+  $cmd | io/no-comments | while read name url junk ; do
 
-    # skip blank, malformed, or comment lines
-    [[ -z "$name" || -z "$url" || "#" = "$name" ]] && continue
+    # skip malformed lines
+    [[ -z "$name" || -z "$url" || -n "$junk" ]] && {
+      p/warn "malformed line encountered in sources.list" "starting with: $name"
+      continue
+    }
 
     # skip lines not matching our filter
     [[ -n "$filter" && " $name " != *" $filter "* ]] && continue
