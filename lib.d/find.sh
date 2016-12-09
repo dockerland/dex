@@ -13,7 +13,7 @@ dex/find-dockerfiles(){
   local search_repo
 
   for search_repo in $(__format="\$name" dex/repo-ls $repo); do
-    
+
     $__pull && dex/repo-pull "$search_repo"
 
     if [ -n "$image" ]; then
@@ -68,7 +68,7 @@ dex/find-repostr(){
   IFS="/" read repo imagestr junk <<< "$repostr"
 
   [ -n "$junk" ] && {
-    io/warn "malformed repostr $repostr"
+    p/warn "malformed repostr $repostr"
     return 2
   }
 
@@ -81,7 +81,7 @@ dex/find-repostr(){
   IFS=":" read image tag junk <<< "$imagestr"
 
   [ -n "$junk" ] && {
-    io/warn "malformed imagestr $imagestr"
+    p/warn "malformed imagestr $imagestr"
     return 2
   }
 
@@ -94,14 +94,14 @@ dex/find-repostr(){
 # given a Dockerfile path in checkouts, print a fully qualified repostr
 dex/find-repostr-from-dockerfile(){
   local Dockerfile="$1"
-  local tag=$(find/dockerfile-tag $Dockerfile)
+  local tag=$(get/dockerfile-tag $Dockerfile)
   local repo=${Dockerfile//$__checkouts\//}
   repo=${repo%%/*}
   local image=${Dockerfile//$__checkouts\/$repo\/dex-images\//}
   image=${image%%/*}
 
   [[ -z "$repo" || -z "$image" || -z "$tag" ]] && {
-    io/warn "failed determining repostr from $Dockerfile"
+    p/warn "failed determining repostr from $Dockerfile"
     return 1
   }
 

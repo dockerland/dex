@@ -56,7 +56,7 @@ dex/conf-print(){
   [ -n "$1" ] || set -- ${!DEX_*}
   local var
 
-  io/comment \
+  p/comment \
     "DEX_BIN_DIR: installation location (add this to your PATH)" \
     "DEX_BIN_PREFIX: installation prefix. Not applied on 'global' installs." \
     "DEX_HOME: user workspace where checkouts and image homes are stored" \

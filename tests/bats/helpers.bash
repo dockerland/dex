@@ -20,11 +20,6 @@ HELPERS_LOADED=true
 # runtime fns
 #
 
-die(){
-  printf "\033[31m%s\n\033[0m" "$@" >&2
-  exit 1
-}
-
 fixture/cat(){
   local fixture="$(fixture/resolve "$1")"
   cat "$fixture"

@@ -160,7 +160,7 @@ teardown(){
   # imgtest/labels image ::
   # LABEL dockerland.dex.docker_groups="tty"
 
-  host_gid=$($APP runfunc find/gid_from_name tty)
+  host_gid=$($APP runfunc get/gid_from_name tty)
   found=false
 
   for gid in $($APP run imgtest/labels id -G); do

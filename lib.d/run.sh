@@ -48,7 +48,7 @@ main_run(){
 dex/run(){
   local repostr="$1" ; shift
   [ -z "$repostr" ] && {
-    io/shout "an image must be specified to run"
+    p/shout "an image must be specified to run"
     display_help 2
   }
 

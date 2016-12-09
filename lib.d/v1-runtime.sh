@@ -193,7 +193,7 @@ v1-runtime(){
 
   # add specified groups (only if they exist)
   for group in $__docker_groups; do
-    gid=$(find/gid_from_name $group)
+    gid=$(get/gid_from_name $group)
     [ -z "$gid" ] || __docker_flags+=" --group-add=$gid"
   done
 
