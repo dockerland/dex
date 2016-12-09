@@ -41,6 +41,7 @@ dex/conf-init(){
   __defaults=false
   __force=false
   __pull=false
+  __pulled_repos=()
 
   mkdir -p $__checkouts || die/perms "unable to create DEX_HOME - $__checkouts"
 

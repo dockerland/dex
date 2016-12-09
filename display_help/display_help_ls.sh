@@ -13,13 +13,15 @@ Usage:
 Options:
   -h|--help
     Displays help
+  -p|--pull
+    pull (refresh) repositories.
 
 Examples:
   # List all available images
   dex ls
 
-  # List images in the extra repository
-  dex ls extra/
+  # List images in the extra repository, pulling it first
+  dex ls --pull extra/
 
   # List 'sed' images across all repositories
   dex ls sed
