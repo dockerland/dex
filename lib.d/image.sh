@@ -40,10 +40,7 @@ dex/image-build(){
     display_help 2
   }
 
-  # keep track of pulled repositories
-  local pulled_repos=()
   __built_images=()
-
   local repostr
   local Dockerfile
   local Dockerfiles
@@ -52,11 +49,6 @@ dex/image-build(){
     local image=
     local tag=
     IFS="/:" read repo image tag <<< "$repostr"
-
-    $__pull &&  ! is/in_list "$repo" "${pulled_repos[@]}" && {
-      dex/repo-pull "$repo"
-      pulled_repos+=( "$repo" )
-    }
 
     Dockerfiles=( $(dex/find-dockerfiles "$repostr") ) || {
       io/warn "skipping $repostr (unable to find a match in sources)"

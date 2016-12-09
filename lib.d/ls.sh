@@ -7,7 +7,9 @@ main_ls(){
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
-        display_help  ;;
+        display_help ;;
+      -p|--pull)
+        __pull=true ;;
       --)
         shift ; list=( "$@" ) ; break ;;
       -*)

@@ -13,6 +13,9 @@ dex/find-dockerfiles(){
   local search_repo
 
   for search_repo in $(__format="\$name" dex/repo-ls $repo); do
+    
+    $__pull && dex/repo-pull "$search_repo"
+
     if [ -n "$image" ]; then
       local path="$__checkouts/$search_repo/dex-images/$image"
       find/dockerfiles "$path" "${tag:-$default_tag}" || continue
