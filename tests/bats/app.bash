@@ -21,6 +21,16 @@ APP_CMDS=(
   run
 )
 
+APP_VARS=(
+  DEX_BIN_DIR
+  DEX_BIN_PREFIX
+  DEX_HOME
+  DEX_NAMESPACE
+  DEX_NETWORK
+  DEX_REGISTRY
+  DEX_RUNTIME
+)
+
 
 #
 # runtime fns

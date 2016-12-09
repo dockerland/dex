@@ -6,128 +6,96 @@
 
 load app
 
-setup(){
-  [ -e $APP ] || install_dex
-  reset_vars
+reset/vars(){
+  for var in "${APP_VARS[@]}"; do
+    eval "unset \$var"
+  done
 }
 
-set_vars(){
-  export DEX_HOME="/myhome"
-  export DEX_BIN_DIR="/mybin"
-  export DEX_BIN_PREFIX="my"
+default/val(){
+  case "$1" in
+    DEX_BIN_DIR) echo "$DEX_HOME/bin" ;;
+    DEX_BIN_PREFIX) echo "d" ;;
+    DEX_HOME) echo "$DEX_HOME" ;;
+    DEX_NAMESPACE) echo "dex/v1" ;;
+    DEX_NETWORK) echo "true" ;;
+    DEX_REGISTRY) echo "true" ;;
+    DEX_RUNTIME) echo "v1" ;;
+    __checkouts) echo "$DEX_HOME/checkouts" ;;
+    __sources) echo "$DEX_HOME/sources.list" ;;
+    __sources_url) echo "https://raw.githubusercontent.com/dockerland/dex/master/v1-sources.list" ;;
+    __defaults) echo "false" ;;
+    __force) echo "false" ;;
+    __pull) echo "false" ;;
+    *) echo "unrecognized var: $1" ; retval=1 ;;
+  esac
+}
+
+@test "conf vars prints evaluable output defining APP_VARS" {
+  reset/vars
+  eval $($APP conf vars)
+
+  for var in "${APP_VARS[@]}"; do
+    eval "[ -n \"\$var\" ]"
+  done
+}
+
+@test "conf vars prints evaluable output for fish|powershell" {
+  #@TODO -- implement
+  skip
+}
+
+@test "conf vars respects limiting output to passed variable names" {
+  reset/vars
+  eval $($APP conf vars -- DEX_BIN_PREFIX DEX_BIN_DIR )
+  [ -n "$DEX_BIN_PREFIX" ]
+  [ -n "$DEX_BIN_DIR" ]
+  [ -z "$DEX_RUNTIME" ]
+
+}
+
+@test "conf vars reflects current environment settings" {
+  export DEX_RUNTIME="zzz"
+  run $APP conf vars -- DEX_RUNTIME
+  [[ "$output" == *"DEX_RUNTIME=\"zzz\""* ]]
+}
+
+@test "conf vars --defaults ignores current environment settings" {
+  export DEX_BIN_DIR="zzz"
+  export DEX_BIN_PREFIX="zzz"
+  export DEX_HOME="$TMPDIR/zzz"
+  export DEX_NAMESPACE="zzz"
   export DEX_NETWORK=false
-  export DEX_RUNTIME=v9000
-}
+  export DEX_REGISTRY=false
+  export DEX_RUNTIME="zzz"
 
-reset_vars(){
-  for var in ${DEX_VARS[@]}; do
-    if [ $var = "DEX_HOME" ]; then
-      export DEX_HOME=$TMPDIR/home/.dex
-    else
-      unset $var
-    fi
+  eval $($APP conf vars --defaults)
+
+  for var in "${APP_VARS[@]}"; do
+    echo "$var"
+    #echo $(default/val $var)
+    #eval "echo \"\$$var\""
+    eval "[ \"$(default/val $var)\" = \"\$$var\" ]"
   done
 }
 
-compare_defaults(){
 
-  if [ $# -eq 0 ]; then
-    echo "no lines passed to compare_defaults"
-    return 1
-  fi
+@test "internal vars get initialized to defaults" {
 
-  for line in $@; do
-    IFS='='
-    read -r var val <<< "$line"
-    echo "comparing $var=$val"
-    case $var in
-      DEX_RUNTIME) [ $val = 'v1' ] || retval=1 ;;
-      DEX_BIN_DIR) [ $val = "/usr/local/bin" ] || retval=1 ;;
-      DEX_BIN_PREFIX) [ $val = "d" ] || retval=1 ;;
-      DEX_HOME) ( [ $val = "$TMPDIR/home/.dex" ] || [ $val = "$HOME/.dex" ] ) || retval=1 ;;
-      DEX_NAMESPACE) [ $val = 'dex/v1' ] || retval=1 ;;
-      DEX_NETWORK) $val ;;
-      *) echo "unrecognized var: $var" ; retval=1 ;;
-    esac
-  done
+  local ivars=(
+    __checkouts
+    __sources
+    __sources_url
+    __defaults
+    __force
+    __pull
+  )
 
-  return $retval
-}
-
-@test "vars prints helpful output matching our fixture" {
-  diff <(cat_fixture help-vars.txt) <($APP vars --help)
-  diff <(cat_fixture help-vars.txt) <($APP vars -h)
-  diff <(cat_fixture help-vars.txt) <($APP help vars)
-}
-
-@test "vars prints a single variable, reflecting its default value" {
-  run $APP vars DEX_BIN_DIR
-  [ $status -eq 0 ]
-  [ $output = "DEX_BIN_DIR=/usr/local/bin" ]
-}
-
-@test "vars exits with status code 2 on invalid configuration variable lookups" {
-  run $APP vars INVALID_VAR
-  [ $status -eq 2 ]
-}
-
-@test "vars prints evaluable lines matching configuration defaults" {
-  run $APP vars all
-
-  [ $status -eq 0 ]
-  for line in "${lines[@]}"; do
-    eval $line
-  done
-  compare_defaults "${lines[@]}"
-}
-
-@test "vars prints evaluable lines reflecting registration of exported configuration" {
-
-  set_vars
-  run $APP vars all
-
-  [ $status -eq 0 ]
-  for line in "${lines[@]}"; do
-    eval $line
-  done
-
-  [ "$DEX_RUNTIME" = "v9000" ]
-  [ "$DEX_HOME" = "/myhome" ]
-  [ "$DEX_BIN_DIR" = "/mybin" ]
-  [ "$DEX_BIN_PREFIX" = "my" ]
-  [ "$DEX_NAMESPACE" = "dex/v9000" ]
-  ! $DEX_NETWORK
-}
-
-@test "vars --defaults prints evaluable lines resetting configuration to defaults" {
-
-  set_vars
-  run $APP vars --defaults all
-
-  [ $status -eq 0 ]
-  for line in "${lines[@]}"; do
-    eval $line
-  done
-
-  run $APP vars all
-  compare_defaults "${lines[@]}"
-}
-
-@test "internal vars get properly initialized" {
-
-  local ivars=( __checkouts __version __build )
-
-  for var in ${ivars[@]}; do
-    run $APP runfunc dex-vars-print $var
-
-    var=${output%%=*}
-    val=${output#*=}
-
-    case $var in
-      __checkouts) [ "$val" = "$TMPDIR/home/.dex/checkouts" ] ;;
-      __build) [ "$val" = "$(git rev-parse --short HEAD)" ] ;;
-      __version) [ "$val" = "$(git rev-parse --abbrev-ref HEAD)" ] ;;
-      *) echo "unrecognized var \"$var\"" ; return 1 ;;
-    esac
+  eval $($APP conf vars -- "${ivars[@]}")
+  for var in "${ivars[@]}"; do
+    echo "$var"
+    #echo $(default/val $var)
+    #eval "echo \"\$$var\""
+    eval "[ \"$(default/val $var)\" = \"\$$var\" ]"
   done
 }
