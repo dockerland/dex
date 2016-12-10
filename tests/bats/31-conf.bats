@@ -26,6 +26,7 @@ default/val(){
     __sources_url) echo "https://raw.githubusercontent.com/dockerland/dex/master/v1-sources.list" ;;
     __defaults) echo "false" ;;
     __force) echo "false" ;;
+    __format) echo "" ;;
     __pull) echo "false" ;;
     *) echo "unrecognized var: $1" ; retval=1 ;;
   esac
@@ -89,6 +90,7 @@ default/val(){
     __defaults
     __force
     __pull
+    __format
   )
 
   eval $($APP conf vars -- "${ivars[@]}")

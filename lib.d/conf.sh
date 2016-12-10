@@ -39,6 +39,7 @@ dex/conf-init(){
   __sources_url="${DEX_SOURCES_URL:-https://raw.githubusercontent.com/dockerland/dex/master/${DEX_RUNTIME}-sources.list}"
 
   __defaults=false
+  __format=
   __force=false
   __pull=false
   __pulled_repos=()
