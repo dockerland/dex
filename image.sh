@@ -157,13 +157,25 @@ dex/image-ls(){
 dex/image-rm(){
   local image
   local container
+  local build_container
+  local repotag
   local flags=()
   $__force && flags+=( "--force" )
   for image in $(quiet=true dex/image-ls "$@"); do
     $__force || prompt/confirm "remove $image ?" || continue
+    
+    # first lets remove the 'build' container. we need sha => name
+    repotag="$(dex/find-container-name "$image")" && {
+      build_container="$(docker/safe_name "$repotag" "dexbuild")"
+      docker/local rm --force "$build_container" || true
+    }
+
+    # next, lets remove any containers using this image as an ancestor
     for container in $(docker/local ps -q --filter ancestor=$image); do
       docker/local rm ${flags[@]} $container
     done
+
+    # finally, remove image
     docker/local rmi ${flags[@]} $image
   done
 }
