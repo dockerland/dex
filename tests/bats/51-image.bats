@@ -4,191 +4,183 @@
 # 50 - runtime command behavior
 #
 
-#@TODO test build --pull
-#@TODO test building packages
-#@TODO betters tests
-
 load app
 
-export DEX_NAMESPACE="dex/v1-tests"
-
 setup(){
-  [ -e $APP ] || install_dex
-  mk-imgtest
+  export REPO_DIR="$TMPDIR/test-repo"
+  make/repo "$REPO_DIR"
+  [ -d  "$REPO_DIR/dex-images" ] || (
+    exec >/dev/null
+    cd $REPO_DIR
+    fixture/cp dex-images .
+    git add dex-images
+    git commit -m "adding dex-images"
+  )
+
+  [ -n "$($APP repo ls test-repo)" ] || \
+    $APP repo add --force test-repo "$REPO_DIR"
 }
 
-@test "image build creates an image from checkouts" {
-  [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
-
-  rm-images
-  run $APP image build imgtest/alpine
-  [ $status -eq 0 ]
-
-  run docker images -q $DEX_NAMESPACE/alpine:latest
-  [ $status -eq 0 ]
-  [ ${#lines[@]} -eq 1 ]
-}
-
-@test "image build spawns a new 'build' container after building images" {
-  local __image="$DEX_NAMESPACE/alpine:latest"
-
-  run $APP image build imgtest/alpine
-  [ $status -eq 0 ]
-  container1_sha=$($APP runfunc dex-image-build-container $__image) || false
-
-  run $APP image build imgtest/alpine
-  [ $status -eq 0 ]
-  container2_sha=$($APP runfunc dex-image-build-container $__image) || false
-
-  [ "$container1_sha" != "$container2_sha" ]
-}
-
-@test "image build labels images according to the current DEX_RUNTIME" {
-
-  local img=$(docker images -q $DEX_NAMESPACE/alpine:latest)
-  local api_version=$($APP vars DEX_RUNTIME | sed 's/DEX_RUNTIME=//')
-
-  [ ! -z "$img" ]
-  [ ! -z "$api_version" ]
-
-  echo "IMAGE: $img"
-
-  for label in api build-api build-imgstr build-tag image namespace source; do
-
-    val=$(docker inspect --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $img)
-    echo "$label=$val"
-
-    case $label in
-      api) [ "$val" = "$api_version" ];;
-      build-*) [ -z "$val" ] && echo "$label is not set" && false ;;
-      image) [ "$val" = "alpine" ] ;;
-      namespace) [ "$val" = "$DEX_NAMESPACE" ] ;;
-      source) [ "$val" = "imgtest" ] ;;
-      *) echo "unknown label - $label" && false ;;
-    esac
+rm/images(){
+  for image in $(docker images -q --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE); do
+    docker rmi --force $image
   done
 }
 
-@test "image build uses docker build cache" {
+get/build-sha(){
+  local image="$1"
+  local tag="$2"
+  docker inspect --type=container --format='{{ .Id }}' \
+    $(docker/safe_name "$DEX_NAMESPACE/test-repo/$image:$tag" "dexbuild")
+}
 
-  # apparently docker applies `docker build --label X --label Y` in random order
-  # @TODO file bug
+@test "image build creates docker images from repository checkouts" {
+  rm/images
+  [ -z "$(docker images -q $DEX_NAMESPACE/test-repo/alpine:latest)" ]
+  [ -z "$(docker images -q $DEX_NAMESPACE/test-repo/debian:8)" ]
+
+  run $APP image build test-repo/alpine:latest test-repo/debian:8
+  [ -n "$(docker images -q $DEX_NAMESPACE/test-repo/alpine:latest)" ]
+  [ -n "$(docker images -q $DEX_NAMESPACE/test-repo/debian:8)" ]
+}
+
+@test "image build spawns a unique 'build' container for each image built" {
+  debian_sha="$(get/build-sha "debian" "8")"
+  alpine_sha="$(get/build-sha "alpine" "latest")"
+  [ "$debian_sha" != "$alpine_sha" ]
+
+  # test new container happens on _each_ build
+  run $APP image build test-repo/alpine:latest test-repo/debian:8
+  [ "$(get/build-sha "debian" "8")" != "$debian_sha" ]
+  [ "$(get/build-sha "alpine" "latest")" != "$alpine_sha" ]
+}
+
+@test "image build labels images according to runtime and build params" {
+  app/var DEX_RUNTIME
+  app/var DEX_NAMESPACE
+
+  local fmt='{{range $key, $value := .Config.Labels }}{{println $key $value }}{{ end }}'
+  local key
+  local label
+  local value
+
+  required_labels=(
+    namespace
+    runtime
+    image
+    repo
+    tag
+  )
+  #docker inspect --format '{{range $key, $value := .Config.Labels }}{{println $key $value }}{{ end }}'
+  #docker inspect --type image -f "$fmt" $DEX_NAMESPACE/test-repo/alpine:latest |
+  while read key value ; do
+      [ -z "$key" ] && continue
+      label="${key//org.dockerland.dex./}"
+
+      # remove label
+      required_labels=( "${required_labels[@]//$label}" )
+
+      # test value
+      case "$label" in
+        namespace) [ "$value" = "$DEX_NAMESPACE" ] ;;
+        runtime) [ "$value" = "$DEX_RUNTIME" ] ;;
+        image) [ "$value" = "alpine" ] ;;
+        repo) [ "$value" = "test-repo" ] ;;
+        tag) [ "$value" = "latest" ] ;;
+        api) true ;;
+        *) echo "unknown label $label" ; false ;;
+      esac
+
+  # use process substitution to avoid subshell and retain access to required_labels
+  done < <(docker inspect --type image -f "$fmt" $DEX_NAMESPACE/test-repo/alpine:latest)
+
+
+  if [ -n "$(io/trim "${required_labels[@]}")" ]; then
+    echo "image is missing the following labels;"
+    echo "${required_labels[@]}"
+    false
+  fi
+}
+
+@test "image build enables docker build cache by default" {
   skip
-
-  run $APP image build imgtest/cachebust:cache
-  [ $status -eq 0 ]
-  echo $output
-  first_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:cache)
-
-
-  run $APP image build imgtest/cachebust:cache
-  [ $status -eq 0 ]
-  echo $output
-  second_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:cache)
-
-  [ "$first_sha" = "$second_sha" ]
+  #@TODO test cache + --no-cache flag
+  # we had trouble because apparently docker build randomly assigns label order
 }
 
-@test "image build uses DEXBUILD_NOCACHE argument to circumvent docker build cache" {
-  run $APP image build imgtest/cachebust:nocache
-  [ $status -eq 0 ]
-  first_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:nocache)
+@test "image build busts cache with the DEXBUILD_NOCACHE argument" {
+  $APP image build test-repo/cachebust:nocache
+  local sha_1=$(get/build-sha "cachebust" "nocache")
 
-  run $APP image build imgtest/cachebust:nocache
-  [ $status -eq 0 ]
-  second_sha=$(docker inspect -f '{{ .Id }}' $DEX_NAMESPACE/cachebust:nocache)
+  $APP image build test-repo/cachebust:nocache
+  local sha_2=$(get/build-sha "cachebust" "nocache")
 
-  [ "$first_sha" != "$second_sha" ]
+  [ "$sha_1" != "$sha_2" ]
 }
 
-@test "image ls prints built images in 'docker images' format" {
-  run $APP image ls
-  [ "$(echo ${lines[0]} | awk '{print $1}')" = "$(docker images $IMAGES_FILTER | head -n1 | awk '{print $1}')" ]
-  [[ "$output" == *"$DEX_NAMESPACE/alpine"* ]]
-}
-
-@test "image ls supports quiet flag akin to 'docker images -q'" {
-  run $APP image ls -q
-  [ ! "$(echo ${lines[0]} | awk '{print $1}')" = "$(docker images $IMAGES_FILTER | head -n1 | awk '{print $1}')" ]
-  [[ ! "$output" == *"$DEX_NAMESPACE/alpine"* ]]
-  [ "${lines[0]}" = "$(docker images -q $IMAGES_FILTER | head -n1)" ]
+@test "image ls flags and output resemble 'docker images' command" {
+  local filters=(
+    "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+    "--filter=label=org.dockerland.dex.repo=test-repo"
+  )
+  diff <($APP image ls test-repo/) <(docker images "${filters[@]}")
+  diff <($APP image ls -q test-repo/) <(docker images -q "${filters[@]}")
 }
 
 
-@test "image rm errors if it cannot find images to remove" {
-  run $APP image rm imgtest/zzz
-  [ $status -eq 1 ]
+@test "image ls flags and output resemble 'docker images' command" {
+  local filters
+  filters=(
+    "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+    "--filter=label=org.dockerland.dex.repo=test-repo"
+  )
+  diff <($APP image ls test-repo/) <(docker images "${filters[@]}")
+  diff <($APP image ls -q test-repo/) <(docker images -q "${filters[@]}")
 }
 
-@test "image rm removes named image(s)" {
-  run docker images -q $DEX_NAMESPACE/alpine:latest
-  [ $status -eq 0 ]
-  [ ${#lines[@]} -eq 1 ]
+@test "image ls supports tag and image filters" {
+  local filters
+  filters=(
+    "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+    "--filter=label=org.dockerland.dex.repo=test-repo"
+    "--filter=label=org.dockerland.dex.image=alpine"
+  )
+  diff <($APP image ls test-repo/alpine) <(docker images "${filters[@]}")
 
-  run $APP image rm imgtest/alpine
-  run docker images -q $DEX_NAMESPACE/alpine:latest
-  [ $status -eq 0 ]
-  [ ${#lines[@]} -eq 0 ]
-}
-
-@test "image build respects tags" {
-  [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
-
-  rm-images
-  $APP image build imgtest/alpine:3.2
-  $APP image build imgtest/alpine:edge
-
-  run docker images -q $IMAGES_FILTER --filter=label=org.dockerland.dex.image=alpine
-  echo $output
-  [ ${#lines[@]} -eq 2 ]
-}
-
-@test "image build respects repo wildcards" {
-  [ -d $DEX_HOME/checkouts/imgtest/dex-images ]
-
-  rm-images
-  $APP image build imgtest/*
-
-  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/dex-images/* | wc -l)
-  run docker images -q $IMAGES_FILTER
-  [ ${#lines[@]} -eq $repo_image_count ]
-}
-
-@test "image rm respects repo wildcards" {
-  local image_count=$(docker images -q $IMAGES_FILTER | wc -l)
-  [ $image_count -ne 0 ]
-
-  run $APP image rm imgtest/*
-  [ $status -eq 0 ]
-
-  image_count=$(docker images -q $IMAGES_FILTER | wc -l)
-  [ $image_count -eq 0 ]
-}
-
-@test "image build|ls|rm always target local/default docker host" {
-  rm-images
-
-  echo "mock setting DOCKER_HOST"
-  (
-    set -e
-    export DOCKER_HOST=an.invalid-host.tld
-    export DOCKER_MACHINE_NAME=invalid-host
-
-    # test build
-    run $APP image build imgtest/alpine
-    [ $status -eq 0 ]
-
-    # test ls
-    run $APP image ls
-    [ $status -eq 0 ]
-    [[ "$output" == *"$DEX_NAMESPACE/alpine"* ]]
-
-    # test rm
-    run $APP image rm imgtest/alpine
-    [ $status -eq 0 ]
+  filters=(
+    "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+    "--filter=label=org.dockerland.dex.repo=test-repo"
+    "--filter=label=org.dockerland.dex.tag=latest"
   )
 
-  run docker images -q $DEX_NAMESPACE/alpine:latest
-  [ $status -eq 0 ]
-  [ ${#lines[@]} -eq 0 ]
+  diff <($APP image ls test-repo/:latest) <(docker images "${filters[@]}")
+}
+
+@test "image rm removes named images, prompts before removal" {
+  yes "n" | $APP image rm test-repo/alpine:latest
+  [ -n "$($APP image ls -q test-repo/alpine:latest)" ]
+  [ -n "$($APP image ls -q test-repo/debian:8)" ]
+
+  yes "y" | $APP image rm test-repo/alpine:latest
+  [ -z "$($APP image ls -q test-repo/alpine:latest)" ]
+  [ -n "$($APP image ls -q test-repo/debian:8)" ]
+}
+
+@test "image rm removes respects --force flag" {
+  [ -n "$($APP image ls -q test-repo/debian:8)" ]
+
+  $APP image rm --force test-repo/debian
+  [ -z "$($APP image ls -q test-repo/debian:8)" ]
+}
+
+
+@test "image build|ls|rm always target local docker engine" {
+
+  export DOCKER_HOST=an.invalid-host.tld
+  export DOCKER_MACHINE_NAME=invalid-host
+
+  $APP image build test-repo/alpine:latest
+  [ -n $($APP image ls -q repo-test/alpine:latest) ]
+  $APP image rm --force test-repo/alpine:latest
+  [ -z $($APP image ls -q repo-test/alpine:latest) ]
 }

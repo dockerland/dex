@@ -9,8 +9,7 @@ SKIP_NETWORK_TEST=${SKIP_NETWORK_TEST:-false}
 
 export DEX_HOME="$TMPDIR/home/.dex"
 export DEX_NETWORK=false
-export DEX_NAMESPACE="v1-tests"
-#export IMAGES_FILTER="--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
+export DEX_NAMESPACE="dex/v1-tests"
 
 APP_CMDS=(
   conf
@@ -71,23 +70,3 @@ make/repo(){
 
 [ -e "$APP" ] || make/app &>/dev/null
 [ -e "$DEX_HOME/sources.list" ] || make/sources &>/dev/null
-
-# mk-imgtest(){
-#   if [ ! -d $DEX_HOME/checkouts/imgtest ]; then
-#     (
-#       set -e
-#       mk-repo
-#       rm -rf $MK_REPO/dex-images
-#       cp_fixture dex-images/ $MK_REPO
-#       cd $MK_REPO
-#       git add dex-images
-#       git commit -m "adding image fixtures"
-#       $APP source --force add imgtest $MK_REPO
-#     ) || error "failed stubbing imgtest"
-#   fi
-# }
-#
-# rm-images(){
-#   for image in $(docker images -q $IMAGES_FILTER); do
-#     docker rmi --force $image
-#   done
