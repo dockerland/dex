@@ -31,6 +31,11 @@ APP_VARS=(
   DEX_RUNTIME
 )
 
+app/var(){
+  local var="$1"
+  eval $($APP conf vars -- "$var" 2>/dev/null)
+  eval "[ -n \"\$$var\" ]"
+}
 
 #
 # runtime fns
@@ -50,24 +55,23 @@ make/sources(){
   fixture/cp sources.list $DEX_HOME/sources.list
 }
 
+make/repo(){
+  local path="$1"
+  [ -d "$path/.git" ] && return
+  (
+    set -e
+    mkdir -p $path
+    cd $path
+    git init
+    echo "content" > file
+    git add file
+    git commit -m "initial commit"
+  )
+}
+
 [ -e "$APP" ] || make/app &>/dev/null
 [ -e "$DEX_HOME/sources.list" ] || make/sources &>/dev/null
 
-#
-# mk-repo(){
-#   MK_REPO=$TMPDIR/local-repo
-#   [ -e $MK_REPO/.git ] && return 0
-#   git init $MK_REPO || return 1
-#   (
-#     cd $MK_REPO
-#     echo "content" > file
-#     git add file || exit 1
-#     git commit -m "initial commit" || exit 1
-#   )
-#
-#   return $?
-# }
-#
 # mk-imgtest(){
 #   if [ ! -d $DEX_HOME/checkouts/imgtest ]; then
 #     (

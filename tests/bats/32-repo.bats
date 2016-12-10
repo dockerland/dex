@@ -6,199 +6,162 @@
 
 load app
 
-setup(){
-  [ -e $APP ] || install_dex
+@test "repo ls prints available repositories, matches sources.list fixture" {
+  diff <(fixture/cat sources.list | io/no-comments) <($APP repo ls)
 }
 
-@test "source ls displays sources.list matching our fixture" {
-  diff <(cat_fixture source-ls.txt) <($APP source ls)
+@test "repo ls supports filtering by repository names" {
+  [ $($APP repo ls | wc -l) -gt  $($APP repo ls core extra | wc -l) ]
+  [ $($APP repo ls core extra | wc -l) -eq 2 ]
 }
 
-@test "source add|ls|rm errors with 127 if missing sources.list" {
-  # skipping -- currently unable to remove sources.list,
-  #   as it's created by dex-init routine which fires before command execution
-  skip
-  for cmd in add ls rm; do
-    run $APP source $cmd junk junk
-    [ $status -eq 127 ]
-  done
+@test "repo ls supports wildcard filtering" {
+  [ $($APP repo ls -- "c*" | wc -l) -eq 1 ]
+  [ $($APP repo ls -- "*xtr*" | wc -l) -eq 1 ]
 }
 
-@test "source add requires name and url, exits with code 2" {
-  run $APP source add
-  [[ $output == *requires* ]]
+@test "repo ls supports dex/repo-exists by returning empty if no repo matches" {
+  [ -z "$($APP repo ls -- nonexistant)" ]
+  $APP runfunc dex/repo-exists core
+  ! $APP runfunc dex/repo-exists non-existant
+}
+
+@test "repo add requires name _and_ url, errexits" {
+  run $APP repo add name
+  [ $status -gt 0 ]
+  [[ "$output" == *"please provide a repo name and url"* ]]
+}
+
+@test "repo add refuses to add repositories it cannot checkout" {
+  mkdir "$TMPDIR/test-non-repo"
+  run $APP repo add test-repo "$TMPDIR/test-non-repo"
   [ $status -eq 2 ]
 
-  run $APP source add abc
-  [[ $output == *requires* ]]
-  [ $status -eq 2 ]
+  $SKIP_NETWORK_TEST || {
+    DEX_NETWORK=true run $APP repo add test-repo git@github.com:briceburg/repository-maybe-hopefully-not-ever-exists.git
+    [ $status -eq 2 ]
+  }
+
+  [ -z "$($APP repo ls test-repo)" ]
 }
 
-@test "source add supports local repository checkouts" {
-  mk-repo
-  run $APP source add local $MK_REPO
+@test "repo add checks out source repositories" {
+  make/repo "$TMPDIR/test-repo"
+  run $APP repo add test-repo "$TMPDIR/test-repo"
   [ $status -eq 0 ]
+  [ -n "$($APP repo ls test-repo)" ]
 
-  run $APP source ls
+  app/var __checkouts
+  [ $(git --git-dir "$TMPDIR/test-repo"/.git rev-parse HEAD) = "$(git --git-dir $__checkouts/test-repo/.git rev-parse HEAD)" ]
+}
+
+@test "repo add prompts before overwriting existing checkouts" {
+  make/repo "$TMPDIR/test-repo"
+  app/var __checkouts
+  mkdir -p "$__checkouts/test-overwrite/blah"
+  yes "n" | $APP repo add test-overwrite "$TMPDIR/test-repo" || true
+  [ -z "$($APP repo ls test-overwrite)" ]
+
+  yes "y" | $APP repo add test-overwrite "$TMPDIR/test-repo" || true
+  [ -n "$($APP repo ls test-overwrite)" ]
+}
+
+@test "repo add respects --force flag, disables prompting" {
+  make/repo "$TMPDIR/test-repo"
+  run $APP repo add --force test-repo "$TMPDIR/test-repo"
   [ $status -eq 0 ]
-  [ "${lines[2]}" = "local $MK_REPO" ]
+  [ -n "$($APP repo ls test-repo)" ]
 }
 
-@test "source add fails to add sources it cannot clone" {
-  run $APP source add unique fake-url.git
-  [ $status -eq 1 ]
+@test "repo pull refreshes available repositories" {
+  DEX_NETWORK=false run $APP repo pull
+  [[ "$output" == *"pulling core"* ]]
+  [[ "$output" == *"pulling extra"* ]]
+  [[ "$output" == *"pulling find-test"* ]]
 }
 
-@test "source add refuses to duplicate existing names and urls" {
-  run $APP source ls
-  [ $status -eq 0 ]
-
-  IFS=" "
-  read -r known_name known_url <<< "${lines[2]}"
-  run $APP source add $known_name fake-url.git
-
-  [[ $output == *duplicate* ]]
-  [ $status -eq 2 ]
-
-  run $APP source add unique $known_url
-  [[ $output == *refusing* ]]
-  [ $status -eq 2 ]
-
+@test "repo pull allows specifiying repositories to pull" {
+  DEX_NETWORK=false run $APP repo pull find-test extra
+  [[ "$output" != *"pulling core"* ]]
+  [[ "$output" == *"pulling extra"* ]]
+  [[ "$output" == *"pulling find-test"* ]]
 }
 
-@test "source add refuses to add sources if a named checkout already exists" {
-  mkdir $DEX_HOME/checkouts/unique
+@test "repo pull refreshes checkouts from source repository" {
+  make/repo "$TMPDIR/test-repo"
+  $APP repo add --force test-repo "$TMPDIR/test-repo"
+  [ -n "$($APP repo ls test-repo)" ]
 
-  run $APP source add unique fake-url.git
-  [[ $output == *refusing* ]]
-  [ $status -eq 2 ]
-}
-
-
-@test "source add --force overwrites existing names" {
-  mk-repo
-
-  run $APP source --force add core $MK_REPO
-  [ $status -eq 0 ]
-
-  IFS=" "
-  $APP source ls | while read -r name url; do
-    if [ $name = "core" ]; then
-      [ $url = $MK_REPO ]
-    fi
-
-    # "core" should have replaced "local" as it uses same url
-    [ $name != "local" ]
-  done
-}
-
-@test "source pull creates (clones) a new checkout" {
-  mk-repo
-  run $APP source --force add pulltest $MK_REPO
-  [ $status -eq 0 ]
-
-  rm -rf $DEX_HOME/checkouts/pulltest
-
-  run $APP source pull pulltest
-  echo "$output"
-  [ $status -eq 0 ]
-  [ -d $DEX_HOME/checkouts/pulltest ]
-}
-
-@test "source pull updates (fetch+merge) clean checkouts" {
-  mk-repo
+  # add a commit to source repo
   (
-    cd $MK_REPO
-    echo "more content" >> file
-    git add file && git commit -m "more content"
-  )
-  run $APP source pull pulltest
-  [ $status -eq 0 ]
-  diff $MK_REPO/file $DEX_HOME/checkouts/pulltest/file
-}
-
-@test "source pull fails to pull into a dirty checkout" {
-  (
-    cd $DEX_HOME/checkouts/pulltest
-    echo "even more content" >> file
+    set -e
+    cd "$TMPDIR/test-repo"
+    echo "blah" >> file
+    git add file
+    git commit -m "additional commit"
   )
 
-  run $APP source pull pulltest
-  [[ $output == *changes* ]]
-  [ $status -eq 1 ]
+  app/var "__checkouts"
+
+  # ensure we're on different commits
+  [ $(git --git-dir "$TMPDIR/test-repo/.git" rev-parse HEAD) != "$(git --git-dir "$__checkouts/test-repo/.git" rev-parse HEAD)" ]
+
+  $APP repo pull test-repo
+  # ensure we're at the same commit
+  [ $(git --git-dir "$TMPDIR/test-repo/.git" rev-parse HEAD) = "$(git --git-dir "$__checkouts/test-repo/.git" rev-parse HEAD)" ]
 }
 
-@test "source pull --force pulls into a dirty checkout" {
-  mk-repo
-  (
-    cd $DEX_HOME/checkouts/pulltest
-    echo "even more content" >> file
-  )
+@test "repo pull prompts before refreshing dirty checkouts" {
+  make/repo "$TMPDIR/test-repo"
+  $APP repo add --force test-repo "$TMPDIR/test-repo"
+  [ -n "$($APP repo ls test-repo)" ]
 
-  run $APP source --force pull pulltest
+  app/var "__checkouts"
+  echo "dirty-test" >> "$__checkouts/test-repo/file"
+
+  yes "n" | $APP repo pull test-repo || true
+  is/in_file "dirty-test" "$__checkouts/test-repo/file"
+
+  yes "y" | $APP repo pull test-repo
+  ! is/in_file "dirty-test" "$__checkouts/test-repo/file"
+}
+
+@test "repo pull respects --force flag" {
+  make/repo "$TMPDIR/test-repo"
+  $APP repo add --force test-repo "$TMPDIR/test-repo"
+  [ -n "$($APP repo ls test-repo)" ]
+
+  app/var "__checkouts"
+  echo "dirty-test" >> "$__checkouts/test-repo/file"
+
+  $APP repo pull --force test-repo
+  ! is/in_file "dirty-test" "$__checkouts/test-repo/file"
+}
+
+@test "repo rm prompts before removing a repository" {
+  make/repo "$TMPDIR/test-repo"
+  $APP repo add --force test-repo "$TMPDIR/test-repo"
+  [ -n "$($APP repo ls test-repo)" ]
+
+  yes "n" | run $APP repo rm test-repo || true
+  [ -n "$($APP repo ls test-repo)" ]
+  [ -n "$($APP repo ls core)" ]
+
+  yes "y" | run $APP repo rm test-repo
+  [ -z "$($APP repo ls test-repo)" ]
+  [ -n "$($APP repo ls core)" ]
+}
+
+@test "repo reset downloads source.list, falls back to built-in defaults" {
+  make/repo "$TMPDIR/test-repo"
+  $APP repo add --force test-repo "$TMPDIR/test-repo"
+  [ -n "$($APP repo ls test-repo)" ]
+
+  app/var SCRIPT_BUILD
+  DEX_NETWORK=false run $APP repo reset
+  echo "${lines[@]}"
   [ $status -eq 0 ]
-  diff $MK_REPO/file $DEX_HOME/checkouts/pulltest/file
-}
-
-@test "source pull supports a wildcard sourcestr" {
-  export DEX_NETWORK=false
-  run $APP source pull
-  echo $output
-  $APP source ls
-  [[ $output == *extra* ]]
-  [[ $output == *pulltest* ]]
-  echo $output
-}
-
-
-@test "source rm requires a <sourcestr|*>" {
-  run $APP source rm
-  [[ $output == *requires* ]]
-  [ $status -eq 2 ]
-}
-
-
-@test "source rm errors if it cannot find the passed <sourcestr|*>" {
-  run $APP source rm highly-unlikely
-  [ $status -eq 1 ]
-}
-
-
-@test "source rm fails to remove sources with a dirty checkout" {
-
-  mk-repo
-  run $APP source --force add rmtest $MK_REPO
-  [ $status -eq 0 ]
-
-  (
-    cd $DEX_HOME/checkouts/rmtest
-    echo "more content" >> file
-  )
-
-  run $APP source rm rmtest
-  [[ $output == *changes* ]]
-  [ $status -eq 1 ]
-}
-
-
-@test "source rm errors with status code 126 if it encounters unwritable checkouts" {
-  chmod 000 $DEX_HOME/checkouts/rmtest
-  run $APP source rm rmtest
-  [ $status -eq 126 ]
-}
-
-
-@test "source rm removes entry from sources.list and its associated checkout" {
-  (
-    chmod 755 $DEX_HOME/checkouts/rmtest
-    cd $DEX_HOME/checkouts/rmtest
-    git reset --hard
-  )
-
-  run $APP source rm rmtest
-  [ $status -eq 0 ]
-  [ ! -d "$DEX_HOME/checkouts/rmtest" ]
-
-  run grep -q -e "^rmtest " $DEX_HOME/sources.list
-  [ $status -eq 1 ]
+  [[ "$output" == *"refusing to fetch"* ]]
+  [[ "$output" == *"loading build $SCRIPT_BUILD defaults"* ]]
+  [ -z "$($APP repo ls test-repo)" ]
 }
