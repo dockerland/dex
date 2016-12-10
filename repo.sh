@@ -2,12 +2,12 @@ main_repo(){
   local operand
   local list=()
 
-  [ $# -eq 0 ] && display_help 1
+  [ $# -eq 0 ] && die/help 1
   set -- $(args/normalize_flags_first "" "$@")
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
-        display_help  ;;
+        die/help  ;;
       -d|--defaults)
         __defaults=true ;;
       -f|--force)
@@ -34,20 +34,23 @@ dex/repo-add(){
   local url="$2"
   [[ -z "$repo" || -z "$url" ]] && {
     p/shout "please provide a repo name and url"
-    display_help 2
+    die/help 2
   }
 
-  dex/repo-exists $repo && {
+  $__force && dex/repo-rm "$repo"
+
+  dex/repo-exists "$repo" && {
     prompt/confirm "$repo already exists. overwrite?" || return 1
-    __force=true dex/repo-rm "$repo"
   }
 
   p/notice "adding \e[1m$repo\e[21m ..."
-  file/interpolate "$__sources" "^$repo " "$repo $url"
+
+  file/interpolate "^$repo " "$repo $url" "$__sources"
   dex/repo-pull "$repo" || {
     __force=true dex/repo-rm "$repo"
     die/exception "failed to add $repo"
   }
+
   p/success "added \e[1m$repo\e[21m"
 }
 
@@ -90,7 +93,7 @@ dex/repo-ls(){
   local name
   local url
   local junk
-  local filter="$@"
+  local filters=( "$@" )
   local format="${__format:-\$name \$url}"
   local cmd="cat $__sources"
   $__defaults && cmd="network/print $__sources_url"
@@ -103,8 +106,10 @@ dex/repo-ls(){
       continue
     }
 
-    # skip lines not matching our filter
-    [[ -n "$filter" && " $name " != *" $filter "* ]] && continue
+    if [ ${#filters[@]} -gt 0 ]; then
+      # skip lines not matching our filter
+      is/matching "$name" "${filters[@]}" || continue
+    fi
 
     eval "printf \"$format\n\""
   done
@@ -147,11 +152,11 @@ dex/repo-rm(){
     if ! $__force; then
       prompt/confirm "remove \e[1m$repo\e[21m from $__sources ?" || continue
     fi
-    file/sed_inplace "$__sources" "/^$repo /d"
+    file/sed_inplace "/^$repo /d" "$__sources" 
     p/log "removing $repo from $__sources"
 
     path="$__checkouts/$repo"
-    prepare/overwrite "$path" "remove checkout $path ?" && \
+    prompt/overwrite "$path" "remove checkout $path ?" && \
       p/log "removed checkout $path"
   done
 }
