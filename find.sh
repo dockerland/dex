@@ -107,3 +107,8 @@ dex/find-repostr-from-dockerfile(){
 
   echo "$repo/$image:$tag"
 }
+
+# given an image SHA, return the container name
+dex/find-container-name(){
+  docker/local inspect --format='{{ index .RepoTags 0 }}' "$1"
+}
