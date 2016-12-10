@@ -1,4 +1,4 @@
-display_help_run(){
+p/help_run(){
   cat <<-EOF
 
 dex - run applications without installing them or their dependencies.
@@ -42,7 +42,7 @@ Options:
   --workspace <path>
     Provide an alternative workspace directory (on the host machine)
     Defaults to CWD ($(pwd))
-    
+
 Examples:
   dex run debian ls
   dex run ag "the quick brown fox"

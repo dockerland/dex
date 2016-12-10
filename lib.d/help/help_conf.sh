@@ -1,4 +1,4 @@
-display_help_conf(){
+p/help_conf(){
   cat <<-EOF
 
 dex - run applications without installing them or their dependencies.

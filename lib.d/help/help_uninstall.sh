@@ -1,8 +1,8 @@
 #
-# lib.d/display_help.sh for dex -*- shell-script -*-
+# lib.d/p/help.sh for dex -*- shell-script -*-
 #
 
-display_help_uninstall(){
+p/help_uninstall(){
   cat <<-EOF
 
 Leave not a trace

@@ -3,12 +3,12 @@ main_install(){
   local list=()
   local global=false
 
-  [ $# -eq 0 ] && display_help 1
+  [ $# -eq 0 ] && die/help 1
   set -- $(args/normalize_flags_first "" "$@")
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
-        display_help  ;;
+        die/help  ;;
       -f|--force)
         __force=true ;;
       -g|--global)
@@ -33,7 +33,7 @@ main_install(){
 dex/install(){
   [ $# -eq 0 ] && {
     p/shout "please provide an image to install"
-    display_help 2
+    die/help 2
   }
 
   mkdir -p $DEX_BIN_DIR || die/perms "\$DEX_BIN_DIR $DEX_BIN_DIR is not writable"

@@ -14,16 +14,16 @@ main(){
 
   dex/conf-init
 
-  [ $# -eq 0 ] && display_help 1
+  [ $# -eq 0 ] && die/help 1
 
   while [ $# -ne 0 ]; do
     case "$1" in
       -v|--version|version)
         echo "Dex version $SCRIPT_VERSION build $SCRIPT_BUILD" ; exit ;;
       -h|--help)
-        display_help ;;
+        die/help ;;
       help)
-        display_help 0 ${2:-main} ;;
+        die/help 0 ${2:-main} ;;
       conf|image|install|ls|repo|run)
         shell/execfn main_"$@" ;;
       runfunc)

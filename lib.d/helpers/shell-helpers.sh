@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 8999c9e
+# shell-helpers version v2.0.0-pr build 92809dc
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -77,7 +77,7 @@ args/normalize_flags_first(){
 
 args/unknown(){
   p/shout "\e[1m$1\e[21m is an unrecognized ${2:-argument}"
-  display_help 2
+  p/help 10
 }
 # shell-helpers - the art of killing your script
 #   https://github.com/briceburg/shell-helpers
@@ -101,6 +101,53 @@ die/exception() {
   __exit_code=2
   die "$@"
 }
+
+die/help(){
+  local status="$1"
+  local cmd="$2"
+
+  [ -z "$cmd" ] && {
+    # functions starting with main_ indicate command name.
+    # attempt to auto-detect by examining call stack
+    local fn
+    for fn in "${FUNCNAME[@]}"; do
+      [ "main" = "${fn:0:4}" ] && {
+        cmd="${fn//main_/}"
+        break
+      }
+    done
+  }
+
+  is/fn "p/help_$cmd" || die/exception "missing p/help_$cmd" \
+    "is $cmd a valid command?"
+
+  p/help_$cmd >&2
+  exit $status
+}
+
+
+# example p/help_<cmd> function
+# p/help_cmd(){
+#   cat <<-EOF
+#
+# util - because you need util
+#
+# Usage:
+#   util cmd [options...] <command>
+#
+# Options:
+#   -h|--help
+#     Displays help
+#
+#   -d|--defaults
+#     Temporarily resets the current environment and prints default values
+#
+# Commands:
+#   vars [-d|--defaults] [--] [list...]
+#     Prints configuration variables as evaluable output
+#
+# EOF
+# }
 # shell-helpers - docker the things
 #   https://github.com/briceburg/shell-helpers
 
@@ -191,32 +238,38 @@ get/dockerfile-tag(){
 #   https://github.com/briceburg/shell-helpers
 
 
-# file/sed_inplace - cross-platform sed "in place" file substitution
-# usage: file/sed_inplace "file" "sed regex pattern"
-#    ex: file/sed_inplace "/tmp/file" "s/CLIENT_CODE/ACME/g"
-#    ex: file/sed_inplace "/tmp/file" "/pattern_to_remove/d"
+# file/sed_inplace - cross-platform sed "in place"
+# usage: file/sed_inplace "sed script" "file"
+#    ex: file/sed_inplace "s/CLIENT_CODE/ACME/g" "/tmp/file"
+#    ex: file/sed_inplace "/pattern_to_remove/d" "/tmp/file"
 file/sed_inplace(){
-  local sed=
+  local script="$1"
+  local file="$2"
   local sed_flags="-r -i"
+  local sed
 
   for sed in gsed /usr/local/bin/sed sed; do
     type $sed &>/dev/null && break
   done
 
   [ "$sed" = "sed" ] && [[ "$OSTYPE" =~ darwin|macos* ]] && sed_flags="-i '' -E"
-  $sed $sed_flags "$2" $1
+  $sed $sed_flags "$script" "$file"
 }
 
 # file/interpolate - interpolates a match in a file, or appends if no match
 #                    similar to ansible line_in_file
-# usage: file/interpolate <file> <match> <content>
-#    ex: file/interpolate  "default.vars" "^VARNAME=.*$" "VARNAME=value"
+# usage: file/interpolate <pattern> <replace> <file>
+#    ex: file/interpolate "^VARNAME=.*$" "VARNAME=value" "default.vars"
 file/interpolate(){
+  local pattern="$1"
+  local replace="$2"
+  local file="$3"
   local delim=${4:-"|"}
-  if is/in_file "$1" "$2"; then
-    file/sed_inplace "$1" "s$delim$2$delim$3$delim"
+
+  if is/in_file "$pattern" "$file"; then
+    file/sed_inplace "s${delim}$pattern${delim}$replace${delim}" "$file"
   else
-    echo "$3" >> "$1"
+    echo "$replace" >> "$file"
   fi
 }
 # shell-helpers - look up. climb tree. look down. look around.
@@ -237,6 +290,24 @@ find/dirs(){
     cd "$path"
     ls -1d $filter/ 2>/dev/null | sed 's|/$||'
   )
+}
+
+
+# find/matching <pattern> <list items...>
+#  returns a filtered list of items matching pattern.
+find/filtered(){
+  local pattern="$1" ; shift
+  local item
+  local found=false
+
+  for item; do
+    is/in "$pattern" "$item" && {
+      echo "$item"
+      found=true
+    }
+  done
+
+  $found
 }
 # shell-helpers - git thingers
 #   https://github.com/briceburg/shell-helpers
@@ -332,6 +403,24 @@ io/no-empty(){
 io/trim(){
   io/cat "$@" | awk '{$1=$1};1'
 }
+
+# adds a prefix to items, returning the prefixed items first
+# example: io/add-prefix "p" "a" "b" =>
+#   pa
+#   pb
+#   a
+#   b
+io/add-prefix(){
+  local prefix="$1" ; shift
+  local item
+
+  for item; do
+    echo "$prefix$item"
+  done
+
+  [ -z "$prefix" ] && return
+  io/add-prefix "" "$@"
+}
 # shell-helpers - you put your left foot in, your right foot out.
 #   https://github.com/briceburg/shell-helpers
 
@@ -352,17 +441,55 @@ is/fn(){
   [ "$(type -t $1)" = "function" ]
 }
 
-# is/in_file <file> <pattern to match>
-is/in_file(){
-  grep -q "$1" "$2" 2>/dev/null
+# is/in <pattern> <strings...>
+#  returns true if a pattern matches _any_ string
+#  supports wildcard matching
+is/in(){
+  #@TODO support piping of pattern
+
+  local pattern="$1" ; shift
+  local wildcard=false
+  local item
+  [[ "$pattern" == *"*"* ]] && wildcard=true
+
+  for item; do
+    if $wildcard; then
+      [[ "$item" == $pattern ]] && return 0
+    else
+      [ "$item" = "$pattern" ] && return 0
+    fi
+  done
+
+  return 1
 }
 
+# is/in_file <pattern> <file to search>
+is/in_file(){
+  local pattern="$1"
+  local file="$2"
+  grep -q "$pattern" "$file" 2>/dev/null
+}
+
+# is/in_list <item> <list items...>
+#  returns true if <item> matches _any_ list item
 is/in_list(){
-  local match="$1" ; shift
-  local item
-  for item in "$@"; do
-    [ "$item" = "$match" ] && return 0
+  #@TODO support piping of item
+  #@TODO disallow wildcard matching?
+
+  is/in "$@"
+}
+
+# is/matching <string> <patterns...>
+#  returns true if string matches _any_ pattern
+is/matching(){
+  #@TODO support piping of string
+
+  local string="$1" ; shift
+  local pattern
+  for pattern; do
+    is/in "$pattern" "$string" && return 0
   done
+
   return 1
 }
 # shell-helpers - a series of tubes and pipes provided by al gore
@@ -562,19 +689,10 @@ prompt/overwrite(){
 #   4. "dansible"
 #   5. "" - returns 127
 get/cmd(){
-  local cmd=
-  for cmd in "$@"; do
-    type ${__cmd_prefix}${cmd} &>/dev/null && {
-      echo "${__cmd_prefix}${cmd}"
-      return 0
-    }
-  done
-
-  for cmd in "$@"; do
-    type $cmd &>/dev/null && {
-      echo "$cmd"
-      return 0
-    }
+  for cmd in $(io/add-prefix "$__cmd_prefix" "$@"); do
+    type "$cmd" &>/dev/null || continue
+    echo "$cmd"
+    return 0
   done
 
   return 127
