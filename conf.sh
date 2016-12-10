@@ -2,12 +2,12 @@ main_conf(){
   local operand
   local list=()
 
-  [ $# -eq 0 ] && display_help 1
+  [ $# -eq 0 ] && die/help 1
   set -- $(args/normalize_flags_first "" "$@")
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
-        display_help  ;;
+        die/help  ;;
       -d|--defaults)
         dex/conf-reset ;;
       --)

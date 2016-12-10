@@ -4,11 +4,11 @@ main_run(){
   local build=false
   DEX_DOCKER_FLAGS=${DEX_DOCKER_FLAGS:-}
 
-  [ $# -eq 0 ] && display_help 1
+  [ $# -eq 0 ] && die/help 1
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
-        display_help ;;
+        die/help ;;
       -b|--build)
         build=true ;;
       -p|--pull)
@@ -49,7 +49,7 @@ dex/run(){
   local repostr="$1" ; shift
   [ -z "$repostr" ] && {
     p/shout "an image must be specified to run"
-    display_help 2
+    die/help 2
   }
 
   # ensure :latest if no image tag is passed

@@ -4,12 +4,12 @@ main_image(){
   local quiet=false
   local all=false
 
-  [ $# -eq 0 ] && display_help 1
+  [ $# -eq 0 ] && die/help 1
   set -- $(args/normalize_flags_first "" "$@")
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
-        display_help  ;;
+        die/help  ;;
       -a|--all)
         all=true ;;
       -f|--force)
@@ -37,7 +37,7 @@ main_image(){
 dex/image-build(){
   [ $# -eq 0 ] && {
     p/shout "please provide an image to build"
-    display_help 2
+    die/help 2
   }
 
   __built_images=()
@@ -91,7 +91,7 @@ dex/image-build(){
         )
 
         $__pull && flags+=( "--pull" )
-        is/in_file "$Dockerfile" "^ARG DEXBUILD_NOCACHE" && flags+=( "--build-arg DEXBUILD_NOCACHE=$random" )
+        is/in_file "^ARG DEXBUILD_NOCACHE" "$Dockerfile" && flags+=( "--build-arg DEXBUILD_NOCACHE=$random" )
 
         docker build ${flags[@]} . || exit 1
 

@@ -1,4 +1,4 @@
-display_help_repo(){
+p/help_repo(){
   cat <<-EOF
 
 dex - run applications without installing them or their dependencies.
