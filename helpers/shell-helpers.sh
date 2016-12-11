@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 92809dc
+# shell-helpers version v2.0.0-pr build 595e633
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -224,7 +224,8 @@ find/dockerfiles(){
 
 }
 
-# print the tag of a passed Dockerfile path
+# print the tag of a passed Dockerfile path - this is used by buildchain,
+# and related to find/dockerfiles
 #  /path/to/Dockerfile => latest
 #  Dockerfile-1.2.0 => 1.2.0
 get/dockerfile-tag(){
@@ -233,6 +234,11 @@ get/dockerfile-tag(){
   local tag=${filename//Dockerfile-/}
   tag=${tag//Dockerfile/latest}
   echo "$tag"
+}
+
+# given an image SHA, return the container name
+get/docker-name(){
+  docker/local inspect --format='{{ index .RepoTags 0 }}' "$1" 2>/dev/null
 }
 # shell-helpers - file/fs manipulation
 #   https://github.com/briceburg/shell-helpers
@@ -280,7 +286,7 @@ file/interpolate(){
 # find/ returns multi-value lists
 #
 
-# usage: get/dirs <path> [filter]
+# usage: find/dirs <path> [filter]
 find/dirs(){
   local path="$1"
   local filter="$2"
