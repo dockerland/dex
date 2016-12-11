@@ -228,6 +228,7 @@ v1-runtime(){
     -u $DEX_DOCKER_UID:$DEX_DOCKER_GID \
     -v $DEX_DOCKER_HOME:/dex/home \
     -v $DEX_DOCKER_WORKSPACE:/dex/workspace \
+    --label org.dockerland.dex.dexbuild=no \
     --log-driver=$DEX_DOCKER_LOG_DRIVER \
     --workdir=/dex/workspace \
     $__image $DEX_DOCKER_CMD $@

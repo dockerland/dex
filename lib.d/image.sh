@@ -127,7 +127,7 @@ dex/image-build-container(){
     docker/deactivate_machine
     $recreate && docker rm --force $name
     docker inspect --type container $name || {
-      docker run --entrypoint=false --name=$name $image
+      docker run --label org.dockerland.dex.dexbuild=yes --entrypoint=false --name=$name $image
     }
 
     docker inspect -f "{{ .Id }}" --type container $name || exit 1
