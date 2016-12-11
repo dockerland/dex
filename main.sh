@@ -24,7 +24,7 @@ main(){
         die/help ;;
       help)
         die/help 0 ${2:-main} ;;
-      conf|image|install|ls|repo|run)
+      conf|image|install|ls|ps|repo|run)
         shell/execfn main_"$@" ;;
       runfunc)
         shift ; shell/execfn "$@" ;;
