@@ -81,7 +81,7 @@ dex/image-build(){
         p/comment "using $(pwd)/$Dockerfile"
 
         # deactivate machine so we execute local docker engine
-        docker/deactivate_machine
+        docker/deactivate-machine
 
         random="$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)" || true
         local flags=(
@@ -121,10 +121,10 @@ dex/image-build(){
 dex/image-build-container(){
   local image="$1"
   local recreate=${2:-false}
-  local name=$(docker/safe_name "$image" "dexbuild")
+  local name=$(docker/get/safe-name "$image" "dexbuild")
   (
     exec &>/dev/null
-    docker/deactivate_machine
+    docker/deactivate-machine
     $recreate && docker rm --force $name
     docker inspect --type container $name || {
       docker run --label org.dockerland.dex.dexbuild=yes --entrypoint=false --name=$name $image
@@ -169,8 +169,8 @@ dex/image-rm(){
     $__force || prompt/confirm "remove $image ?" || continue
 
     # first lets remove the 'build' container. we need sha => name
-    repotag="$(get/docker-name "$image")" && {
-      build_container="$(docker/safe_name "$repotag" "dexbuild")"
+    repotag="$(docker/get/repotag "$image")" && {
+      build_container="$(docker/get/safe-name "$repotag" "dexbuild")"
       docker/local rm --force "$build_container" || true
     }
 

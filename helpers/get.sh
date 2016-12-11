@@ -60,7 +60,7 @@ dex/get-repostr(){
 # given a Dockerfile path in checkouts, print a fully qualified repostr
 dex/get-repostr-from-dockerfile(){
   local Dockerfile="$1"
-  local tag=$(get/dockerfile-tag $Dockerfile)
+  local tag=$(docker/get/dockerfile-tag $Dockerfile)
   local repo=${Dockerfile//$__checkouts\//}
   repo=${repo%%/*}
   local image=${Dockerfile//$__checkouts\/$repo\/dex-images\//}

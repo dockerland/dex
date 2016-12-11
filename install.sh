@@ -70,9 +70,9 @@ dex/install(){
         prompt/overwrite "$bin" || continue
 
         echo "#!/usr/bin/env bash" > $bin
-        declare -f docker/deactivate_machine >> $bin
+        declare -f docker/deactivate-machine >> $bin
         declare -f dex/image-build-container >> $bin
-        declare -f docker/safe_name >> $bin
+        declare -f docker/get/safe-name >> $bin
         declare -f get/gid_from_name >> $bin
         declare -f $DEX_RUNTIME-runtime >> $bin
         echo "__image=\"$imagetag\"" >> $bin

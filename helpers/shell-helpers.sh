@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 595e633
+# shell-helpers version v2.0.0-pr build 4443a8c
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -77,7 +77,7 @@ args/normalize_flags_first(){
 
 args/unknown(){
   p/shout "\e[1m$1\e[21m is an unrecognized ${2:-argument}"
-  p/help 10
+  die/help 10
 }
 # shell-helpers - the art of killing your script
 #   https://github.com/briceburg/shell-helpers
@@ -125,7 +125,6 @@ die/help(){
   exit $status
 }
 
-
 # example p/help_<cmd> function
 # p/help_cmd(){
 #   cat <<-EOF
@@ -151,7 +150,7 @@ die/help(){
 # shell-helpers - docker the things
 #   https://github.com/briceburg/shell-helpers
 
-docker/deactivate_machine(){
+docker/deactivate-machine(){
   # @TODO support boot2docker / concept of "default" machine
   is/cmd docker-machine && {
     eval $(docker-machine env --unset --shell bash)
@@ -163,23 +162,15 @@ docker/deactivate_machine(){
 
 # docker/local - run docker against the local engine
 docker/local()(
-  docker/deactivate_machine
+  docker/deactivate-machine
   exec docker "$@"
 )
 
 # docker/local-compose - run docker-compose against the local engine
 docker/local-compose()(
-  docker/deactivate_machine
+  docker/deactivate-machine
   exec docker-compose "$@"
 )
-
-# docker/safe_name - sanitize a string for use as a container or image name
-docker/safe_name(){
-  local name="$@"
-  set -- "${name:0:1}" "${name:1}"
-  printf "%s%s" "${1//[^a-zA-Z0-9]/0}" "${2//[^a-zA-Z0-9_.-]/_}"
-}
-
 
 
 # print Dockerfiles found in a path. filter by tag and/or extension.
@@ -187,7 +178,7 @@ docker/safe_name(){
 #    /path/Dockerfile
 #    /path/Dockerfile-1.2.0
 #    /path/Dockerfile-1.3.0.j2
-find/dockerfiles(){
+docker/find/dockerfiles(){
   local path="${1:-.}" ; shift
   local filter_tag="$1" ; shift
   local filter_extensions=( "${@:-j2 Dockerfile}" )
@@ -200,7 +191,7 @@ find/dockerfiles(){
       [ -e "$Dockerfile" ] || continue
 
       filename="$Dockerfile"
-      tag="$(get/dockerfile-tag $Dockerfile)"
+      tag="$(docker/get/dockerfile-tag $Dockerfile)"
 
       # skip tags not matching our filter
       [[ -n "$filter_tag" && "$tag" != "$filter_tag" ]] && continue
@@ -221,14 +212,48 @@ find/dockerfiles(){
 
     $found
   )
-
 }
 
+# docker/find/labels <name|sha> [type (container|image)]
+#  outputs labels one per line as "<label name> <label value>"
+docker/find/labels(){
+  local lookup="$1"
+  local type="$2"
+  local format="${__format:-\$label \$value\n}"
+
+  [ -n "$type" ] && type="--type $type"
+  local label
+  local value
+
+  docker/local inspect $type -f '{{range $key, $value := .Config.Labels }}{{println $key $value }}{{ end }}' $lookup |
+  while read label value ; do
+    [ -z "$label" ] && continue
+    eval "printf \"$format\""
+  done
+}
+
+# docker/find/repotags <name|sha> [type (container|image)]
+#  outputs names (repository tags) one per line
+docker/find/repotags(){
+  local lookup="$1"
+  local type="$2"
+
+  [ -n "$type" ] && type="--type $type"
+  local name
+
+  docker/local inspect $type -f '{{range $name := .RepoTags }}{{println $name }}{{ end }}' $lookup |
+  while read name ; do
+    [ -z "$name" ] && continue
+    echo "$name"
+  done
+}
+
+
 # print the tag of a passed Dockerfile path - this is used by buildchain,
-# and related to find/dockerfiles
+# and related to docker/find/dockerfiles
 #  /path/to/Dockerfile => latest
 #  Dockerfile-1.2.0 => 1.2.0
-get/dockerfile-tag(){
+docker/get/dockerfile-tag(){
   local Dockerfile="$(basename $1)"
   local filename=${Dockerfile%.*}
   local tag=${filename//Dockerfile-/}
@@ -236,9 +261,17 @@ get/dockerfile-tag(){
   echo "$tag"
 }
 
-# given an image SHA, return the container name
-get/docker-name(){
-  docker/local inspect --format='{{ index .RepoTags 0 }}' "$1" 2>/dev/null
+# docker/get/name <name|sha> [type (container|image)]
+docker/get/repotag(){
+  docker/find/repotags "$@" | head -n1
+}
+
+# docker/get/safe-name <strings> [append list...]
+#   sanitize strings into a safe container or image name
+docker/get/safe-name(){
+  local name="$@"
+  set -- "${name:0:1}" "${name:1}"
+  printf "%s%s" "${1//[^a-zA-Z0-9]/0}" "${2//[^a-zA-Z0-9_.-]/_}"
 }
 # shell-helpers - file/fs manipulation
 #   https://github.com/briceburg/shell-helpers

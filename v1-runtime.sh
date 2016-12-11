@@ -2,7 +2,7 @@
 
 v1-runtime(){
   # deactivate docker-machine
-  docker/deactivate_machine
+  docker/deactivate-machine
 
   DEX_HOME=${DEX_HOME:-~/.dex}
   [ -z "$__image" ] && { echo "missing runtime image" ; exit 1 ; }
