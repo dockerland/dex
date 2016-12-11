@@ -31,7 +31,7 @@ dex/ls(){
   local Dockerfile
   for repostr in "$@"; do
     for Dockerfile in $(dex/find-dockerfiles "$repostr"); do
-      dex/find-repostr-from-dockerfile "$Dockerfile"
+      dex/get-repostr-from-dockerfile "$Dockerfile"
     done
   done
 }

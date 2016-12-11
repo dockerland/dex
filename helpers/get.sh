@@ -1,44 +1,10 @@
 # dex helpers
-
-dex/find-dockerfiles(){
-  local repostr="$1"
-  local default_tag="$2"
-  local repo
-  local image
-  local tag
-  IFS="/:" read repo image tag <<< "$(dex/find-repostr $1)"
-
-  local found=false
-  local search_image
-  local search_repo
-
-  for search_repo in $(__format="\$name" dex/repo-ls $repo); do
-
-    $__pull && dex/repo-pull "$search_repo"
-
-    if [ -n "$image" ]; then
-      local path="$__checkouts/$search_repo/dex-images/$image"
-      find/dockerfiles "$path" "${tag:-$default_tag}" || continue
-      found=true
-    else
-      for search_image in $(find/dirs "$__checkouts/$search_repo/dex-images"); do
-        local path="$__checkouts/$search_repo/dex-images/$search_image"
-        find/dockerfiles "$path" "${tag:-$default_tag}" || continue
-        found=true
-      done
-    fi
-  done
-
-  $found && return 0
-  return 127
-}
-
 # return first found built image matching repostr
-dex/find-image(){
+dex/get-image(){
   local repo
   local image
   local tag
-  IFS="/:" read repo image tag <<< "$(dex/find-repostr "$1")"
+  IFS="/:" read repo image tag <<< "$(dex/get-repostr "$1")"
 
   [ -z "$image" ] && return 2
 
@@ -50,13 +16,13 @@ dex/find-image(){
   )
 
   [ -n "$repo" ] && flags+=( "--filter=\"label=org.dockerland.dex.repo=$repo\"" )
-  [ -n "$tag" ] && flags+=( "--filter=\"label=org.dockerland.dex.repo=$tag\"" )
+  [ -n "$tag" ] && flags+=( "--filter=\"label=org.dockerland.dex.tag=$tag\"" )
 
   docker/local images ${flags[@]} | head -n1
 }
 
 # normalizes a repostr
-dex/find-repostr(){
+dex/get-repostr(){
   local repostr="$1"
   local default_tag="$2"
   local imagestr
@@ -92,7 +58,7 @@ dex/find-repostr(){
 }
 
 # given a Dockerfile path in checkouts, print a fully qualified repostr
-dex/find-repostr-from-dockerfile(){
+dex/get-repostr-from-dockerfile(){
   local Dockerfile="$1"
   local tag=$(get/dockerfile-tag $Dockerfile)
   local repo=${Dockerfile//$__checkouts\//}
@@ -109,6 +75,6 @@ dex/find-repostr-from-dockerfile(){
 }
 
 # given an image SHA, return the container name
-dex/find-container-name(){
+dex/get-container-name(){
   docker/local inspect --format='{{ index .RepoTags 0 }}' "$1" 2>/dev/null
 }
