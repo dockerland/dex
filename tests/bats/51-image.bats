@@ -20,17 +20,17 @@ get/build-sha(){
   local image="$1"
   local tag="$2"
   docker inspect --type=container --format='{{ .Id }}' \
-    $(docker/safe_name "$DEX_NAMESPACE/test-repo/$image:$tag" "dexbuild")
+    $(docker/get/safe-name "$DEX_NAMESPACE/test-repo/$image:$tag" "dexbuild")
 }
 
 @test "image build creates docker images from repository checkouts" {
   rm/images
-  [ -z "$(docker images -q $DEX_NAMESPACE/test-repo/alpine:latest)" ]
-  [ -z "$(docker images -q $DEX_NAMESPACE/test-repo/debian:8)" ]
+  [ -z "$(docker/local images -q $DEX_NAMESPACE/test-repo/alpine:latest)" ]
+  [ -z "$(docker/local images -q $DEX_NAMESPACE/test-repo/debian:8)" ]
 
   run $APP image build test-repo/alpine:latest test-repo/debian:8
-  [ -n "$(docker images -q $DEX_NAMESPACE/test-repo/alpine:latest)" ]
-  [ -n "$(docker images -q $DEX_NAMESPACE/test-repo/debian:8)" ]
+  [ -n "$(docker/local images -q $DEX_NAMESPACE/test-repo/alpine:latest)" ]
+  [ -n "$(docker/local images -q $DEX_NAMESPACE/test-repo/debian:8)" ]
 }
 
 @test "image build spawns a unique 'build' container for each image built" {
@@ -48,11 +48,6 @@ get/build-sha(){
   app/var DEX_RUNTIME
   app/var DEX_NAMESPACE
 
-  local fmt='{{range $key, $value := .Config.Labels }}{{println $key $value }}{{ end }}'
-  local key
-  local label
-  local value
-
   required_labels=(
     namespace
     runtime
@@ -60,11 +55,9 @@ get/build-sha(){
     repo
     tag
   )
-  #docker inspect --format '{{range $key, $value := .Config.Labels }}{{println $key $value }}{{ end }}'
-  #docker inspect --type image -f "$fmt" $DEX_NAMESPACE/test-repo/alpine:latest |
-  while read key value ; do
-      [ -z "$key" ] && continue
-      label="${key//org.dockerland.dex./}"
+
+  while read label value ; do
+      label="${label//org.dockerland.dex./}"
 
       # remove label
       required_labels=( "${required_labels[@]//$label}" )
@@ -81,7 +74,7 @@ get/build-sha(){
       esac
 
   # use process substitution to avoid subshell and retain access to required_labels
-  done < <(docker inspect --type image -f "$fmt" $DEX_NAMESPACE/test-repo/alpine:latest)
+done < <(docker/find/labels $DEX_NAMESPACE/test-repo/alpine:latest)
 
 
   if [ -n "$(io/trim "${required_labels[@]}")" ]; then

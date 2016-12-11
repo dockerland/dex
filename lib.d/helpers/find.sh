@@ -18,12 +18,12 @@ dex/find-dockerfiles(){
 
     if [ -n "$image" ]; then
       local path="$__checkouts/$search_repo/dex-images/$image"
-      find/dockerfiles "$path" "${tag:-$default_tag}" || continue
+      docker/find/dockerfiles "$path" "${tag:-$default_tag}" || continue
       found=true
     else
       for search_image in $(find/dirs "$__checkouts/$search_repo/dex-images"); do
         local path="$__checkouts/$search_repo/dex-images/$search_image"
-        find/dockerfiles "$path" "${tag:-$default_tag}" || continue
+        docker/find/dockerfiles "$path" "${tag:-$default_tag}" || continue
         found=true
       done
     fi
