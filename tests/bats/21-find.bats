@@ -19,22 +19,22 @@ setup(){
   local image
   local tag
 
-  IFS="/:" read repo image tag <<< "$($APP runfunc dex/find-repostr "extra/alpine:latest")"
+  IFS="/:" read repo image tag <<< "$($APP runfunc dex/get-repostr "extra/alpine:latest")"
   [ "$repo" = "extra" ]
   [ "$image" = "alpine" ]
   [ "$tag" = "latest" ]
 
-  IFS="/:" read repo image tag <<< "$($APP runfunc dex/find-repostr "extra/")"
+  IFS="/:" read repo image tag <<< "$($APP runfunc dex/get-repostr "extra/")"
   [ "$repo" = "extra" ]
   [ "$image" = "" ]
   [ "$tag" = "" ]
 
-  IFS="/:" read repo image tag <<< "$($APP runfunc dex/find-repostr "alpine")"
+  IFS="/:" read repo image tag <<< "$($APP runfunc dex/get-repostr "alpine")"
   [ "$repo" = "" ]
   [ "$image" = "alpine" ]
   [ "$tag" = "" ]
 
-  IFS="/:" read repo image tag <<< "$($APP runfunc dex/find-repostr ":macos")"
+  IFS="/:" read repo image tag <<< "$($APP runfunc dex/get-repostr ":macos")"
   [ "$repo" = "" ]
   [ "$image" = "" ]
   [ "$tag" = "macos" ]
@@ -42,11 +42,11 @@ setup(){
 }
 
 @test "find-repostr respects default tags" {
-  [ "$($APP runfunc dex/find-repostr "alpine" "latest")" = "/alpine:latest" ]
+  [ "$($APP runfunc dex/get-repostr "alpine" "latest")" = "/alpine:latest" ]
 }
 
 @test "find-repostr will not default tag on unspecified images" {
-  [ "$($APP runfunc dex/find-repostr "extra/" "latest")" = "extra/:" ]
+  [ "$($APP runfunc dex/get-repostr "extra/" "latest")" = "extra/:" ]
 }
 
 @test "find-dockerfiles returns available dockerfiles in repository checkouts" {
@@ -68,7 +68,7 @@ setup(){
 
 @test "find-repostr-from-dockerfile returns IFS parsable repostr" {
   dockerfile=$($APP runfunc dex/find-dockerfiles "find-test/alpine:latest")
-  repostr=$($APP runfunc dex/find-repostr-from-dockerfile "$dockerfile")
+  repostr=$($APP runfunc dex/get-repostr-from-dockerfile "$dockerfile")
 
   IFS="/:" read repo image tag <<< "$repostr"
   [ "$repo" = "find-test" ]

@@ -53,16 +53,15 @@ dex/run(){
   }
 
   # ensure :latest if no image tag is passed
-  repostr="$(dex/find-repostr "$repostr" "latest")" || {
+  repostr="$(dex/get-repostr "$repostr" "latest")" || {
     die "bad repostr ($repostr) passed to run"
   }
 
   # build
-  if $build || [ -z "${__image:=$(dex/find-image "$repostr")}" ]; then
+  if $build || [ -z "${__image:=$(dex/get-image "$repostr")}" ]; then
     dex/image-build "$repostr" || return 1
-    __image="$(dex/find-image "$repostr")"
+    __image="$(dex/get-image "$repostr")"
   fi
-
   api="$(docker/local inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.runtime\" }}" $__image)"
   [ -z "$api" ] && {
     die/exception "failed determing runtime for $repostr from $__image image"

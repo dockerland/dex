@@ -51,12 +51,16 @@ dex/image-build(){
     IFS="/:" read repo image tag <<< "$repostr"
 
     Dockerfiles=( $(dex/find-dockerfiles "$repostr") ) || {
-      p/warn "skipping $repostr (unable to find a match in sources)"
+      if [ -z "$repo" ]; then
+        p/warn "$repostr is missing from all repository checkouts"
+      else
+        p/warn "$repostr is missing from the \e[1m$repo\e[21m repository"
+      fi
       continue
     }
 
     for Dockerfile in "${Dockerfiles[@]}"; do
-      repostr=$(dex/find-repostr-from-dockerfile $Dockerfile) || continue
+      repostr=$(dex/get-repostr-from-dockerfile $Dockerfile) || continue
       local repo=
       local image=
       local tag=
@@ -134,7 +138,7 @@ dex/image-ls(){
   local repo
   local image
   local tag
-  IFS="/:" read repo image tag <<< "$(dex/find-repostr $1)"
+  IFS="/:" read repo image tag <<< "$(dex/get-repostr $1)"
 
   if $all; then
     local flags=(
@@ -163,9 +167,9 @@ dex/image-rm(){
   $__force && flags+=( "--force" )
   for image in $(quiet=true dex/image-ls "$@"); do
     $__force || prompt/confirm "remove $image ?" || continue
-    
+
     # first lets remove the 'build' container. we need sha => name
-    repotag="$(dex/find-container-name "$image")" && {
+    repotag="$(dex/get-container-name "$image")" && {
       build_container="$(docker/safe_name "$repotag" "dexbuild")"
       docker/local rm --force "$build_container" || true
     }

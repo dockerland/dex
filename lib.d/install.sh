@@ -51,7 +51,7 @@ dex/install(){
     for repostr in "$@"; do
 
       # ensure :latest if no image tag is passed
-      repostr="$(dex/find-repostr "$repostr" "latest")" || {
+      repostr="$(dex/get-repostr "$repostr" "latest")" || {
         p/error "bad repostr ($repostr) passed to install"
         continue
       }
