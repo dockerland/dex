@@ -68,5 +68,20 @@ make/repo(){
   )
 }
 
+make/test-repo(){
+  local REPO_DIR="$TMPDIR/test-repo"
+  make/repo "$REPO_DIR"
+  [ -d  "$REPO_DIR/dex-images" ] || (
+    exec >/dev/null
+    cd $REPO_DIR
+    fixture/cp dex-images .
+    git add dex-images
+    git commit -m "adding dex-images"
+  )
+
+  [ -n "$($APP repo ls test-repo)" ] || \
+    $APP repo add --force test-repo "$REPO_DIR"
+}
+
 [ -e "$APP" ] || make/app &>/dev/null
 [ -e "$DEX_HOME/sources.list" ] || make/sources &>/dev/null

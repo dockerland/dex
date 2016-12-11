@@ -169,7 +169,7 @@ dex/image-rm(){
     $__force || prompt/confirm "remove $image ?" || continue
 
     # first lets remove the 'build' container. we need sha => name
-    repotag="$(dex/get-container-name "$image")" && {
+    repotag="$(get/docker-name "$image")" && {
       build_container="$(docker/safe_name "$repotag" "dexbuild")"
       docker/local rm --force "$build_container" || true
     }

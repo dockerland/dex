@@ -73,8 +73,3 @@ dex/get-repostr-from-dockerfile(){
 
   echo "$repo/$image:$tag"
 }
-
-# given an image SHA, return the container name
-dex/get-container-name(){
-  docker/local inspect --format='{{ index .RepoTags 0 }}' "$1" 2>/dev/null
-}
