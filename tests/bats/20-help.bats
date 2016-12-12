@@ -14,11 +14,11 @@ load app
 
 @test "help prints, warns on invalid flags and arguments" {
   run $APP invalid-argument
-  [ $status -eq 2 ]
+  [ $status -eq 10 ]
   [[ "$output" == *"unrecognized command"* ]]
 
   run $APP --invalid-flag
-  [ $status -eq 2 ]
+  [ $status -eq 10 ]
   [[ "$output" == *"unrecognized flag"* ]]
 }
 
@@ -50,7 +50,7 @@ load app
   done
 }
 
-@test "help exits with status code 2 when invalid arguments are passed to a command" {
+@test "help exits with status code 10 when invalid arguments are passed to a command" {
 
   local skip_args=(
     install
@@ -61,14 +61,14 @@ load app
   for cmd in ${APP_CMDS[@]} ; do
     echo "testing $cmd"
     run $APP $cmd --invalid-flag
-    [ $status -eq 2 ]
+    [ $status -eq 10 ]
     [[ "$output" == *"unrecognized flag"* ]]
 
     is/in_list "$cmd" "${skip_args[@]}" && continue
 
     run $APP $cmd invalid-argument
     echo "${lines[@]}"
-    [ $status -eq 2 ]
+    [ $status -eq 10 ]
     [[ "$output" == *"unrecognized argument"* ]]
   done
 }

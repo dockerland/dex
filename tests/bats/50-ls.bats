@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 #
-# 50 - runtime command behavior
+# 50 - command behavior
 #
 
 load app

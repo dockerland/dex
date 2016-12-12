@@ -1,16 +1,21 @@
 #!/usr/bin/env bats
 
 #
-# 50 - runtime command behavior
+# 60 - runtime command behavior
 #
 
-export DEX_NAMESPACE="dex/v1-tests"
 load app
+
+setup(){
+  make/test-repo
+  mkdir -p $TMPDIR/label-test/{home,vol,workspace}
+}
+
 
 setup(){
   [ -e $APP ] || install_dex
   mk-imgtest
-  mkdir -p $TMPDIR/label-test/{home,vol,workspace}
+
   __containers=()
   export TMPDIR=$TMPDIR
 }
