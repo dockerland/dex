@@ -41,7 +41,7 @@ dex/install(){
 
 
   local repostr
-  local imagetag
+  local repotag
   local repo
   local image
   local tag
@@ -62,22 +62,29 @@ dex/install(){
         continue
       }
 
-      for imagetag in "${__built_images[@]}"; do
-        IFS="/:" read repo image tag <<< "${imagetag//$DEX_NAMESPACE\//}"
+      for repotag in "${__built_images[@]}"; do
+        IFS="/:" read repo image tag <<< "${repotag//$DEX_NAMESPACE\//}"
         p/log "installing $repo/$image:$tag ..."
 
         local bin="$DEX_BIN_DIR/${DEX_BIN_PREFIX}${image}-${tag}"
         prompt/overwrite "$bin" || continue
 
         echo "#!/usr/bin/env bash" > $bin
+        declare -f $DEX_RUNTIME-runtime >> $bin
         declare -f dex/get/reference-path >> $bin
         declare -f dex/run/mk-reference >> $bin
+
+        # helpers
         declare -f docker/deactivate-machine >> $bin
         declare -f docker/get/safe-name >> $bin
         declare -f get/gid_from_name >> $bin
-        declare -f $DEX_RUNTIME-runtime >> $bin
-        echo "__image=\"$imagetag\"" >> $bin
-        echo "$runtimeFn \$@" >> $bin
+        declare -f die >> $bin
+        declare -f p/error >> $bin
+        declare -f p/blockquote >> $bin
+        echo "__repotag=\"$repotag\"" >> $bin
+        echo "__name=\"$image\"" >> $bin
+        echo "__tag=\"$tag\"" >> $bin
+        echo "$DEX_RUNTIME-runtime \$@" >> $bin
         chmod +x $bin || {
           p/warn "unable to mark $bin executable"
           continue
