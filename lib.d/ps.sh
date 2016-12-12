@@ -53,6 +53,6 @@ dex/ps(){
     $quiet && flags+=( "-q" )
 
     docker/local ps -a ${flags[@]}
-    
+
   done
 }
