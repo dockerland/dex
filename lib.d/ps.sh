@@ -3,7 +3,6 @@ main_ps(){
   local list=()
   local global=false
   local quiet=false
-  local build=false
 
   set -- $(args/normalize_flags_first "" "$@")
   while [ $# -ne 0 ]; do
@@ -12,8 +11,6 @@ main_ps(){
         die/help ;;
       -a|--all)
         global=true ;;
-      -b|--build)
-        build=true ;;
       -q|--quiet)
         quiet=true ;;
       --)
@@ -48,8 +45,6 @@ dex/ps(){
       local flags=(
         "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
       )
-
-      ! $build && flags+=( "--filter=\"label=org.dockerland.dex.dexbuild=no\"" )
     fi
 
     [ -n "$image" ] && flags+=( "--filter=label=org.dockerland.dex.image=$image" )

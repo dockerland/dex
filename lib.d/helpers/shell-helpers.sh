@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 4443a8c
+# shell-helpers version v2.0.0-pr build 8b0b105
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -265,6 +265,16 @@ docker/get/dockerfile-tag(){
 docker/get/repotag(){
   docker/find/repotags "$@" | head -n1
 }
+
+# docker/get/id <name|repotag> [type (container|image)]
+docker/get/id(){
+  local lookup="$1"
+  local type="$2"
+
+  [ -n "$type" ] && type="--type $type"
+  docker/local inspect $type -f '{{ .Id }}' $lookup
+}
+
 
 # docker/get/safe-name <strings> [append list...]
 #   sanitize strings into a safe container or image name

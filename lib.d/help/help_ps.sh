@@ -14,9 +14,6 @@ Options:
   -h|--help
     Displays help
 
-  -b|--build
-    include 'build' containers
-
   -a|--all
     additionally lists containers across runtimes
 
