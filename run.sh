@@ -67,6 +67,10 @@ dex/run(){
     die/exception "failed determing runtime for $repostr from $__image image"
   }
 
+  __repotag=$(docker/get/repotag $__image)
+  __name="${__repotag##*/}"
+  __name="${__name%%:*}"
+  __tag="${__repotag##*:}"
   shell/execfn ${api:-$DEX_RUNTIME}-runtime "$@"
 }
 
