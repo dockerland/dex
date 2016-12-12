@@ -80,9 +80,6 @@ dex/image-build(){
         # @TODO support templated [j2] builds as per buildchain
         p/comment "using $(pwd)/$Dockerfile"
 
-        # deactivate machine so we execute local docker engine
-        docker/deactivate-machine
-
         random="$(LC_CTYPE=C tr -dc 'a-zA-Z0-9-_' < /dev/urandom | head -c10)" || true
         local flags=(
           "-t $__image"
@@ -97,17 +94,15 @@ dex/image-build(){
         $__pull && flags+=( "--pull" )
         is/in_file "^ARG DEXBUILD_NOCACHE" "$Dockerfile" && flags+=( "--build-arg DEXBUILD_NOCACHE=$random" )
 
-        docker build ${flags[@]} . || exit 1
-
-        # force re-create "build" container
-        dex/image-build-container $__image true &>/dev/null || {
-          p/warn "failed creating build container for $__image"
-          exit 1
-        }
+        docker/local build ${flags[@]} . || exit 1
       ) || {
         p/error "failed building $Dockerfile"
         continue
       }
+      
+      # force re-recreation of "reference" directory used by runtime
+      local reference_path="$(dex/get/reference-path $__image)"
+      [ -e "$reference_path" ] && rm -rf "$reference_path"
 
       __built_images+=( "$__image" )
       p/success "built \e[1m$repostr\e[21m"
@@ -116,22 +111,6 @@ dex/image-build(){
   done
 
   [ ${#__built_images[@]} -gt 0 ]
-}
-
-dex/image-build-container(){
-  local image="$1"
-  local recreate=${2:-false}
-  local name=$(docker/get/safe-name "$image" "dexbuild")
-  (
-    exec &>/dev/null
-    docker/deactivate-machine
-    $recreate && docker rm --force $name
-    docker inspect --type container $name || {
-      docker run --label org.dockerland.dex.dexbuild=yes --entrypoint=false --name=$name $image
-    }
-
-    docker inspect -f "{{ .Id }}" --type container $name || exit 1
-  )
 }
 
 dex/image-ls(){
