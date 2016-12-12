@@ -99,7 +99,7 @@ dex/image-build(){
         p/error "failed building $Dockerfile"
         continue
       }
-      
+
       # force re-recreation of "reference" directory used by runtime
       local reference_path="$(dex/get/reference-path $__image)"
       [ -e "$reference_path" ] && rm -rf "$reference_path"
@@ -146,19 +146,11 @@ dex/image-rm(){
   $__force && flags+=( "--force" )
   for image in $(quiet=true dex/image-ls "$@"); do
     $__force || prompt/confirm "remove $image ?" || continue
-
-    # first lets remove the 'build' container. we need sha => name
-    repotag="$(docker/get/repotag "$image")" && {
-      build_container="$(docker/get/safe-name "$repotag" "dexbuild")"
-      docker/local rm --force "$build_container" || true
-    }
-
-    # next, lets remove any containers using this image as an ancestor
+    
     for container in $(docker/local ps -q --filter ancestor=$image); do
       docker/local rm ${flags[@]} $container
     done
 
-    # finally, remove image
     docker/local rmi ${flags[@]} $image
   done
 }
