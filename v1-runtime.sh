@@ -145,24 +145,18 @@ v1-runtime(){
     fi
   esac
 
-  # map host /etc/passwd and /etc/group in container
+  # add actual host user and group to container's /etc/passwd and /etc/group
   case $(echo "$__host_users" | awk '{print tolower($0)}') in rw|ro)
-    container_sha=$(dex-image-build-container $__image) || {
-      echo "dex runtime failed to spawn a build container"
-      exit 1
-    }
-    container_dir=$DEX_HOME/build-containers/$container_sha
-    [ -d $container_dir ] || mkdir -p $container_dir
-    [ -e $container_dir/passwd ] || docker cp $container_sha:/etc/passwd $container_dir/passwd
-    [ -e $container_dir/group ] || docker cp $container_sha:/etc/group $container_dir/group
+    reference_path="$(dex/get/reference-path $__image)"
+    [ -d "$reference_path" ] || dex/run/mk-reference "$__image"
 
     # augment /etc/passwd and /etc/group files with current user (if !already exists)
-    grep -q ":$DEX_HOST_UID:$DEX_HOST_GID:" $container_dir/passwd || \
-      echo "$DEX_HOST_USER:x:$DEX_HOST_UID:$DEX_HOST_UID:gecos:/dex/home:/bin/sh" >> $container_dir/passwd
-    grep -q ":$DEX_HOST_GID:" $container_dir/group || \
-      echo "$DEX_HOST_GROUP:x:$DEX_HOST_GID:" >> $container_dir/group
+    grep -q ":$DEX_HOST_UID:$DEX_HOST_GID:" $reference_path/passwd || \
+      echo "$DEX_HOST_USER:x:$DEX_HOST_UID:$DEX_HOST_UID:gecos:/dex/home:/bin/sh" >> $reference_path/passwd
+    grep -q ":$DEX_HOST_GID:" $reference_path/group || \
+      echo "$DEX_HOST_GROUP:x:$DEX_HOST_GID:" >> $reference_path/group
 
-    __docker_volumes+=" $container_dir/passwd:/etc/passwd:$__host_users $container_dir/group:/etc/group:$__host_users"
+    __docker_volumes+=" $reference_path/passwd:/etc/passwd:$__host_users $reference_path/group:/etc/group:$__host_users"
   esac
 
   # map host docker socket and passthru docker vars
@@ -228,7 +222,6 @@ v1-runtime(){
     -u $DEX_DOCKER_UID:$DEX_DOCKER_GID \
     -v $DEX_DOCKER_HOME:/dex/home \
     -v $DEX_DOCKER_WORKSPACE:/dex/workspace \
-    --label org.dockerland.dex.dexbuild=no \
     --log-driver=$DEX_DOCKER_LOG_DRIVER \
     --workdir=/dex/workspace \
     $__image $DEX_DOCKER_CMD $@

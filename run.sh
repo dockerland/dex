@@ -69,3 +69,29 @@ dex/run(){
 
   shell/execfn ${api:-$DEX_RUNTIME}-runtime "$@"
 }
+
+# dex/run/mk-reference - add image reference files for use by runtime.
+#                        useful for augmenting a container's host|group files.
+dex/run/mk-reference(){
+  local repotag="$1"
+  local path="$(dex/get/reference-path "$repotag")"
+  local name="$(docker/get/safe-name "$repotag" "reference" )"
+
+  (
+    exec >&2
+    docker/machine-deactivate
+    docker rm --force $name &>/dev/null || true
+
+    # start reference container
+    docker run --label org.dockerland.dex.reference=yes --entrypoint=false --name=$name $repotag
+
+    # copy files into reference directory
+    rm -rf "$path" && mkdir -p "$path"
+    docker cp $name:/etc/passwd $path/passwd
+    docker cp $name:/etc/group $path/group
+
+    # remove reference container
+    docker rm --force $name &>/dev/null || true
+  )
+
+}

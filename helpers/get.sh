@@ -73,3 +73,9 @@ dex/get-repostr-from-dockerfile(){
 
   echo "$repo/$image:$tag"
 }
+
+
+# output path containing reference files from an image/repotag
+dex/get/reference-path(){
+  echo "$DEX_HOME/references/$(docker/get/safe-name "$1")"
+}
