@@ -81,6 +81,7 @@ dex/install(){
         declare -f die >> $bin
         declare -f io/cat >> $bin
         declare -f io/lowercase >> $bin
+        declare -f is/absolute >> $bin
         declare -f is/any >> $bin
         declare -f is/in >> $bin
         declare -f p/error >> $bin

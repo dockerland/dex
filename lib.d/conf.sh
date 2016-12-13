@@ -33,6 +33,9 @@ dex/conf-init(){
   DEX_NETWORK=${DEX_NETWORK:-true}
   DEX_REGISTRY="${DEX_NETWORK:-dexbuilds/}"
 
+  # ensure DEX_HOME is absolute
+  is/absolute "$DEX_HOME" || DEX_HOME="$(pwd)/$DEX_HOME"
+
   # bootstrap internal vars
   __checkouts="$DEX_HOME/checkouts"
   __sources="$DEX_HOME/sources.list"
