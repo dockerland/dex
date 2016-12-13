@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 8b0b105
+# shell-helpers version v2.0.0-pr build b229776
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -102,9 +102,12 @@ die/exception() {
   die "$@"
 }
 
+# die/help <exit code> <message text...>
+#  calls p/help_[cmd] function. (e.g. calls p/help_main from main() fn)
+#  help messages are prefixed w/ any message text, such as warnings about
+#  about missing arguments.
 die/help(){
-  local status="$1"
-  local cmd="$2"
+  local status="$1" ; shift
 
   [ -z "$cmd" ] && {
     # functions starting with main_ indicate command name.
@@ -120,6 +123,8 @@ die/help(){
 
   is/fn "p/help_$cmd" || die/exception "missing p/help_$cmd" \
     "is $cmd a valid command?"
+
+  [ -n "$@" ] && p/shout "$@"
 
   p/help_$cmd >&2
   exit $status
@@ -470,11 +475,23 @@ io/add-prefix(){
   [ -z "$prefix" ] && return
   io/add-prefix "" "$@"
 }
+
+io/lowercase(){
+  io/cat "$@" | awk '{print tolower($0)}'
+}
 # shell-helpers - you put your left foot in, your right foot out.
 #   https://github.com/briceburg/shell-helpers
 
 is/absolute(){
   [[ "${1:0:1}" == / || "${1:0:2}" == ~[/a-z] ]]
+}
+
+# is/any <string|pattern> <list...>
+#   case insensitive matching (lowercases string/pattern first)
+#  use is/in as non-lowercasing alternative
+is/any(){
+  local pattern="$(io/lowercase $1)" ; shift
+  is/in "$pattern" "$@"
 }
 
 is/cmd(){

@@ -79,6 +79,10 @@ dex/install(){
         declare -f docker/get/safe-name >> $bin
         declare -f get/gid_from_name >> $bin
         declare -f die >> $bin
+        declare -f io/cat >> $bin
+        declare -f io/lowercase >> $bin
+        declare -f is/any >> $bin
+        declare -f is/in >> $bin
         declare -f p/error >> $bin
         declare -f p/blockquote >> $bin
         echo "__repotag=\"$repotag\"" >> $bin
