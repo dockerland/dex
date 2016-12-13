@@ -124,7 +124,7 @@ v1-runtime(){
   #
 
   # apply windowing vars (if window=true)
-  is/matching "$window" "true" "yes" "on" && {
+  is/any "$window" "true" "yes" "on" && {
     docker_flags+=" $DEX_WINDOW_FLAGS -e DEX_WINDOW=true"
     docker_groups+=" audio video"
     docker_devices+=" dri snd video video0"
@@ -154,7 +154,7 @@ v1-runtime(){
   }
 
   # mount typical host paths to coax common absolute path resolutions
-  is/matching "$host_paths" "ro" "rw" && {
+  is/any "$host_paths" "ro" "rw" && {
     if [[ ! "$HOME" =~ ^($DEX_HOST_PWD|/dex/home)$ ]]; then
       docker_volumes+=" $HOME:$HOME:$host_paths"
     fi
@@ -164,7 +164,7 @@ v1-runtime(){
   }
 
   # add real host user and group to container's /etc/passwd and /etc/group
-  is/matching "$host_users" "ro" "rw" && {
+  is/any "$host_users" "ro" "rw" && {
     reference_path="$(dex/get/reference-path $__repotag)"
     [ -d "$reference_path" ] || dex/run/mk-reference "$__repotag"
 
@@ -178,7 +178,7 @@ v1-runtime(){
   }
 
   # map host docker socket and passthru docker vars
-  is/matching "$host_docker" "ro" "rw" && {
+  is/any "$host_docker" "ro" "rw" && {
     local docker_socket="${DOCKER_SOCKET:-/var/run/docker.sock}"
     [ -S "$docker_socket" ] || {
       echo "image requests docker, but $docker_socket is not a valid socket"
@@ -227,7 +227,6 @@ v1-runtime(){
     eval "[ -z \"\$$var\" ] || docker_flags+=\" -e $var=\$$var\""
   done
 
-
   #
   # execution
   #
@@ -256,17 +255,4 @@ v1-runtime(){
     --log-driver=$DEX_DOCKER_LOG_DRIVER \
     --workdir=/dex/workspace \
     $__repotag $DEX_DOCKER_CMD $@
-}
-
-# lowercase matching helper
-is/matching(){
-  local match="$1" ; shift
-  [ -z "$match" ] && return 1
-  match=$(echo "$match" | awk '{print tolower($0)}')
-
-  local item
-  for item; do
-    [ "$pattern" = "$item" ] && return 0
-  done
-  return 1
 }
