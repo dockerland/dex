@@ -117,10 +117,6 @@ v1-runtime(){
   [ -d "$DEX_DOCKER_WORKSPACE" ] || \
     die "workspace is not a directory: $DEX_DOCKER_WORKSPACE"
 
-  # piping to|from a container requires interactive, non-tty input
-  if [ ! -t 1 ] || ! tty -s > /dev/null 2>&1 ; then
-    docker_flags+=" --interactive=true --tty=false"
-  fi
 
 
   #
@@ -234,6 +230,12 @@ v1-runtime(){
   #
   # execution
   #
+
+  # piping to|from a container requires interactive, non-tty input
+  # lets do this last to take priority over earlier flags
+  if [ ! -t 1 ] || ! tty -s > /dev/null 2>&1 ; then
+    docker_flags+=" --interactive=true --tty=false"
+  fi
 
   # allow debugging by passing DEX_DEBUG=true, e.g.
   #  DEX_DEBUG=true dex run sed ...
