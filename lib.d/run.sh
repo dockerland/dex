@@ -79,23 +79,32 @@ dex/run(){
 dex/run/mk-reference(){
   local repotag="$1"
   local path="$(dex/get/reference-path "$repotag")"
-  local name="$(docker/get/safe-name "$repotag" "reference" )"
 
   (
     exec >&2
-    docker/machine-deactivate
-    docker rm --force $name &>/dev/null || true
+    set +e
+    docker/deactivate-machine
 
     # start reference container
-    docker run --label org.dockerland.dex.reference=yes --entrypoint=false --name=$name $repotag
+    id=$(docker run --label org.dockerland.dex.reference=yes --entrypoint=false --detach $repotag)
+
+    [ -z "$id" ] && p/warn "failed staring reference container" && exit 1
 
     # copy files into reference directory
     rm -rf "$path" && mkdir -p "$path"
-    docker cp $name:/etc/passwd $path/passwd
-    docker cp $name:/etc/group $path/group
+
+    docker cp $id:/etc/passwd $path/passwd || {
+        p/warn "failed stubbing reference /etc/passwd"
+        exit 1
+    }
+
+    docker cp $id:/etc/group $path/group || {
+      p/warn "failed stubbing reference /etc/group"
+      exit 1
+    }
 
     # remove reference container
-    docker rm --force $name &>/dev/null || true
+    docker rm --force $id
   )
 
 }

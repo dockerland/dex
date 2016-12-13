@@ -7,7 +7,7 @@ v1-runtime(){
   #
 
   [[ -z "$__repotag" || -z "$__name" || -z "$__tag" ]] && \
-    die "missing repotag ($__repotag), name ($__name), or tag ($__tag)"
+    die "\e[1m$FUNCNAME\e[21m - missing repotag ($__repotag), name ($__name), or tag ($__tag)"
 
   # deactivate docker-machine
   docker/deactivate-machine
@@ -109,13 +109,13 @@ v1-runtime(){
   #
 
   [ -z "$runtime" ] && \
-    die "$__repotag must provide a org.dockerland.dex.runtime label!"
+    die "\e[1m$FUNCNAME\e[21m - $__repotag must provide a org.dockerland.dex.runtime label!"
 
   [ -d "$DEX_DOCKER_HOME" ] || mkdir -p $DEX_DOCKER_HOME || \
-    die "unable to stub home directory: $DEX_DOCKER_HOME"
+    die "\e[1m$FUNCNAME\e[21m - unable to stub home directory: $DEX_DOCKER_HOME"
 
   [ -d "$DEX_DOCKER_WORKSPACE" ] || \
-    die "workspace is not a directory: $DEX_DOCKER_WORKSPACE"
+    die "\e[1m$FUNCNAME\e[21m - workspace is not a directory: $DEX_DOCKER_WORKSPACE"
 
 
 
@@ -166,13 +166,14 @@ v1-runtime(){
   # add real host user and group to container's /etc/passwd and /etc/group
   is/any "$host_users" "ro" "rw" && {
     reference_path="$(dex/get/reference-path $__repotag)"
-    [ -d "$reference_path" ] || dex/run/mk-reference "$__repotag"
+    [ -d "$reference_path" ] || dex/run/mk-reference "$__repotag" || die \
+      "\e[1m$FUNCNAME\e[21m - mk-reference failed"
 
     # augment /etc/passwd and /etc/group files with current user (if !already exists)
     grep -q ":$DEX_HOST_UID:$DEX_HOST_GID:" $reference_path/passwd || \
-      echo "$DEX_HOST_USER:x:$DEX_HOST_UID:$DEX_HOST_UID:gecos:/dex/home:/bin/sh" >> $reference_path/passwd
+      echo "$DEX_HOST_USER:x:$DEX_HOST_UID:$DEX_HOST_UID:gecos:/dex/home:/bin/sh" >> "$reference_path/passwd"
     grep -q ":$DEX_HOST_GID:" $reference_path/group || \
-      echo "$DEX_HOST_GROUP:x:$DEX_HOST_GID:" >> $reference_path/group
+      echo "$DEX_HOST_GROUP:x:$DEX_HOST_GID:" >> "$reference_path/group"
 
     docker_volumes+=" $reference_path/passwd:/etc/passwd:$host_users $reference_path/group:/etc/group:$host_users"
   }
@@ -180,10 +181,9 @@ v1-runtime(){
   # map host docker socket and passthru docker vars
   is/any "$host_docker" "ro" "rw" && {
     local docker_socket="${DOCKER_SOCKET:-/var/run/docker.sock}"
-    [ -S "$docker_socket" ] || {
-      echo "image requests docker, but $docker_socket is not a valid socket"
-      exit 1
-    }
+    [ -S "$docker_socket" ] || \
+      die "\e[1m$FUNCNAME\e[21m - image requests docker, but $docker_socket is not a valid socket"
+
     docker_volumes+=" $docker_socket:/var/run/docker.sock:$host_docker $DOCKER_CERT_PATH $MACHINE_STORAGE_PATH"
     docker_flags+=" --group-add=$(ls -ln $docker_socket | awk '{print $4}')"
     docker_envars+=" DOCKER_* MACHINE_STORAGE_PATH"

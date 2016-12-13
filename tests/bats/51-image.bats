@@ -10,6 +10,11 @@ setup(){
   make/test-repo
 }
 
+teardown(){
+  unset DOCKER_HOST
+  unset DOCKER_MACHINE_NAME
+}
+
 rm/images(){
   for image in $(docker images -q --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE); do
     docker rmi --force $image
