@@ -1,0 +1,2 @@
+# test.bats - to prototype tests as bats doesn't support "focused" tests
+/test.bats

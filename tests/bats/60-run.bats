@@ -49,11 +49,16 @@ setup(){
   [ -n "$($APP ps -q test-repo/debian)" ]
 }
 
-
 @test "run passes arguments through to container" {
+  $APP run test-repo/debian echo 'ping-pong'
   run $APP run test-repo/debian echo 'ping-pong'
   [ $status -eq 0 ]
-  [ $output = "ping-pong" ]
+  echo "|$output|"
+  [ "$output" = "ping-pong" ]
+}
+
+@test "run allows piping of stdin" {
+  [ "$(echo "foo" | $APP run debian cat -)" = "foo" ]
 }
 
 @test "run returns exit code from container's command" {

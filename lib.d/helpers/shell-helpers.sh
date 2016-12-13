@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build b229776
+# shell-helpers version v2.0.0-pr build 053c22c
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -422,24 +422,24 @@ is/dirty(){
 #   https://github.com/briceburg/shell-helpers
 
 
-# io/cat - support variadic input (either arguments or piped stdin), and
-#          normalize output. arguments are output one per line.
+# io/cat - allows io/ funcs to accept either piped input or a list of strings as
+#          input. Try to use "-" as first argument to hint stdin.
+#          normalizes output, one per-line.
 #
-#          this is a helper fn used by other io/ commands, e.g.
-#          io/trim supports trimming arguments or the contents of a file.
 # examples:
-#   cat my-file | io/cat   =>
+#   cat my-file | io/cat -   =>
 #     <contents of my-file...>
 #
 #   io/cat "hello" "world" =>
 #     hello
 #     world
 io/cat(){
-  if [ -t 0 ]; then
+  # if stdin hint, or we're piped to AND without arguments, read from stdin...
+  if [ "$1" = "-" ] || [[ ! -t 0 && ${#@} -eq 0 ]]; then
+    cat -
+  else
     local line
     for line; do echo $line; done
-  else
-    cat
   fi
 }
 
@@ -490,7 +490,7 @@ is/absolute(){
 #   case insensitive matching (lowercases string/pattern first)
 #  use is/in as non-lowercasing alternative
 is/any(){
-  local pattern="$(io/lowercase $1)" ; shift
+  local pattern="$(io/lowercase "$1")" ; shift
   is/in "$pattern" "$@"
 }
 
