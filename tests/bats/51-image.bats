@@ -153,3 +153,15 @@ done < <(docker/find/labels $DEX_NAMESPACE/test-repo/alpine:latest)
   $APP image rm --force test-repo/alpine:latest
   [ -z $($APP image ls -q repo-test/alpine:latest) ]
 }
+
+@test "image build --pull updates relevant source checkouts" {
+  run $APP image build --pull alpine:latest
+  [[ "$output" == *"pulling core"* ]]
+  [[ "$output" == *"pulling extra"* ]]
+  [[ "$output" == *"pulling test-repo"* ]]
+
+  run $APP image build --pull test-repo/alpine:latest
+  [[ "$output" != *"pulling core"* ]]
+  [[ "$output" != *"pulling extra"* ]]
+  [[ "$output" == *"pulling test-repo"* ]]
+}
