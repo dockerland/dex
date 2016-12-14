@@ -36,6 +36,10 @@ load app
 
 @test "help is provided whenever -h or --help flags are passed to a command" {
   for cmd in ${APP_CMDS[@]} ; do
+    echo "testing $cmd"
+    run $APP $cmd -h
+    [ $status -eq 0 ]
+    [ -n "$output" ]
     diff <($APP $cmd -h) <($APP help $cmd)
     diff <($APP $cmd --help) <($APP help $cmd)
   done

@@ -23,7 +23,8 @@ main(){
       -h|--help)
         die/help ;;
       help)
-        die/help 0 ${2:-main} ;;
+        is/fn "p/help_$2" || die "missing help for $2"
+        p/help_$2 ; exit ;;
       conf|image|install|ls|ps|repo|run)
         shell/execfn main_"$@" ;;
       runfunc)

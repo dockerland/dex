@@ -127,7 +127,7 @@ done < <(docker/find/labels $DEX_NAMESPACE/test-repo/alpine:latest)
     "--filter=label=org.dockerland.dex.tag=latest"
   )
 
-  diff <($APP image ls test-repo/:latest) <(docker images "${filters[@]}")
+  diff <($APP image ls -q test-repo/:latest) <(docker images -q "${filters[@]}")
 }
 
 @test "image rm removes named images, prompts before removal" {

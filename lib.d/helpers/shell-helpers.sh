@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 053c22c
+# shell-helpers version v2.0.0-pr build 3d46a87
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -19,10 +19,9 @@
 #   args/normalize "om" "-abcooutput.txt" "--def=jam" "-mz" "--" "-abcx" "-my"
 #     => -a -b -c -o output.txt --def jam -m z -- -abcx -my"
 args/normalize(){
-  local fargs="$1"
+  local fargs="$1" ; shift || true
   local passthru=false
   local output=""
-  shift
   for arg in $@; do
     if $passthru; then
       output+=" $arg"
@@ -59,11 +58,10 @@ args/normalize(){
 #     => -a -b -c -x -y -z command otro -- -def xyz
 
 args/normalize_flags_first(){
-  local fargs="$1"
+  local fargs="$1" ; shift || true
   local output=""
   local cmdstr=""
   local passthru=false
-  shift
   for arg in $(args/normalize "$fargs" "$@"); do
     [ "--" = "$arg" ] && passthru=true
     if $passthru || [ ! "-" = ${arg:0:1} ]; then
@@ -107,27 +105,22 @@ die/exception() {
 #  help messages are prefixed w/ any message text, such as warnings about
 #  about missing arguments.
 die/help(){
-  local status="$1" ; shift
+  local status="$1" ; shift || true
 
-  [ -z "$cmd" ] && {
-    # functions starting with main_ indicate command name.
-    # attempt to auto-detect by examining call stack
-    local fn
-    for fn in "${FUNCNAME[@]}"; do
-      [ "main" = "${fn:0:4}" ] && {
-        cmd="${fn//main_/}"
-        break
-      }
-    done
-  }
+  # functions starting with main_ indicate command name.
+  # attempt to auto-detect by examining call stack
+  local fn
+  for fn in "${FUNCNAME[@]}"; do
+    [ "main" = "${fn:0:4}" ] && {
+      cmd="${fn//main_/}"
+      is/fn "p/help_$cmd" || continue
+      [ -z "$@" ] || p/shout "$@"
+      p/help_$cmd
+      exit $status
+    }
+  done
 
-  is/fn "p/help_$cmd" || die/exception "missing p/help_$cmd" \
-    "is $cmd a valid command?"
-
-  [ -n "$@" ] && p/shout "$@"
-
-  p/help_$cmd >&2
-  exit $status
+  die/exception "failed to detect helpfile from function stack" "${FUNCNAME[@]}"
 }
 
 # example p/help_<cmd> function
@@ -184,8 +177,8 @@ docker/local-compose()(
 #    /path/Dockerfile-1.2.0
 #    /path/Dockerfile-1.3.0.j2
 docker/find/dockerfiles(){
-  local path="${1:-.}" ; shift
-  local filter_tag="$1" ; shift
+  local path="${1:-.}" ; shift || true
+  local filter_tag="$1" ; shift || true
   local filter_extensions=( "${@:-j2 Dockerfile}" )
 
   (
@@ -350,7 +343,7 @@ find/dirs(){
 # find/matching <pattern> <list items...>
 #  returns a filtered list of items matching pattern.
 find/filtered(){
-  local pattern="$1" ; shift
+  local pattern="$1" ; shift || true
   local item
   local found=false
 
@@ -465,7 +458,7 @@ io/trim(){
 #   a
 #   b
 io/add-prefix(){
-  local prefix="$1" ; shift
+  local prefix="$1" ; shift || true
   local item
 
   for item; do
@@ -513,7 +506,7 @@ is/fn(){
 is/in(){
   #@TODO support piping of pattern
 
-  local pattern="$1" ; shift
+  local pattern="$1" ; shift || true
   local wildcard=false
   local item
   [[ "$pattern" == *"*"* ]] && wildcard=true
@@ -550,7 +543,7 @@ is/in_list(){
 is/matching(){
   #@TODO support piping of string
 
-  local string="$1" ; shift
+  local string="$1" ; shift || true
   local pattern
   for pattern; do
     is/in "$pattern" "$string" && return 0
@@ -819,8 +812,8 @@ p/header(){
 }
 
 p/blockquote(){
-  local escape="$1" ; shift
-  local prefix="$1" ; shift
+  local escape="$1" ; shift || true
+  local prefix="$1" ; shift || true
   local indent="$(printf '%*s' ${#prefix})"
 
   while [ $# -ne 0 ]; do

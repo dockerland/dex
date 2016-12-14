@@ -37,9 +37,7 @@ teardown(){
 }
 
 @test "ps supports repotag" {
-  ls -l $DEX_HOME/
   cat $DEX_HOME/sources.list
-  ls -l $DEX_HOME/checkouts
   $APP image build --pull test-repo/debian:8
 
   docker/local run --name=$name $DEX_NAMESPACE/test-repo/alpine:latest
