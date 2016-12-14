@@ -97,18 +97,7 @@ done < <(docker/find/labels $DEX_NAMESPACE/test-repo/alpine:latest)
     "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
     "--filter=label=org.dockerland.dex.repo=test-repo"
   )
-  diff <($APP image ls test-repo/) <(docker images "${filters[@]}")
-  diff <($APP image ls -q test-repo/) <(docker images -q "${filters[@]}")
-}
-
-
-@test "image ls flags and output resemble 'docker images' command" {
-  local filters
-  filters=(
-    "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
-    "--filter=label=org.dockerland.dex.repo=test-repo"
-  )
-  diff <($APP image ls test-repo/) <(docker images "${filters[@]}")
+  diff <($APP image ls test-repo/ --format "{{.Repository}}") <(docker images "${filters[@]}" --format "{{.Repository}}")
   diff <($APP image ls -q test-repo/) <(docker images -q "${filters[@]}")
 }
 

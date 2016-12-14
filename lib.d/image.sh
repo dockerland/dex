@@ -3,9 +3,10 @@ main_image(){
   local list=()
   local quiet=false
   local all=false
+  local format
 
   [ $# -eq 0 ] && die/help 1
-  set -- $(args/normalize_flags_first "" "$@")
+  set -- $(args/normalize "" "$@")
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
@@ -14,6 +15,8 @@ main_image(){
         all=true ;;
       -f|--force)
         __force=true ;;
+      --format)
+        format="$2" ; shift ;;
       -p|--pull)
         __pull=true ;;
       -q|--quiet)
@@ -131,6 +134,7 @@ dex/image-ls(){
   [ -n "$image" ] && flags+=( "--filter=label=org.dockerland.dex.image=$image" )
   [ -n "$repo" ] && flags+=( "--filter=label=org.dockerland.dex.repo=$repo" )
   [ -n "$tag" ] && flags+=( "--filter=label=org.dockerland.dex.tag=$tag" )
+  [ -n "$format" ] && flags+=( "--format $format" )
   $quiet && flags+=( "-q" )
 
   docker/local images ${flags[@]}

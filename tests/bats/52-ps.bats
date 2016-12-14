@@ -20,12 +20,16 @@ teardown(){
   docker/local rm --force ${name}debian || true
 }
 
-@test "ps lists running containers, resembers docker ps" {
+@test "ps lists running containers" {
   [ -z "$($APP ps -q)" ]
   docker/local run --name=$name $DEX_NAMESPACE/test-repo/alpine:latest
   [ -n "$($APP ps -q)" ]
+}
+
+@test "ps output resembles docker ps command" {
+  docker/local run --name=$name $DEX_NAMESPACE/test-repo/alpine:latest
   diff <($APP ps -q) <(docker/local ps -aq --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE)
-  diff <($APP ps) <(docker/local ps -a --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE)
+  diff <($APP ps --format "{{.Repository}}") <(docker/local ps -a --format "{{.Repository}}" --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE)
 }
 
 @test "ps -a lists containers across runtimes" {
