@@ -6,104 +6,99 @@
 
 load app
 
-export DEX_NAMESPACE="dex/v1-tests"
-export DEX_BIN_DIR=$TMPDIR/usr/local/bin/installs
-
 setup(){
-  [ -e $APP ] || install_dex
-  [ -d $DEX_BIN_DIR ] || mkdir -p $DEX_BIN_DIR
-  mk-imgtest
+  make/test-repo &>/dev/null
+  app/var DEX_BIN_PREFIX
+  app/var DEX_BIN_DIR
 }
 
 teardown(){
-  chmod 755 $DEX_BIN_DIR
   rm -rf $DEX_BIN_DIR
 }
 
-imgcount(){
-  echo $(ls -1 $DEX_BIN_DIR | wc -l)
-}
-
-@test "install errors if it cannot write(126)|access(127) DEX_BIN_DIR" {
-
-  chmod 000 $DEX_BIN_DIR
-  run $APP install imgtest/alpine
+@test "install errors if it cannot write(126)" {
+  mkdir -p "$DEX_BIN_DIR"
+  chmod 000 "$DEX_BIN_DIR"
+  run $APP install test-repo/alpine
   [ $status -eq 126 ]
-
-  chmod 755 $DEX_BIN_DIR && rm -rf $DEX_BIN_DIR
-  run $APP install imgtest/alpine
-  [ $status -eq 127 ]
 }
+
 
 @test "install errors if it cannot match any image(s)" {
-  run $APP install imgtest/certainly-missing
-  [ $status -eq 2 ]
+  run $APP install test-repo/certainly-missing
+  [ $status -eq 126 ]
 }
 
-@test "install adds tagged runtime to DEX_BIN_DIR and a prefixed link to it" {
-  [ $(imgcount) -eq 0 ]
-  eval $($APP vars DEX_BIN_PREFIX)
-
-  run $APP install imgtest/alpine:latest
-
+@test "install creates DEX_BIN dir and writes tag runtime and prefixed link" {
+  run $APP install test-repo/alpine:latest
   [ $status -eq 0 ]
-  [ $(imgcount) -eq 2 ]
-  [ -e $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine-latest ]
-  [ -L $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine ]
+
+  [ -d "$DEX_BIN_DIR" ]
+  [ -e "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine-latest" ]
+  [ -L "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine" ]
 }
 
 @test "install writes _behaving dexecutables_ to DEX_BIN_DIR"  {
-
-  export TMPDIR=$TMPDIR
-  mkdir -p $TMPDIR/label-test/{home,vol,workspace}
-
-  eval $($APP vars DEX_BIN_PREFIX)
-  run $APP install imgtest/labels
-
+  run $APP install test-repo/debian:latest
   [ $status -eq 0 ]
-  [ -x $DEX_BIN_DIR/${DEX_BIN_PREFIX}labels ]
+  [ -x "$DEX_BIN_DIR/${DEX_BIN_PREFIX}debian" ]
 
-  run $DEX_BIN_DIR/${DEX_BIN_PREFIX}labels
-  [[ $output == *"DEBIAN_RELEASE"* ]]
+  run "$DEX_BIN_DIR/${DEX_BIN_PREFIX}debian"
+  [[ "$output" == *"DEBIAN_RELEASE"* ]]
 
-  output=$(echo "foo" | $DEX_BIN_DIR/${DEX_BIN_PREFIX}labels sed 's/foo/bar/')
-  [ $? -eq 0 ]
+  output=$(echo "foo" | $DEX_BIN_DIR/${DEX_BIN_PREFIX}debian sed 's/foo/bar/')
   [ "$output" = "bar" ]
 }
 
-@test "install adds matching images to DEX_BIN_DIR" {
-  [ $(imgcount) -eq 0 ]
-
-  local repo_image_count=$(ls -ld $DEX_HOME/checkouts/imgtest/dex-images/* | wc -l)
-
-  run $APP install imgtest/*
+@test "install supports repotags" {
+  run $APP install :8 alpine:latest
   [ $status -eq 0 ]
-  [ $(imgcount) -eq $(($repo_image_count + $repo_image_count)) ]
+  [ $(ls -1 "$DEX_BIN_DIR" | wc -l) -eq 4 ]
 }
 
 @test "install adds symlink to runtime script when --global flag is passed" {
-  eval $($APP vars DEX_BIN_PREFIX)
-  run $APP install --global imgtest/alpine
+  run $APP install --global test-repo/alpine:latest
 
   [ $status -eq 0 ]
-  [ -e $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine ]
-  [ -L $DEX_BIN_DIR/alpine ]
+  [ -e "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine" ]
+  [ -L "$DEX_BIN_DIR/alpine" ]
 }
 
-@test "install will not overwrite existing files, except when --force is passed" {
+@test "install prompts to overwrite existing files" {
+  mkdir -p "$DEX_BIN_DIR"
+  touch "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine"
+  touch "$DEX_BIN_DIR/alpine"
 
-  eval $($APP vars DEX_BIN_PREFIX)
-  touch $DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine
-  touch $DEX_BIN_DIR/alpine
+  yes "n" | run $APP install --global test-repo/alpine
+  [ -z "$(cat "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine")" ]
+  [ ! -L "$DEX_BIN_DIR/alpine" ]
 
-  run $APP install --global imgtest/alpine
-  [[ $output = *"$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine exists"* ]]
-  [[ $output = *"skipped linking alpine to ${DEX_BIN_PREFIX}alpine-latest"* ]]
-
-  run $APP install --global --force imgtest/alpine
-  [ -L $DEX_BIN_DIR/dalpine ]
-  [ -L $DEX_BIN_DIR/alpine ]
+  yes "y" | run $APP install --global test-repo/alpine
+  [ -n "$(cat "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine")" ]
+  [ -L "$DEX_BIN_DIR/alpine" ]
 }
 
+@test "install respects --force flag" {
+  mkdir -p "$DEX_BIN_DIR"
+  touch "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine"
+  touch "$DEX_BIN_DIR/alpine"
+
+  $APP install --force --global test-repo/alpine
+  [ -n "$(cat "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine")" ]
+  [ -L "$DEX_BIN_DIR/alpine" ]
+}
+
+@test "install complains if DEX_BIN_DIR not in PATH" {
+  run $APP install --force --global test-repo/alpine
+  [[ "$output" == *"DEX_BIN_DIR is missing from your PATH"* ]]
+
+  export PATH="$DEX_BIN_DIR:$PATH"
+  run $APP install --force --global test-repo/alpine
+  [[ "$output" != *"DEX_BIN_DIR is missing from your PATH"* ]]
+
+  export PATH="$PATH:$DEX_BIN_DIR"
+  run $APP install --force --global test-repo/alpine
+  [[ "$output" != *"DEX_BIN_DIR is missing from your PATH"* ]]
+}
 
 #@TODO test label failures, e.g. when org.dockerland.dex.api is missing
