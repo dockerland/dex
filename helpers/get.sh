@@ -10,9 +10,9 @@ dex/get-image(){
 
   local flags=(
     "-q"
-    "--filter \"dangling=false\""
-    "--filter \"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
-    "--filter \"label=org.dockerland.dex.image=$image\""
+    "--filter dangling=false"
+    "--filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
+    "--filter label=org.dockerland.dex.image=$image"
   )
 
   [ -n "$repo" ] && flags+=( "--filter=\"label=org.dockerland.dex.repo=$repo\"" )
