@@ -7,7 +7,7 @@ main_conf(){
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
-        die/help  ;;
+        die/help ;;
       -d|--defaults)
         dex/conf-reset ;;
       --)
