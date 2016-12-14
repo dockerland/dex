@@ -91,7 +91,7 @@ dex/image-build(){
           "--label=\"org.dockerland.dex.tag=$tag\""
         )
 
-        $__pull && flags+=( "--pull" )
+        $__pull && $DEX_NETWORK && flags+=( "--pull" )
         is/in_file "^ARG DEXBUILD_NOCACHE" "$Dockerfile" && flags+=( "--build-arg DEXBUILD_NOCACHE=$random" )
 
         docker/local build ${flags[@]} . || exit 1
@@ -146,7 +146,7 @@ dex/image-rm(){
   $__force && flags+=( "--force" )
   for image in $(quiet=true dex/image-ls "$@"); do
     $__force || prompt/confirm "remove $image ?" || continue
-    
+
     for container in $(docker/local ps -q --filter ancestor=$image); do
       docker/local rm ${flags[@]} $container
     done
