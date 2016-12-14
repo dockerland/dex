@@ -47,6 +47,7 @@ dex/install(){
   local tag
 
   (
+    success=false
     export DEX_NAMESPACE="${DEX_NAMESPACE}-install"
     for repostr in "$@"; do
 
@@ -103,9 +104,17 @@ dex/install(){
         }
 
         p/success "installed $repo/$image:$tag"
+        success=true
       done
     done
+    $success || exit 126
   )
+
+  shell/is/in_path "$DEX_BIN_DIR" || p/warn \
+    "DEX_BIN_DIR is missing from your PATH!" \
+    "add $DEX_BIN_DIR to your PATH to execute installed images from anywhere." \
+    "if you prefer dex images over system installed commands," \
+    "  prioritize DEX_BIN_DIR by placing at the beginning (leftmost) of PATH" 
 }
 
 # dex-install-link <src> <dest>

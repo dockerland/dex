@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 3d46a87
+# shell-helpers version v2.0.0-pr build e8c11f5
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -674,6 +674,15 @@ shell/execfn(){
 
   "$@"
   exit $?
+}
+
+# shell/is/in_path <path|pattern>
+shell/is/in_path(){
+  # trim trailing slash from path|pattern
+  local pattern="$(echo "$1" | sed 's|/$||')"
+  local IFS=":"
+
+  is/in "$pattern" $PATH
 }
 # prompt/user - prompt for input, useful for assigning variiable values
 # usage: prompt/user <prompt message> [fallback value*]
