@@ -51,19 +51,6 @@ teardown(){
   [ "$output" = "bar" ]
 }
 
-@test "install supports repotags" {
-  run $APP install :8 alpine:latest
-  [ $status -eq 0 ]
-  [ $(ls -1 "$DEX_BIN_DIR" | wc -l) -eq 4 ]
-}
-
-@test "install adds symlink to runtime script when --global flag is passed" {
-  run $APP install --global test-repo/alpine:latest
-
-  [ $status -eq 0 ]
-  [ -e "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine" ]
-  [ -L "$DEX_BIN_DIR/alpine" ]
-}
 
 @test "install prompts to overwrite existing files" {
   mkdir -p "$DEX_BIN_DIR"
@@ -79,6 +66,7 @@ teardown(){
   [ -L "$DEX_BIN_DIR/alpine" ]
 }
 
+
 @test "install respects --force flag" {
   mkdir -p "$DEX_BIN_DIR"
   touch "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine"
@@ -86,6 +74,21 @@ teardown(){
 
   $APP install --force --global test-repo/alpine
   [ -n "$(cat "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine")" ]
+  [ -L "$DEX_BIN_DIR/alpine" ]
+}
+
+
+@test "install supports multiple repotags" {
+  run $APP install --force :8 alpine:latest
+  [ $status -eq 0 ]
+  [ $(ls -1 "$DEX_BIN_DIR" | wc -l) -eq 4 ]
+}
+
+@test "install adds symlink to runtime script when --global flag is passed" {
+  run $APP install --force --global test-repo/alpine:latest
+
+  [ $status -eq 0 ]
+  [ -e "$DEX_BIN_DIR/${DEX_BIN_PREFIX}alpine" ]
   [ -L "$DEX_BIN_DIR/alpine" ]
 }
 
@@ -103,3 +106,4 @@ teardown(){
 }
 
 #@TODO test label failures, e.g. when org.dockerland.dex.api is missing
+#@TODO test that installation of a repo installs _all_ images, and if no :latest, all versions of that image.
