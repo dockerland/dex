@@ -3,6 +3,7 @@ main_ps(){
   local list=()
   local global=false
   local quiet=false
+  local format
 
   set -- $(args/normalize_flags_first "" "$@")
   while [ $# -ne 0 ]; do
@@ -11,6 +12,8 @@ main_ps(){
         die/help ;;
       -a|--all)
         global=true ;;
+      --format)
+        format="$2" ; shift ;;
       -q|--quiet)
         quiet=true ;;
       --)
@@ -50,6 +53,7 @@ dex/ps(){
     [ -n "$image" ] && flags+=( "--filter=label=org.dockerland.dex.image=$image" )
     [ -n "$repo" ] && flags+=( "--filter=label=org.dockerland.dex.repo=$repo" )
     [ -n "$tag" ] && flags+=( "--filter=label=org.dockerland.dex.tag=$tag" )
+    [ -n "$format" ] && flags+=( "--format $format" )
     $quiet && flags+=( "-q" )
 
     docker/local ps -a ${flags[@]}
