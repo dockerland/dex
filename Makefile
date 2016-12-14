@@ -48,7 +48,7 @@ DOCKER_SOCKET ?= /var/run/docker.sock
 DOCKER_GROUP_ID ?= $(shell ls -ln $(DOCKER_SOCKET) | awk '{print $$4}')
 
 # for docker-for-mac, we also add group-id of 50 ("authedusers") as moby distro seems to auto bind-mount /var/run/docker.sock w/ this ownership
-DOCKER_FOR_MAC_WORKAROUND := $(shell [[ "$$OSTYPE" == darwin* ]] || [[ "$$OSTYPE" == macos* ]] && echo "--group-add=50")
+DOCKER_FOR_MAC_WORKAROUND := $(shell [[ "$$OSTYPE" == darwin* || "$$OSTYPE" == macos* ]] && echo "--group-add=50")
 
 TEST ?=
 SKIP_NETWORK_TEST ?=

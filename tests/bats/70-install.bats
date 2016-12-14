@@ -13,7 +13,8 @@ setup(){
 }
 
 teardown(){
-  rm -rf $DEX_BIN_DIR
+  chmod 755 "$DEX_BIN_DIR" || true
+  rm -rf "$DEX_BIN_DIR"
 }
 
 @test "install errors if it cannot write(126)" {

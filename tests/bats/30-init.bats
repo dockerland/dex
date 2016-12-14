@@ -27,9 +27,9 @@ load app
 
 @test "init exits with status code 126 if DEX_HOME is not writable" {
   rm -rf "$DEX_HOME"
-  mkdir -p $DEX_HOME && chmod 000 $DEX_HOME
+  mkdir -p "$DEX_HOME" && chmod 000 "$DEX_HOME"
   run $APP
-  rm -rf "$DEX_HOME"
+  chmod 755 "$DEX_HOME" && rm -rf "$DEX_HOME"
   [ $status -eq 126 ]
 }
 
