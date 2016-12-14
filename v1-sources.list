@@ -3,5 +3,5 @@
 # @aardvark
 #
 
-core git@github.com:dockerland/dex-dockerfiles-core.git
-extra git@github.com:dockerland/dex-dockerfiles-extra.git
+core https://github.com/dockerland/dex-dockerfiles-core.git
+extra https://github.com/dockerland/dex-dockerfiles-extra.git

@@ -1,12 +1,25 @@
 #!/usr/bin/env bash
 
 v1-runtime(){
-  DEX_HOME=${DEX_HOME:-~/.dex}
-  [ -z "$__image" ] && { echo "missing runtime image" ; exit 1 ; }
-  IFS=":" read -r __name __tag <<< "$__image"
 
-  read -d "\n" DEX_HOST_UID DEX_HOST_GID DEX_HOST_USER DEX_HOST_GROUP DEX_HOST_PWD DEX_IMAGE_NAME < <(
-    exec 2>/dev/null ; id -u ; id -g ; id -un ; id -gn ; pwd ; basename $__name )
+  #
+  # initialization
+  #
+
+  [[ -z "$__repotag" || -z "$__name" || -z "$__tag" ]] && \
+    die "\e[1m$FUNCNAME\e[21m - missing repotag ($__repotag), name ($__name), or tag ($__tag)"
+
+  # deactivate docker-machine
+  docker/deactivate-machine
+  DEX_HOME=${DEX_HOME:-~/.dex}
+
+  # ensure DEX_HOME is absolute
+  is/absolute "$DEX_HOME" || DEX_HOME="$(pwd)/$DEX_HOME"
+
+
+  # it's faster to execute these in a single child process ...
+  read -d "\n" DEX_HOST_UID DEX_HOST_GID DEX_HOST_USER DEX_HOST_GROUP DEX_HOST_PWD < <(
+    exec 2>/dev/null ; id -u ; id -g ; id -un ; id -gn ; pwd  ) || true
 
   # label defaults -- images may provide a org.dockerland.dex.<var> label
   #  supplying a value that overrides these default values, examples are:
@@ -23,35 +36,35 @@ v1-runtime(){
   #  org.dockerland.dex.host_users=ro             (augment container's /etc/passwd and /etc/group files [in read-only mode] with current host's uid|gid)
   #  org.dockerland.dex.window=yes                (applies window/X11 flags)
   #
-  __docker_devices=
-  __docker_envars="LANG TZ"
-  __docker_flags=
-  __docker_groups=
-  __docker_home=$DEX_IMAGE_NAME-$__tag
-  __docker_workspace=$DEX_HOST_PWD
-  __docker_volumes=
-  __host_docker=
-  __host_paths="ro"
-  __host_users=
+  local docker_devices=
+  local docker_envars="LANG TZ"
+  local docker_flags=
+  local docker_groups=
+  local docker_home="$__name-$__tag"
+  local docker_workspace="$DEX_HOST_PWD"
+  local docker_volumes=
+  local host_docker=
+  local host_paths="ro"
+  local host_users=
+  local window=
 
-  __window=
+  #
+  # runtime assignments
+  #
 
-  # augment defaults with image meta
-  for label in api docker_devices docker_envars docker_flags docker_groups docker_home docker_workspace docker_volumes host_docker host_paths host_users window ; do
-    # @TODO reduce this to a single docker inspect command
-    val=$(__local_docker inspect --type image --format "{{ index .Config.Labels \"org.dockerland.dex.$label\" }}" $__image)
-    [ -z "$val" ] && continue
-    eval "__$label=\"$val\""
-  done
+  # augment defaults with image labels
+  local label
+  local value
+  while read label value ; do
+    [[ -z "$label" || ! "${label:0:19}" == "org.dockerland.dex." ]] && continue #docker-cli injects newline...
+    eval "${label/org.dockerland.dex.}=\"$value\""
+  done < <(docker inspect --type image -f '{{range $key, $value := .Config.Labels }}{{println $key $value }}{{ end }}' $__repotag)
 
-  ${__interactive_flag:-false} && __docker_flags+=" --tty --interactive"
-  ${__persist_flag:-false} || __docker_flags+=" --rm"
-
-  # rutime defaults -- override these by passing run flags, or through
-  # exporting the following vars:
+  # rutime defaults -- override through 'run' flags or exporting variables
   #
   # DEX_DOCKER_CMD - alternative command passed to docker run
   # DEX_DOCKER_ENTRYPOINT - alternative entrypoint passed to docker run
+  # DEX_DOCKER_FLAGS - additional flags passed to docker
   #
   # DEX_DOCKER_HOME - host directory mounted as the container's $HOME
   # DEX_DOCKER_WORKSPACE - host directory mounted as the container's CWD
@@ -62,152 +75,174 @@ v1-runtime(){
   # DEX_DOCKER_LOG_DRIVER - docker logging driver
   # DEX_WINDOW_FLAGS - flags applied to windowed/X11 images
   #
-  DEX_DOCKER_CMD=${DEX_DOCKER_CMD:-}
-  DEX_DOCKER_ENTRYPOINT=${DEX_DOCKER_ENTRYPOINT:-}
+  DEX_DOCKER_CMD="${DEX_DOCKER_CMD:-}"
+  DEX_DOCKER_ENTRYPOINT="${DEX_DOCKER_ENTRYPOINT:-}"
+  DEX_DOCKER_FLAGS="${DEX_DOCKER_FLAGS:-}"
 
-  DEX_DOCKER_HOME=${DEX_DOCKER_HOME:-$__docker_home}
-  DEX_DOCKER_HOME=${DEX_DOCKER_HOME/#\~/$HOME}
-  DEX_DOCKER_WORKSPACE=${DEX_DOCKER_WORKSPACE:-$__docker_workspace}
+  DEX_DOCKER_HOME="${DEX_DOCKER_HOME:-$docker_home}"
+  DEX_DOCKER_HOME="${DEX_DOCKER_HOME/#\~/$HOME}"
+  DEX_DOCKER_WORKSPACE="${DEX_DOCKER_WORKSPACE:-$docker_workspace}"
 
-  DEX_DOCKER_GID=${DEX_DOCKER_GID:-$DEX_HOST_GID}
-  DEX_DOCKER_UID=${DEX_DOCKER_UID:-$DEX_HOST_UID}
+  DEX_DOCKER_GID="${DEX_DOCKER_GID:-$DEX_HOST_GID}"
+  DEX_DOCKER_UID="${DEX_DOCKER_UID:-$DEX_HOST_UID}"
 
-  DEX_DOCKER_LOG_DRIVER=${DEX_DOCKER_LOG_DRIVER:-'none'}
-  DEX_WINDOW_FLAGS=${DEX_WINDOW_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}
+  DEX_DOCKER_LOG_DRIVER="${DEX_DOCKER_LOG_DRIVER:-none}"
+  DEX_WINDOW_FLAGS="${DEX_WINDOW_FLAGS:-"-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY"}"
+  DEX_PERSIST="${DEX_PERSIST:-false}"
 
-  [ -z "$__api" ] && \
-    { echo "$__image did not specify an org.dockerland.dex.api label!" ; exit 1 ; }
+  # containers are removed by default...
+  $DEX_PERSIST || docker_flags+=" --rm"
 
   # if home is not an absolute path, make relative to $DEX_HOME/homes/
-  [ "${DEX_DOCKER_HOME:0:1}" != '/' ] && \
+  is/absolute "$DEX_DOCKER_HOME" || \
     DEX_DOCKER_HOME=$DEX_HOME/homes/$DEX_DOCKER_HOME
 
+  [ -z "$DEX_DOCKER_ENTRYPOINT" ] || \
+    docker_flags+=" --entrypoint=$DEX_DOCKER_ENTRYPOINT"
+
+  [ -z "$DEX_DOCKER_FLAGS" ] || \
+    docker_flags+=" --entrypoint=$DEX_DOCKER_FLAGS"
+
+
+  #
+  # sanity
+  #
+
+  [ -z "$runtime" ] && \
+    die "\e[1m$FUNCNAME\e[21m - $__repotag must provide a org.dockerland.dex.runtime label!"
+
   [ -d "$DEX_DOCKER_HOME" ] || mkdir -p $DEX_DOCKER_HOME || \
-    { echo "unable to stub home directory: $DEX_DOCKER_HOME" ; exit 1 ; }
+    die "\e[1m$FUNCNAME\e[21m - unable to stub home directory: $DEX_DOCKER_HOME"
 
   [ -d "$DEX_DOCKER_WORKSPACE" ] || \
-    { echo "workspace is not a directory: $DEX_DOCKER_WORKSPACE" ; exit 1 ; }
+    die "\e[1m$FUNCNAME\e[21m - workspace is not a directory: $DEX_DOCKER_WORKSPACE"
 
-  [ -z "$DEX_DOCKER_ENTRYPOINT" ] || \
-    __docker_flags+=" --entrypoint=$DEX_DOCKER_ENTRYPOINT"
 
-  # piping to|from a container requires interactive, non-tty input
-  if [ ! -t 1 ] || ! tty -s > /dev/null 2>&1 ; then
-    __docker_flags+=" --interactive=true --tty=false"
-  fi
+
+  #
+  # label assignments
+  #
 
   # apply windowing vars (if window=true)
-  case $(echo "$__window" | awk '{print tolower($0)}') in true|yes|on)
-      __docker_flags+=" $DEX_WINDOW_FLAGS -e DEX_WINDOW=true"
-      __docker_groups+=" audio video"
-      __docker_devices+=" dri snd video video0"
-      __docker_volumes+=" /dev/shm /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro /etc/machine-id:/etc/machine-id:ro"
+  is/any "$window" "true" "yes" "on" && {
+    docker_flags+=" $DEX_WINDOW_FLAGS -e DEX_WINDOW=true"
+    docker_groups+=" audio video"
+    docker_devices+=" dri snd video video0"
+    docker_volumes+=" /dev/shm /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro /etc/machine-id:/etc/machine-id:ro"
 
-      # @TODO bats testing
-      [ -z "$XDG_RUNTIME_DIR" ] || {
-        __docker_flags+=" -v $XDG_RUNTIME_DIR:/var/run/xdg -e XDG_RUNTIME_DIR=/var/run/xdg"
-      }
+    # @TODO bats testing
+    [ -z "$XDG_RUNTIME_DIR" ] || {
+      docker_flags+=" -v $XDG_RUNTIME_DIR:/var/run/xdg -e XDG_RUNTIME_DIR=/var/run/xdg"
+    }
 
-      # append xauth
-      # @TODO test under fedora, opensuse, ubuntu
-      # @TODO bats testing
-      type xauth &>/dev/null && {
-        __xauth=$DEX_HOME/.xauth
-        touch $__xauth && \
-          xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $__xauth nmerge - &>/dev/null && \
-          __docker_flags+=" -v $__xauth:/tmp/.xauth -e XAUTHORITY=/tmp/.xauth"
-      }
+    # append xauth
+    # @TODO test under fedora, opensuse, ubuntu
+    # @TODO bats testing
+    type xauth &>/dev/null && {
+      local xauth=$DEX_HOME/.xauth
+      touch $xauth && \
+        xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $xauth nmerge - &>/dev/null && \
+        docker_flags+=" -v $xauth:/tmp/.xauth -e XAUTHORITY=/tmp/.xauth"
+    }
 
-      # lookup CONFIG_USER_NS (e.g. for chrome sandbox),
-      #   and add SYS_ADMIN cap if missing
-      type zgrep &>/dev/null && {
-        zgrep CONFIG_USER_NS=y /proc/config.gz &>/dev/null || \
-          __docker_flags+=" --cap-add=SYS_ADMIN"
-      }
-      ;;
-  esac
+    # lookup CONFIG_USER_NS (e.g. for chrome sandbox),
+    #   and add SYS_ADMIN cap if missing
+    type zgrep &>/dev/null && {
+      zgrep CONFIG_USER_NS=y /proc/config.gz &>/dev/null || \
+        docker_flags+=" --cap-add=SYS_ADMIN"
+    }
+  }
 
   # mount typical host paths to coax common absolute path resolutions
-  case $(echo "$__host_paths" | awk '{print tolower($0)}') in rw|ro)
+  is/any "$host_paths" "ro" "rw" && {
     if [[ ! "$HOME" =~ ^($DEX_HOST_PWD|/dex/home)$ ]]; then
-      __docker_volumes+=" $HOME:$HOME:$__host_paths"
+      docker_volumes+=" $HOME:$HOME:$host_paths"
     fi
     if [[ ! "$DEX_HOST_PWD" =~ ^($HOME|/dex/workspace|/|/bin|/dev|/etc|/lib|/lib64|/opt|/proc|/sbin|/run|/sbin|/srv|/sys|/usr|/var)$ ]]; then
-      __docker_volumes+=" $DEX_HOST_PWD:$DEX_HOST_PWD:$__host_paths"
+      docker_volumes+=" $DEX_HOST_PWD:$DEX_HOST_PWD:$host_paths"
     fi
-  esac
+  }
 
-  # map host /etc/passwd and /etc/group in container
-  case $(echo "$__host_users" | awk '{print tolower($0)}') in rw|ro)
-    container_sha=$(dex-image-build-container $__image) || {
-      echo "dex runtime failed to spawn a build container"
-      exit 1
-    }
-    container_dir=$DEX_HOME/build-containers/$container_sha
-    [ -d $container_dir ] || mkdir -p $container_dir
-    [ -e $container_dir/passwd ] || __local_docker cp $container_sha:/etc/passwd $container_dir/passwd
-    [ -e $container_dir/group ] || __local_docker cp $container_sha:/etc/group $container_dir/group
+  # add real host user and group to container's /etc/passwd and /etc/group
+  is/any "$host_users" "ro" "rw" && {
+    reference_path="$(dex/get/reference-path $__repotag)"
+    [ -d "$reference_path" ] || dex/run/mk-reference "$__repotag" || die \
+      "\e[1m$FUNCNAME\e[21m - mk-reference failed"
 
     # augment /etc/passwd and /etc/group files with current user (if !already exists)
-    grep -q ":$DEX_HOST_UID:$DEX_HOST_GID:" $container_dir/passwd || \
-      echo "$DEX_HOST_USER:x:$DEX_HOST_UID:$DEX_HOST_UID:gecos:/dex/home:/bin/sh" >> $container_dir/passwd
-    grep -q ":$DEX_HOST_GID:" $container_dir/group || \
-      echo "$DEX_HOST_GROUP:x:$DEX_HOST_GID:" >> $container_dir/group
+    grep -q ":$DEX_HOST_UID:$DEX_HOST_GID:" $reference_path/passwd || \
+      echo "$DEX_HOST_USER:x:$DEX_HOST_UID:$DEX_HOST_UID:gecos:/dex/home:/bin/sh" >> "$reference_path/passwd"
+    grep -q ":$DEX_HOST_GID:" $reference_path/group || \
+      echo "$DEX_HOST_GROUP:x:$DEX_HOST_GID:" >> "$reference_path/group"
 
-    __docker_volumes+=" $container_dir/passwd:/etc/passwd:$__host_users $container_dir/group:/etc/group:$__host_users"
-  esac
+    docker_volumes+=" $reference_path/passwd:/etc/passwd:$host_users $reference_path/group:/etc/group:$host_users"
+  }
 
   # map host docker socket and passthru docker vars
-  case $(echo "$__host_docker" | awk '{print tolower($0)}') in rw|ro)
-    __docker_socket=${DOCKER_SOCKET:-/var/run/docker.sock}
-    [ -S $__docker_socket ] || {
-      echo "image requests docker, but $__docker_socket is not a valid socket"
-      exit 1
-    }
-    __docker_volumes+=" $__docker_socket:/var/run/docker.sock:$__host_docker $DOCKER_CERT_PATH $MACHINE_STORAGE_PATH"
-    __docker_flags+=" --group-add=$(ls -ln $__docker_socket | awk '{print $4}')"
-    __docker_envars+=" DOCKER_* MACHINE_STORAGE_PATH"
-  esac
+  is/any "$host_docker" "ro" "rw" && {
+    local docker_socket="${DOCKER_SOCKET:-/var/run/docker.sock}"
+    [ -S "$docker_socket" ] || \
+      die "\e[1m$FUNCNAME\e[21m - image requests docker, but $docker_socket is not a valid socket"
+
+    docker_volumes+=" $docker_socket:/var/run/docker.sock:$host_docker $DOCKER_CERT_PATH $MACHINE_STORAGE_PATH"
+    docker_flags+=" --group-add=$(ls -ln $docker_socket | awk '{print $4}')"
+    docker_envars+=" DOCKER_* MACHINE_STORAGE_PATH"
+  }
+
+  local path
+  local group
 
   # mount specicified devices (only if they exist)
-  for path in $__docker_devices; do
+  for path in $docker_devices; do
     [ "${path:0:5}" = "/dev/" ] || path="/dev/$path"
-    [ -e $path ] && __docker_flags+=" --device=$path"
+    [ -e "$path" ] && docker_flags+=" --device=$path"
   done
 
   # mount specified volumes (only if they exist)
-  for path in $__docker_volumes; do
+  for path in $docker_volumes; do
     IFS=":" read path_host path_container path_mode <<< "$path"
-    path_host=${path_host/#\~/$HOME}
+    path_host="${path_host/#\~/$HOME}"
     [ -e "$path_host" ] || continue
-    __docker_flags+=" -v $path_host:${path_container:-$path_host}:${path_mode:-rw}"
+    docker_flags+=" -v $path_host:${path_container:-$path_host}:${path_mode:-rw}"
   done
 
   # add specified groups (only if they exist)
-  for group in $__docker_groups; do
-    gid=$(get_group_id $group)
-    [ -z "$gid" ] || __docker_flags+=" --group-add=$gid"
+  for group in $docker_groups; do
+    #@TODO should we test if group is numeric?
+    gid="$(get/gid_from_name $group)"
+    [ -z "$gid" ] || docker_flags+=" --group-add=$gid"
   done
 
   # assign passthru envars (if empty)
-  # @TODO can probably refactor here...
-  __vars=""
-  for var in $__docker_envars; do
-    if [[ $var == *"*" ]]; then
-      eval "for var in \${!$var}; do __vars+=\" \$var\" ; done"
+  local vars=()
+  local var
+  for var in $docker_envars; do
+    if [[ "$var" == *"*" ]]; then
+      eval "for var in \${!$var}; do vars+=( \"\$var\" ) ; done"
     else
-      __vars+=" $var"
+      vars+=( "$var" )
     fi
   done
-  for var in $__vars; do
-    eval "[ -z \"\$$var\" ] || __docker_flags+=\" -e $var=\$$var\""
+  for var in "${vars[@]}"; do
+    eval "[ -z \"\$$var\" ] || docker_flags+=\" -e $var=\$$var\""
   done
 
-  # deactivate docker-machine
-  __deactivate_machine
+  #
+  # execution
+  #
 
-  ${DEX_DEBUG:=false} && __exec="echo"
-  ${__exec:-exec} docker run $__docker_flags \
+  # piping to|from a container requires interactive, non-tty input
+  # lets do this last to take priority over earlier flags
+  if [ ! -t 1 ] || ! tty -s > /dev/null 2>&1 ; then
+    docker_flags+=" --interactive=true --tty=false"
+  fi
+
+  # allow debugging by passing DEX_DEBUG=true, e.g.
+  #  DEX_DEBUG=true dex run sed ...
+  local cmd="exec"
+  ${DEX_DEBUG:=false} && cmd="echo"
+
+  $cmd docker run $docker_flags \
     -e DEX_DOCKER_HOME=$DEX_DOCKER_HOME \
     -e DEX_DOCKER_WORKSPACE=$DEX_DOCKER_WORKSPACE \
     -e DEX_HOST_GID=$DEX_HOST_GID \
@@ -216,8 +251,8 @@ v1-runtime(){
     -e DEX_HOST_UID=$DEX_HOST_UID \
     -e DEX_HOST_USER=$DEX_HOST_USER \
     -e DEX_HOST_HOME=$HOME \
-    -e DEX_IMAGE=$__image \
-    -e DEX_IMAGE_NAME=$DEX_IMAGE_NAME \
+    -e DEX_IMAGE=$__repotag \
+    -e DEX_IMAGE_NAME=$__name \
     -e DEX_IMAGE_TAG=$__tag \
     -e HOME=/dex/home \
     -u $DEX_DOCKER_UID:$DEX_DOCKER_GID \
@@ -225,5 +260,5 @@ v1-runtime(){
     -v $DEX_DOCKER_WORKSPACE:/dex/workspace \
     --log-driver=$DEX_DOCKER_LOG_DRIVER \
     --workdir=/dex/workspace \
-    $__image $DEX_DOCKER_CMD $@
+    $__repotag $DEX_DOCKER_CMD $@
 }

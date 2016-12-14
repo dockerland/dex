@@ -3,7 +3,7 @@
 #BATS_TEST_DIRNAME=<autoloaded by bats>-
 NAMESPACE=dex
 REPO_ROOT=${REPO_ROOT:-"$(git rev-parse --show-toplevel)"}
-TMPDIR=$BATS_TEST_DIRNAME/tmp
+TMPDIR="$BATS_TEST_DIRNAME/tmp"
 
 #
 # bootstrap
@@ -20,25 +20,23 @@ HELPERS_LOADED=true
 # runtime fns
 #
 
-error(){
-  printf "\033[31m%s\n\033[0m" "$@" >&2
-  exit 1
+fixture/cat(){
+  local fixture="$(fixture/resolve "$1")"
+  cat "$fixture"
 }
 
-cat_fixture(){
-  local fixture=$BATS_TEST_DIRNAME/fixtures/$1
-  [ -e $fixture ] || fixture=$BATS_TEST_DIRNAME/../fixtures/$1
-  [ -e $fixture ] || error "unable to resolve fixture $1"
-
-  cat $fixture
-  return 0
+fixture/cp(){
+  local fixture="$(fixture/resolve "$1")"
+  local target="$2"
+  cp -R "$fixture" "$target"
 }
 
-cp_fixture(){
-  local fixture=$BATS_TEST_DIRNAME/fixtures/$1
-  [ -e $fixture ] || fixture=$BATS_TEST_DIRNAME/../fixtures/$1
-  [ -e $fixture ] || error "unable to resolve fixture $1"
-
-  cp -R $fixture $2
-  return $?
+fixture/resolve(){
+  local fixture="$BATS_TEST_DIRNAME/fixtures/$1"
+  [ -e $fixture ] || fixture="$BATS_TEST_DIRNAME/../fixtures/$1"
+  echo "$fixture"
 }
+
+
+# allow shell helpers
+source $REPO_ROOT/lib.d/helpers/shell-helpers.sh
