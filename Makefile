@@ -86,55 +86,53 @@ tests: dockerbuild-tests clean-tests
 .PHONY: release prerelease _mkrelease
 
 RELEASE_VERSION ?=
+RELEASE_BRANCH ?=
+MERGE_BRANCH ?= HEAD
 
 GH_TOKEN ?=
 GH_URL ?= https://api.github.com
 GH_UPLOAD_URL ?= https://uploads.github.com
-GH_PROJECT:=briceburg/shell-helpers
+GH_PROJECT:=dockerland/dex
 
 REMOTE_GH:=origin
 REMOTE_LOCAL:=local
 
-prerelease: BRANCH = prerelease
-prerelease: MERGE_BRANCH = master
 prerelease: PRERELEASE = true
 prerelease: _mkrelease
 
-release: BRANCH = release
-release: MERGE_BRANCH = master
 release: PRERELEASE = false
 release: _mkrelease
 
 _mkrelease: RELEASE_TAG = v$(RELEASE_VERSION)$(shell $(PRERELEASE) && echo '-pr')
 _mkrelease: _release_check $(NAMESPACE)
-	git push $(REMOTE_LOCAL) $(MERGE_BRANCH):$(BRANCH)
-	git push $(REMOTE_GH) $(BRANCH)
-	$(eval RELEASE_SHA=$(shell git rev-parse $(BRANCH)))
+	git push --force $(REMOTE_LOCAL) $(MERGE_BRANCH):$(RELEASE_BRANCH)
+	git push $(REMOTE_GH) $(RELEASE_BRANCH)
+	$(eval RELEASE_SHA=$(shell git rev-parse $(RELEASE_BRANCH)))
 	$(eval CREATE_JSON=$(shell printf '{"tag_name": "%s","target_commitish": "%s","draft": false,"prerelease": %s}' $(RELEASE_TAG) $(RELEASE_SHA) $(PRERELEASE)))
-	@( \
+	( \
 	  cd $(CURDIR) ; \
-	  echo "  * attempting to create release $(RELEASE_TAG) ..." ; \
 		id=$$(curl -sLH "Authorization: token $(GH_TOKEN)" $(GH_URL)/repos/$(GH_PROJECT)/releases/tags/$(RELEASE_TAG) | jq -Me .id) ; \
 		if [ $$id = "null" ]; then \
-			echo "  * attempting to create release $(RELEASE_TAG) ..." ; \
-			id=$$(curl -sLH "Authorization: token $(GH_TOKEN)" -X POST --data '$(CREATE_JSON)' $(GH_URL)/repos/$(GH_PROJECT)/releases | jq -Me .id) ; \
+		  echo "  * attempting to create release $(RELEASE_TAG) ..." ; \
+      id=$$(curl -sLH "Authorization: token $(GH_TOKEN)" -X POST --data '$(CREATE_JSON)' $(GH_URL)/repos/$(GH_PROJECT)/releases | jq -Me .id) ; \
 		else \
-			echo "  * attempting to update release $(RELEASE_TAG) ..." ; \
+		  echo "  * attempting to update release $(RELEASE_TAG) ..." ; \
 			git push $(REMOTE_GH) :$(RELEASE_TAG) ; \
-			curl -sLH "Authorization: token $(GH_TOKEN)" -X PATCH --data '$(CREATE_JSON)' $(GH_URL)/repos/$(GH_PROJECT)/releases/$$id ; \
+		  curl -sLH "Authorization: token $(GH_TOKEN)" -X PATCH --data '$(CREATE_JSON)' $(GH_URL)/repos/$(GH_PROJECT)/releases/$$id ; \
 		fi ; \
 		[ $$id = "null" ] && echo "  !! unable to create release" && exit 1 ; \
 		echo "  * uploading dist/$(NAMESPACE) to release $(RELEASE_TAG) ($$id) ..." ; \
     curl -sL -H "Authorization: token $(GH_TOKEN)" -H "Content-Type: text/x-shellscript" --data-binary @"dist/$(NAMESPACE)" -X POST $(GH_UPLOAD_URL)/repos/$(GH_PROJECT)/releases/$$id/assets?name=$(NAMESPACE) &>/dev/null ; \
 	)
 
-	$(info * publishing to get.iceburg.net/$(NAMESPACE)/latest-$(MAKECMDGOALS)/)
+	$(info * publishing to get.iceburg.net/$(NAMESPACE)/latest-$(RELEASE_BRANCH)/)
 	@( \
+		set -e ; \
 	  cd $(CURDIR)/dist ; \
 		for file in * ; do \
-		  echo "# @$(NAMESPACE)_UPDATE_URL=http://get.iceburg.net/$(NAMESPACE)/latest-$(MAKECMDGOALS)/$$file" >> $$file ; \
+		  echo "# @$(NAMESPACE)_UPDATE_URL=http://get.iceburg.net/$(NAMESPACE)/latest-$(RELEASE_BRANCH)/$$file" >> $$file ; \
 		done ; \
-		drclone sync . iceburg_s3:get.iceburg.net/$(NAMESPACE)/latest-$(MAKECMDGOALS) ; \
+		drclone sync . iceburg_s3:get.iceburg.net/$(NAMESPACE)/latest-$(RELEASE_BRANCH) ; \
 	)
 
 
@@ -151,9 +149,15 @@ _release_check: _wc_check _git_check _gh_check
 		false )
 
 _git_check:
-	$(info ensure release branches, local remote, and checkout $(MERGE_BRANCH)...)
-	@git rev-parse --verify "$(BRANCH)" &>/dev/null || \
-	  git branch --track $(BRANCH) $(MERGE_BRANCH)
+	$(info ensure release branches, local remote)
+	@test ! -z "$(RELEASE_BRANCH)" || ( \
+		echo "  * please provide RELEASE_BRANCH - e.g. 'v1' 'v2' 'release' 'prerelease'" ; \
+		false )
+	@git rev-parse --verify "$(RELEASE_BRANCH)" &>/dev/null || { \
+    read -r -p "Release Branch $(RELEASE_BRANCH) does not exist. Create? [y/N] " CONTINUE; \
+    [[ "$$CONTINUE" =~ [Yy] ]] || { exit 1 ; } ; \
+		git branch --track $(RELEASE_BRANCH) $(MERGE_BRANCH) ; \
+	}
 	@git ls-remote --exit-code --heads $(REMOTE_LOCAL) &>/dev/null || \
 	  git remote add $(REMOTE_LOCAL) $(shell git rev-parse --show-toplevel)
 	@git checkout $(MERGE_BRANCH)
