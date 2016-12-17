@@ -1,5 +1,7 @@
 # dex
 
+[![Join the chat at https://gitter.im/dockerland/dex](https://badges.gitter.im/dockerland/dex.svg)](https://gitter.im/dockerland/dex?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/dockerland/dex.svg?branch=master)](https://travis-ci.org/dockerland/dex)
 
 Dex makes it easy to run applications _without_ the need to install them or
