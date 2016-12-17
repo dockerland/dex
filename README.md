@@ -60,7 +60,7 @@ dex is periodically packaged as a monolithic script and published to;
 * download a [release](https://github.com/dockerland/dex/releases/) and copy it to a folder in your $PATH
 
 ```sh
-curl -L http://get.iceburg.net/dex/latest-v1/dex > /usr/local/bin/dex && \
+curl -L http://get.iceburg.net/dex/latest-0.12.x/dex > /usr/local/bin/dex && \
 chmod +x /usr/local/bin/dex
 ```
 
@@ -79,7 +79,7 @@ sudo make install
 Diehards run dex from the Al Gore provided Cloud
 ```sh
 # install 'ag' via a series of tubes
-curl -L http://get.iceburg.net/dex/latest-v1/dex | bash -s 'install' 'ag'
+curl -L http://get.iceburg.net/dex/latest-0.12.x/dex | bash -s 'install' 'ag'
 ```
 
 ### quickstart
