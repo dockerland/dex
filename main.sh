@@ -7,7 +7,7 @@
 main(){
   set -eo pipefail
   readonly CWD="$( pwd -P )"
-  readonly SCRIPT_CWD="$( cd $(dirname ${BASH_SOURCE[0]}) ; pwd -P )"
+  [ -z "${BASH_SOURCE[0]}" ] || readonly SCRIPT_CWD="$( cd $(dirname ${BASH_SOURCE[0]}) ; pwd -P )"
   readonly SCRIPT_BUILD="@BUILD@"
   readonly SCRIPT_ENTRYPOINT="$0 $@"
   readonly SCRIPT_VERSION="@VERSION@"

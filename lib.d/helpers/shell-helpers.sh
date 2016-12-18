@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build e8c11f5
+# shell-helpers version v2.0.0-pr build f2f87c2
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -183,7 +183,7 @@ docker/find/dockerfiles(){
 
   (
     found=false
-    cd $path 2>/dev/null
+    cd "$path" 2>/dev/null || exit 1
 
     for Dockerfile in Dockerfile* ; do
       [ -e "$Dockerfile" ] || continue
@@ -197,7 +197,7 @@ docker/find/dockerfiles(){
       # resolve extension
       extension="${filename##*.}"
       while [ -L "$path/$filename" ]; do
-        filename=$(readlink $path/$filename)
+        filename=$(readlink "$path/$filename")
         extension=${filename##*.}
       done
 
@@ -685,7 +685,7 @@ shell/is/in_path(){
   is/in "$pattern" $PATH
 }
 # prompt/user - prompt for input, useful for assigning variiable values
-# usage: prompt/user <prompt message> [fallback value*]
+# usage: prompt/user <prompt message> [fallback value*] [flags]
 #   * uses fallback value if no input recieved or a tty is not available
 # example:
 #   name=$(prompt/user "name to encrypt")
@@ -694,23 +694,22 @@ prompt/user(){
   local input=
   local prompt="${1:-value}"
   local default="$2"
+  local read_flags="${3:--r}"
   [ -z "$default" ] || prompt+=" [$default]"
 
   # convert escape sequences in prompt to ansi codes
   prompt="$(echo -e -n "$prompt : ")"
 
   while [ -z "$input" ]; do
-    if [ -t 0 ]; then
-      # user input
-      read -p "$prompt" input </dev/tty
+    # we have a tty or script is fed through stdin
+    if [[ -t 0 || -z "${BASH_SOURCE[0]}" ]]; then
+      read $read_flags -p "$prompt" input </dev/tty
     else
-      # piped input
       read input
     fi
 
     [[ -n "$default" && -z "$input" ]] && input="$default"
     [ -z "$input" ] && p/warn "invalid input"
-
   done
   echo "$input"
 }
@@ -720,8 +719,11 @@ prompt/user(){
 # examples:
 #  prompt/confirm "really?" || exit 0
 prompt/confirm() {
+  local val
   while true; do
-    case $(prompt/user "${@:-Continue?} [y/n]") in
+    val="$(prompt/user "${@:-Continue?} [y/n]" "" "-r -n 1")"
+    echo
+    case "$val" in
       [yY]) return 0 ;;
       [nN]) return 1 ;;
       *) p/warn "invalid input"
