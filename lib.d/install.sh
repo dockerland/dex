@@ -84,6 +84,7 @@ dex/install(){
         declare -f io/lowercase >> $bin
         declare -f is/absolute >> $bin
         declare -f is/any >> $bin
+        declare -f is/cmd >> $bin
         declare -f is/in >> $bin
         declare -f p/error >> $bin
         declare -f p/blockquote >> $bin
