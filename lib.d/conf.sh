@@ -41,6 +41,7 @@ dex/conf-init(){
   __sources="$DEX_HOME/sources.list"
   __sources_url="${DEX_SOURCES_URL:-https://raw.githubusercontent.com/dockerland/dex/master/${DEX_RUNTIME}-sources.list}"
 
+  __build_callback=
   __defaults=false
   __format=
   __force=false

@@ -52,7 +52,7 @@ dex/get-repostr(){
   }
 
   # tag images with default tag if image is specified and tag is empty
-  [[ -z "$tag" && -n "$image" ]] && tag=$default_tag
+  [[ -z "$tag" && -n "$image" ]] && tag="$default_tag"
 
   echo "$repo/$image:$tag"
 }

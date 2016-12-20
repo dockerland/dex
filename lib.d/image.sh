@@ -43,7 +43,7 @@ dex/image-build(){
     die/help 2
   }
 
-  __built_images=()
+  local success=false
   local repostr
   local Dockerfile
   local Dockerfiles
@@ -53,7 +53,7 @@ dex/image-build(){
     local tag=
     IFS="/:" read repo image tag <<< "$repostr"
 
-    Dockerfiles=( $(dex/find-dockerfiles "$repostr") ) || {
+    Dockerfiles=( $(dex/find-dockerfiles "$repostr" "latest") ) || {
       if [ -z "$repo" ]; then
         p/warn "$repostr is missing from all repository checkouts"
       else
@@ -107,13 +107,14 @@ dex/image-build(){
       local reference_path="$(dex/get/reference-path $__image)"
       [ -e "$reference_path" ] && rm -rf "$reference_path"
 
-      __built_images+=( "$__image" )
+      success=true
       p/success "built \e[1m$repostr\e[21m"
 
+      [ -z "$__build_callback" ] || $__build_callback "$__image"
     done
   done
 
-  [ ${#__built_images[@]} -gt 0 ]
+  $success
 }
 
 dex/image-ls(){
