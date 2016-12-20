@@ -37,7 +37,7 @@ dex/ps(){
   local repo
   local image
   local tag
-  for repostr in "$@"; do
+  for repostr; do
     IFS="/:" read repo image tag <<< "$(dex/get-repostr $repostr)"
 
     if $global; then

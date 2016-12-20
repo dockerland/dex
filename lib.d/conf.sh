@@ -69,7 +69,7 @@ dex/conf-print(){
     "DEX_REGISTRY: default registry prefix used when pulling pre-built images" \
     "DEX_RUNTIME: runtime api version"
 
-    for var in "$@"; do
+    for var; do
       eval "shell/evaluable_export \"$var\" \"\$$var\""
     done
 

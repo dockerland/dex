@@ -29,7 +29,7 @@ dex/ls(){
   [ ${#@} -eq 0 ] && set -- ""
   local repostr
   local Dockerfile
-  for repostr in "$@"; do
+  for repostr; do
     for Dockerfile in $(dex/find-dockerfiles "$repostr"); do
       dex/get-repostr-from-dockerfile "$Dockerfile"
     done

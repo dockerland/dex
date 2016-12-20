@@ -47,7 +47,7 @@ dex/image-build(){
   local repostr
   local Dockerfile
   local Dockerfiles
-  for repostr in "$@"; do
+  for repostr; do
     local repo=
     local image=
     local tag=

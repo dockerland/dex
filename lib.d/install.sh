@@ -49,7 +49,7 @@ dex/install(){
   (
     success=false
     export DEX_NAMESPACE="${DEX_NAMESPACE}-install"
-    for repostr in "$@"; do
+    for repostr; do
 
       # ensure :latest if no image tag is passed
       repostr="$(dex/get-repostr "$repostr" "latest")" || {
@@ -115,7 +115,7 @@ dex/install(){
     "DEX_BIN_DIR is missing from your PATH!" \
     "add $DEX_BIN_DIR to your PATH to execute installed images from anywhere." \
     "if you prefer dex images over system installed commands," \
-    "  prioritize DEX_BIN_DIR by placing at the beginning (leftmost) of PATH" 
+    "  prioritize DEX_BIN_DIR by placing at the beginning (leftmost) of PATH"
 }
 
 # dex-install-link <src> <dest>
