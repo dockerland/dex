@@ -16,19 +16,18 @@ dex/find-dockerfiles(){
 
     $__pull && dex/repo-pull "$search_repo"
 
-    if [ -n "$image" ]; then
-      local path="$__checkouts/$search_repo/dex-images/$image"
-      docker/find/dockerfiles "$path" "${tag:-$default_tag}" || continue
+    for search_image in $(find/dirs "$__checkouts/$search_repo/dex-images" "$image"); do
+      local path="$__checkouts/$search_repo/dex-images/$search_image"
+      docker/find/dockerfiles "$path" "${tag:-$default_tag}" || {
+        [ -n "$tag" ] || docker/find/dockerfiles "$path" || continue
+        # ^^^ if not images were found using the default tag, try without a tag.
+        # allows soft-limiting, e.g. if installing all images from a repo,
+        # attempt :latest first, then install all variants if missing :latest 
+        #
+      }
       found=true
-    else
-      for search_image in $(find/dirs "$__checkouts/$search_repo/dex-images"); do
-        local path="$__checkouts/$search_repo/dex-images/$search_image"
-        docker/find/dockerfiles "$path" "${tag:-$default_tag}" || continue
-        found=true
-      done
-    fi
+    done
   done
 
-  $found && return 0
-  return 127
+  $found
 }
