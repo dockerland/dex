@@ -55,10 +55,8 @@ dex/install(){
         continue
       }
 
-      __build_callback="dex/install/callback" dex/image-build "$repostr" || {
-        p/warn "failed installing $repostr"
-        continue
-      }
+      __build_callback="dex/install/callback" dex/image-build "$repostr" || \
+        die/exception "failed installing $repostr"
     done
   )
 

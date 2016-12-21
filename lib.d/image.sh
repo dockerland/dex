@@ -55,7 +55,7 @@ dex/image-build(){
 
     Dockerfiles=( $(dex/find-dockerfiles "$repostr" "latest") ) || {
       if [ -z "$repo" ]; then
-        p/warn "$repostr is missing from all repository checkouts"
+        p/warn "$repostr is missing from repository checkouts"
       else
         p/warn "$repostr is missing from the \e[1m$repo\e[21m repository"
       fi

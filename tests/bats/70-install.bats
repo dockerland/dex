@@ -27,7 +27,7 @@ teardown(){
 
 @test "install errors if it cannot match any image(s)" {
   run $APP install test-repo/certainly-missing
-  [ $status -eq 126 ]
+  [ $status -gt 0 ]
 }
 
 @test "install creates DEX_BIN dir and writes tag runtime and prefixed link" {
