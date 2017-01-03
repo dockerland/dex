@@ -87,11 +87,11 @@ dex/image-build(){
         local flags=(
           "-t $__image"
           "-f $Dockerfile"
-          "--label=\"org.dockerland.dex.namespace=$DEX_NAMESPACE\""
-          "--label=\"org.dockerland.dex.runtime=$DEX_RUNTIME\""
-          "--label=\"org.dockerland.dex.image=$image\""
-          "--label=\"org.dockerland.dex.repo=$repo\""
-          "--label=\"org.dockerland.dex.tag=$tag\""
+          "--label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
+          "--label=org.dockerland.dex.runtime=$DEX_RUNTIME"
+          "--label=org.dockerland.dex.image=$image"
+          "--label=org.dockerland.dex.repo=$repo"
+          "--label=org.dockerland.dex.tag=$tag"
         )
 
         $__pull && $DEX_NETWORK && flags+=( "--pull" )
