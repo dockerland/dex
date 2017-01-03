@@ -132,7 +132,7 @@ dex/repo-pull(){
       continue
     }
 
-    if [ -d "$path" ]; then
+    if git/is/work-tree "$path"; then
       git/pull "$path" >&2 || return 1
     else
       git/clone "$url" "$path" >&2 || return 1
@@ -152,7 +152,7 @@ dex/repo-rm(){
     if ! $__force; then
       prompt/confirm "remove \e[1m$repo\e[21m from $__sources ?" || continue
     fi
-    file/sed_inplace "/^$repo /d" "$__sources" 
+    file/sed_inplace "/^$repo /d" "$__sources"
     p/log "removing $repo from $__sources"
 
     path="$__checkouts/$repo"
