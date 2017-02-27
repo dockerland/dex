@@ -3,7 +3,9 @@ main_conf(){
   local list=()
 
   [ $# -eq 0 ] && die/help 1
-  set -- $(args/normalize_flags_first "" "$@")
+
+  args/normalize_flags_first "" "$@"
+  set -- "${__argv[@]}"
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)

@@ -3,7 +3,8 @@ main_ls(){
   local list=()
   local global=false
 
-  set -- $(args/normalize_flags_first "" "$@")
+  args/normalize_flags_first "" "$@"
+  set -- "${__argv[@]}"
   while [ $# -ne 0 ]; do
     case "$1" in
       -h|--help)
