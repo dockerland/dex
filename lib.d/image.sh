@@ -123,7 +123,7 @@ dex/image-ls(){
   local repo
   local image
   local tag
-  IFS="/:" read repo image tag <<< "$(dex/get-repostr $1)"
+  IFS="/:" read repo image tag <<< "$(dex/get-repostr "$1")"
 
   if $all; then
     local flags=(

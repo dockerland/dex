@@ -39,7 +39,7 @@ dex/ps(){
   local image
   local tag
   for repostr; do
-    IFS="/:" read repo image tag <<< "$(dex/get-repostr $repostr)"
+    IFS="/:" read repo image tag <<< "$(dex/get-repostr "$repostr")"
 
     if $global; then
       local flags=(

@@ -6,7 +6,7 @@ dex/find-dockerfiles(){
   local repo
   local image
   local tag
-  IFS="/:" read repo image tag <<< "$(dex/get-repostr $1)"
+  IFS="/:" read repo image tag <<< "$(dex/get-repostr "$repostr")"
 
   local found=false
   local search_image
