@@ -93,30 +93,28 @@ done < <(docker/find/labels $DEX_NAMESPACE/test-repo/alpine:latest)
 }
 
 @test "image ls flags and output resemble 'docker images' command" {
-  local filters=(
-    "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+  filters=(
+    "--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
     "--filter=label=org.dockerland.dex.repo=test-repo"
   )
-  diff <($APP image ls test-repo/ --format "{{.Repository}}") <(docker images "${filters[@]}" --format "{{.Repository}}")
-  diff <($APP image ls -q test-repo/) <(docker images -q "${filters[@]}")
+  diff <($APP image ls test-repo/ --format "{{.Repository}}" | sort) <(docker images "${filters[@]}" --format "{{.Repository}}" | sort)
+  diff <($APP image ls -q test-repo/ | sort) <(docker images -q "${filters[@]}" | sort)
 }
 
 @test "image ls supports tag and image filters" {
-  local filters
   filters=(
-    "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
-    "--filter=label=org.dockerland.dex.repo=test-repo"
+    "--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
     "--filter=label=org.dockerland.dex.image=alpine"
+    "--filter=label=org.dockerland.dex.repo=test-repo"
   )
-  diff <($APP image ls test-repo/alpine) <(docker images "${filters[@]}")
+  diff <($APP image ls test-repo/alpine -q | sort) <(docker images -q "${filters[@]}" | sort)
 
   filters=(
-    "--filter=\"label=org.dockerland.dex.namespace=$DEX_NAMESPACE\""
+    "--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
     "--filter=label=org.dockerland.dex.repo=test-repo"
     "--filter=label=org.dockerland.dex.tag=latest"
   )
-
-  diff <($APP image ls -q test-repo/:latest) <(docker images -q "${filters[@]}")
+  diff <($APP image ls -q test-repo/:latest | sort) <(docker images -q "${filters[@]}" | sort)
 }
 
 @test "image rm removes named images, prompts before removal" {
