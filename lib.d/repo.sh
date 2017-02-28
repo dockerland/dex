@@ -44,8 +44,9 @@ dex/repo-add(){
 
   dex/repo-exists "$repo" && {
     prompt/confirm "$repo exists. overwrite?" || return 1
+    __force=true dex/repo-rm "$repo"
   }
-
+  
   path="$__checkouts/$repo"
   prompt/overwrite "$path" "$repo checkout exists. overwrite?" || return 1
 
