@@ -34,6 +34,7 @@ main_repo(){
 dex/repo-add(){
   local repo="$1"
   local url="$2"
+  local path
   [[ -z "$repo" || -z "$url" ]] && {
     p/shout "please provide a repo name and url"
     die/help 2
@@ -42,17 +43,18 @@ dex/repo-add(){
   $__force && dex/repo-rm "$repo"
 
   dex/repo-exists "$repo" && {
-    prompt/confirm "$repo already exists. overwrite?" || return 1
+    prompt/confirm "$repo exists. overwrite?" || return 1
   }
 
-  p/notice "adding \e[1m$repo\e[21m ..."
+  path="$__checkouts/$repo"
+  prompt/overwrite "$path" "$repo checkout exists. overwrite?" || return 1
 
+  p/notice "adding \e[1m$repo\e[21m ..."
   file/interpolate "^$repo " "$repo $url" "$__sources"
   dex/repo-pull "$repo" || {
     __force=true dex/repo-rm "$repo"
     die/exception "failed to add $repo"
   }
-
   p/success "added \e[1m$repo\e[21m"
 }
 
