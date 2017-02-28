@@ -79,3 +79,7 @@ dex/get-repostr-from-dockerfile(){
 dex/get/reference-path(){
   echo "$DEX_HOME/references/$(docker/get/safe-name "$1")"
 }
+
+dex/get/engine-info(){
+  docker/local info || die "failed communicating with docker. is it running? do you have access to its socket?" "executing 'docker info' must work" "dex requires a working docker engine. please fix before continuing"
+}

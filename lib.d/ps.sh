@@ -28,6 +28,7 @@ main_ps(){
     shift
   done
 
+  dex/get/engine-info >/dev/null
   shell/execfn "$operand" "${list[@]}"
 }
 

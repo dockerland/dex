@@ -11,11 +11,11 @@ v1-runtime(){
 
   # deactivate docker-machine
   docker/deactivate-machine
-  DEX_HOME=${DEX_HOME:-~/.dex}
+  docker info >/dev/null || die "failed communicating with docker. is it running? do you have access to its socket?"
 
   # ensure DEX_HOME is absolute
+  DEX_HOME=${DEX_HOME:-~/.dex}
   is/absolute "$DEX_HOME" || DEX_HOME="$(pwd)/$DEX_HOME"
-
 
   # it's faster to execute these in a single child process ...
   read -d "\n" DEX_HOST_UID DEX_HOST_GID DEX_HOST_USER DEX_HOST_GROUP DEX_HOST_PWD < <(
