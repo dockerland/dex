@@ -35,11 +35,6 @@ teardown(){
   [ "$output" = "/dex/workspace" ]
 }
 
-@test "runtime supports piping of stdin" {
-  #@TODO this should be a test of "installed" script
-  [ "$(echo "foo" | $APP run test-repo/debian sed 's/foo/bar/')" = "bar" ]
-}
-
 @test "runtime assigns default v1 vars" {
   run $APP run test-repo/debian
 
@@ -242,22 +237,26 @@ teardown(){
   [[ $output == *"DOCKER_TEST=test"* ]]
 }
 
-@test "runtime suppresses tty flags when container output is piped" {
+@test "runtime suppresses tty flags when container stdout is piped" {
   # test-repo/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
   local out=$(DEX_DEBUG=true $APP run test-repo/labels echo "foo" | sed 's/foo/bar/')
   [[ "$out" == *"--tty=false"* ]]
-
-  local out=$($APP run test-repo/labels echo "foo" | sed 's/foo/bar/')
-  [ "$out" = "bar" ]
 }
 
-@test "runtime suppresses tty flags when container input is piped" {
+@test "runtime supports piped stdout" {
+  local out=$($APP run test-repo/labels echo 'foo' | cat -)
+  [ "$out" = "foo" ]
+}
+
+@test "runtime suppresses tty flags when container stdin is piped" {
   # test-repo/labels image ::
   # LABEL dockerland.dex.docker_flags="--tty -e TESTVAR=TEST"
   local out=$(echo "foo" | DEX_DEBUG=true $APP run test-repo/labels sed 's/foo/bar/')
   [[ "$out" == *"--tty=false"* ]]
+}
 
+@test "runtime supports piped stdin" {
   local out=$(echo "foo" | $APP run test-repo/labels sed 's/foo/bar/')
   [ "$out" = "bar" ]
 }

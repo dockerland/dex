@@ -231,10 +231,13 @@ v1-runtime(){
   # execution
   #
 
-  # piping to|from a container requires interactive, non-tty input
+  # piping to a container requires interactive, non-tty input
   # lets do this last to take priority over earlier flags
-  if [ ! -t 1 ] || ! tty -s > /dev/null 2>&1 ; then
-    docker_flags+=" --interactive=true --tty=false"
+  docker_flags+=" --interactive=true"
+  if [ -t 0 ] && [ -t 1 ]; then
+    docker_flags+=" --tty=true"
+  else
+    docker_flags+=" --tty=false"
   fi
 
   # allow debugging by passing DEX_DEBUG=true, e.g.
