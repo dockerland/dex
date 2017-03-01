@@ -46,12 +46,13 @@ dex/repo-add(){
     prompt/confirm "$repo exists. overwrite?" || return 1
     __force=true dex/repo-rm "$repo"
   }
-  
+
   path="$__checkouts/$repo"
   prompt/overwrite "$path" "$repo checkout exists. overwrite?" || return 1
 
   p/notice "adding \e[1m$repo\e[21m ..."
   file/interpolate "^$repo " "$repo $url" "$__sources"
+  file/ensure_newline "$__sources"
   dex/repo-pull "$repo" || {
     __force=true dex/repo-rm "$repo"
     die/exception "failed to add $repo"
@@ -85,6 +86,7 @@ EOF
 dex/repo-reset(){
   p/notice "reseting $__sources"
   dex/repo-defaults || die/exception "unable to reset $__sources"
+  file/ensure_newline "$__sources"
 
   local repo
   for repo in $(dex/repo-ls); do

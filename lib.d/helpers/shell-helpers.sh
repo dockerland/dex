@@ -1,5 +1,5 @@
 #
-# shell-helpers version v2.0.0-pr build 1dd8f71
+# shell-helpers version v2.0.0-pr build c682487
 #   https://github.com/briceburg/shell-helpers
 # Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
@@ -310,6 +310,14 @@ file/interpolate(){
   else
     echo "$replace" >> "$file"
   fi
+}
+
+# file/ensure_newline - appends a newline if a file does not end in newline
+# usage: file/ensure_newline <path>
+file/ensure_newline(){
+  local file="$1"
+  local junk
+  tail -c1 "$file" | read -r junk || echo >> "$file"
 }
 # shell-helpers - unfurl your arguments
 #   https://github.com/briceburg/shell-helpers
