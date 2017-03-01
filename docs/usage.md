@@ -4,41 +4,6 @@ At its heart, dex manages _'dexecutables'_ -- [runtime scripts](docs/v1-runtime.
 containerized applications. The Dockerfiles making up these applications
 are managed in [source repositories](#source-repositories).
 
-### quickstart
-
-##### run 'ag' (the grep replacement!) from the "extra" repository
-```sh
-echo "hello" > world.txt
-dex run extra/ag "hello"
-```
-
-##### play sed pong
-```sh
-echo 'ping' | dex run sed 's/ping/pong/'
-```
-
-##### add a custom source repository and install all images from it
-```sh
-dex repo add acme-tools git@github.com/acme-tools/dex.git
-dex install acme-tools/
-```
-
-##### install macos-sed to an alternative path, without the 'd' prefix
-```sh
-DEX_BIN_DIR=/usr/local/bin sudo dex install --global sed:macos
-sed --help
-# ^^^ yay 1993
-```
-
-##### use DOS like a boss
-```sh
-export PATH="~/.dex/bin:$PATH"
-dex install --global deltree
-mkdir -p /tmp/dex-makes-it/possible
-deltree /tmp/dex-makes-it
-# ^^^ yay 1983
-```
-
 ### source repositories
 
 Dex consults source repositories for the Dockerfile to build application images from --
@@ -97,3 +62,15 @@ DEX_DOCKER_GID| current uid | host gid to run the container under
 DEX_DOCKER_UID| current gid | host uid to run the container under
 DEX_DOCKER_LOG_DRIVER | none | logging driver to use for container
 DEX_WINDOW_FLAGS | _runtime_ | applied to windowed containers, typically `-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY`
+
+
+
+## use cases
+
+TODO
+
+#### as a bootstrap
+
+#### as a dependency manager
+
+#### wrapping an environment
