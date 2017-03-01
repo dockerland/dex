@@ -11,7 +11,7 @@ v1-runtime(){
 
   # deactivate docker-machine
   docker/deactivate-machine
-  docker info >/dev/null || die "failed communicating with docker. is it running? do you have access to its socket?"
+  docker version >/dev/null || die "dex failed communicating with docker. is it running? do you have access to its socket?" "executing 'docker version' must succeed"
 
   # ensure DEX_HOME is absolute
   DEX_HOME=${DEX_HOME:-~/.dex}

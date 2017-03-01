@@ -81,5 +81,5 @@ dex/get/reference-path(){
 }
 
 dex/get/engine-info(){
-  docker/local info || die "failed communicating with docker. is it running? do you have access to its socket?" "executing 'docker info' must work" "dex requires a working docker engine. please fix before continuing"
+  docker/local version || die "dex failed communicating with docker. is it running? do you have access to its socket?" "executing 'docker version' must succeed"
 }
