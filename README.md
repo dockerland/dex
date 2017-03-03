@@ -52,10 +52,10 @@ dex run deltree dost-test
 # ^^^ yay 1984
 ```
 
-##### install macos-sed to /usr/local/bin, without the 'd' prefix
+##### install macos-sed to /usr/local/bin, with a'macos-' prefix
 ```sh
-DEX_BIN_DIR=/usr/local/bin sudo dex install --global sed:macos
-/usr/local/bin/sed --help
+DEX_BIN_DIR=/usr/local/bin DEX_BIN_PREFIX=macos- dex install sed:macos
+macos-sed --help
 # ^^^ yay 1994
 ```
 
