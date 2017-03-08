@@ -182,7 +182,7 @@ v1-runtime(){
     [ -S "$docker_socket" ] || \
       die "\e[1m$FUNCNAME\e[21m - image requests docker, but $docker_socket is not a valid socket"
 
-    docker_volumes+=" $docker_socket:/var/run/docker.sock:$host_docker $DOCKER_CERT_PATH $MACHINE_STORAGE_PATH"
+    docker_volumes+=" $docker_socket:/var/run/docker.sock:$host_docker $HOME/.docker:/dex/home/.docker:$host_docker $DOCKER_CERT_PATH $MACHINE_STORAGE_PATH"
     docker_flags+=" --group-add=$(ls -ln $docker_socket | awk '{print $4}')"
     docker_envars+=" DOCKER_* MACHINE_STORAGE_PATH"
   }

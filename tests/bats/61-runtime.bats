@@ -25,6 +25,12 @@ teardown(){
   unset DOCKER_MACHINE_NAME
 }
 
+@test "runtime host_docker label bind mounts user's .docker directory to /dex/home/.docker" {
+  mkdir -p $TMPDIR/fake-home/.docker/.dex_test
+  HOME=$TMPDIR/fake-home run $APP run test-repo/labels:enable-host_docker ls -la /dex/home/.docker/
+  [[ $output == *".dex_test"* ]]
+}
+
 @test "runtime properly sets \$HOME as /dex/home" {
   run $APP run test-repo/debian printenv HOME
   [ "$output" = "/dex/home" ]
