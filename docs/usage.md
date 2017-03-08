@@ -51,25 +51,19 @@ DEX_DOCKER_ENTYPOINT=bash ansible
 # ...we're now in the ansible container's bash shell...
 ```
 
-
-v1 runtime vars | default | description
---- | --- | ---
-DEX_DOCKER_CMD | _image_  | alternative command passed to docker run
-DEX_DOCKER_ENTRYPOINT | _image_  |  alternative entrypoint passed to docker run
-DEX_DOCKER_HOME | _image_  | host directory bind mounted as container's `$HOME`. Typically applications get their own home (`$DEX_HOME/homes/[image]-[tag]`) to avoid clobbering system-installed versions.
-DEX_DOCKER_WORKSPACE | current pwd |  host directory bind mounted as container's CWD
-DEX_DOCKER_GID| current uid | host gid to run the container under
-DEX_DOCKER_UID| current gid | host uid to run the container under
-DEX_DOCKER_LOG_DRIVER | none | logging driver to use for container
-DEX_WINDOW_FLAGS | _runtime_ | applied to windowed containers, typically `-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY`
-
+See [v1 runtime variables](v1-runtime.md#runtime-variables) for a complete list.
 
 
 ## use cases
 
-TODO
+WIP
 
 #### as a bootstrap
+
+see [dex and a "modern" bootstrap](https://github.com/dockerland/charleston-containers/tree/master/talks/20170301_Dex-and-a-modern-Bootstrap)
+
+
+
 
 #### as a dependency manager
 

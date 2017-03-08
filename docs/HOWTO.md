@@ -5,44 +5,35 @@
 Dex supports altering the default [docker entrypoint](https://docs.docker.com/engine/reference/builder/#/entrypoint), allowing a user to run applications other than the default, for instance, a shell.
 
 Override the entrypoint via:
-  * passing a flag to `dex run`, or
-  * the `DEX_DOCKER_ENTRYPOINT` environmental variable, helpful for **installed** dexecutables.
+  * passing as a flag to `dex run`, e.g. `dex run --entrypoint=bash sed`, or
+  * providing the `DEX_DOCKER_ENTRYPOINT` environmental variable (helpful for **installed** dexecutables). See [v1 runtime variables](v1-runtime.m2#runtime-variables) for more.
 
 For some dexecutables, you may need to clear the [docker command](https://docs.docker.com/engine/reference/builder/#/cmd) and force an interactive tty to get a shell.
 
 ```sh
-
-# via dex run
-dex run --entrypoint sh ansible-playbook
-
-# via environmental variable
-DEX_DOCKER_ENTRYPOINT=sh dansible-playbook
-
 # force interactive tty and clear cmd
 DEX_DOCKER_ENTRYPOINT=sh DEX_DOCKER_FLAGS="-it" DEX_DOCKER_CMD= dansible-playbook
 ```
 
 ## containerize your application
 
-If you have already containerized your application, all you need to do is add
-[label(s)](https://docs.docker.com/engine/reference/builder/#/label) to support dex. The process is no different than providing a regular
+The process is no different than providing a regular
 Dockerfile for your application, with the following exceptions:
-* dex uses _[special labels](v1-runtime.md)_ to specify runtime behavior and version
+* dex uses _[special labels](v1-runtime.md#runtim)_ to specify runtime behavior and version
 * dex generates a runtime script to execute your image (for consistency and convenience). It applies the working directory, users, groups, devices, volumes, variables, &c. needed to run your application.
 
+If you have already containerized your application, all you need to do is add
+label(s to support dex.
 
-For instance, setting the `org.dockerland.dex.docker_devices=/dev/shm`
-label will mount the host's /dev/shm into your application container at runtime.
-You may also pass arbitrary flags to `docker run` via the `org.dockerland.dex.docker_flags` label.  E.g.
+Refer to [v1-runtime documentation](v1-runtime.md) for a list of behavior-changing
+ labels and conventions.
 
-```
-FROM debian:jessie
+Here's a simple example from the [xeyes](https://github.com/dockerland/dex-dockerfiles-extra/tree/master/dex-images/xeyes) Dockerfile;
 
-#
-# dex my-app:latest image
-#
-
-# ... commands to install my-app and all dependencies
+```Dockerfile
+FROM alpine:edge
+RUN apk add --no-cache xeyes
+ENTRYPOINT ["xeyes"]
 
 #
 # v1 dex-api
@@ -50,23 +41,17 @@ FROM debian:jessie
 
 LABEL \
   org.dockerland.dex.api="v1" \
-  org.dockerland.dex.docker_flags="--interactive --tty" \
-  org.dockerland.dex.docker_devices=/dev/shm
+  org.dockerland.dex.window="true"
 ```
 
-
-Refer to [v1-runtime documentation](v1-runtime.md) for a list of behavior-changing
- labels and conventions.
-
-#### getting started
-
+### developing your dex application
 
 ##### create a local source repository
 
-To run your application with dex, its Dockerfile must be in a [source repository](../README.md#source-repositories).
+To run your application with dex, its Dockerfile must be in a [source repository](usage.md#source-repositories).
 
 Lets create a local development repository. _Alternatively_ you can start
-working directly from a repository that's already checked out (e.g. `$DEX_HOME/checkouts/core`).
+working directly from a repository that's already checked out (e.g. `~/.dex/checkouts/core`).
 
 ```sh
 # initialize local repository
@@ -77,9 +62,7 @@ git init
 
 ##### add your application's Dockerfile
 
-Lets pretend your application is named "my-app". We'll create a Dockerfile
-in `dex-images/my-app/`. Dex uses this Dockerfile to build your application
-image, for instance on `dex run my-app`.
+Lets pretend your application is named "my-app". We'll create its Dockerfile under `dex-images/my-app/`.
 
 ```sh
 # use /path/to/my-app/Dockerfile for my application
@@ -91,8 +74,10 @@ git add dex-images
 git commit -m "dexified my-app"
 ```
 
-Refer to [v1-runtime documentation](v1-runtime.md) for a list of behavior-changing
- labels and conventions.
+Dex will use this Dockerfile to build your application
+image when it runs via `dex run my-app` or `dex image build my-app`.
+
+Refer to [v1-runtime documentation](v1-runtime.md) for a list of dex specific labels you can use in your Dockerfile.
 
 ##### add a tagged Dockerfile [optional]
 
@@ -121,7 +106,7 @@ Skip this step if you're working from an existing checkout.
 
 ```sh
 # add local repository to dex
-dex source add local /path/to/my/local-repo
+dex repo add local /path/to/my/local-repo
 ```
 
 the "local" repository is now checked out to `~/.dex/checkouts/local/`
