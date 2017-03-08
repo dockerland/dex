@@ -101,7 +101,7 @@ v1-runtime(){
     docker_flags+=" --entrypoint=$DEX_DOCKER_ENTRYPOINT"
 
   [ -z "$DEX_DOCKER_FLAGS" ] || \
-    docker_flags+=" --entrypoint=$DEX_DOCKER_FLAGS"
+    docker_flags+=" $DEX_DOCKER_FLAGS"
 
 
   #
