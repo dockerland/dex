@@ -233,8 +233,13 @@ teardown(){
   $APP run test-repo/labels:enable-host_docker | grep -q Plugins
 
   # test DOCKER_ envar passthrough
-  run DOCKER_TEST="test" $APP run test-repo/labels:enable-host_docker printenv
+  DOCKER_TEST="test" run $APP run test-repo/labels:enable-host_docker printenv
   [[ $output == *"DOCKER_TEST=test"* ]]
+}
+
+@test "runtime host_docker label preserves original DOCKER_HOST in container" {
+  DOCKER_HOST="abc" run $APP run test-repo/labels:enable-host_docker printenv
+  [[ $output == *"DOCKER_HOST=abc"* ]]
 }
 
 @test "runtime suppresses tty flags when container stdout is piped" {

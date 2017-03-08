@@ -88,6 +88,7 @@ dex/install/callback(){
   # helpers
   declare -f docker/deactivate-machine >> $bin
   declare -f docker/get/safe-name >> $bin
+  declare -f docker/local >> $bin
   declare -f get/gid_from_name >> $bin
   declare -f die >> $bin
   declare -f io/cat >> $bin

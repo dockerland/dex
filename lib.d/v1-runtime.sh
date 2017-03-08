@@ -9,9 +9,7 @@ v1-runtime(){
   [[ -z "$__repotag" || -z "$__name" || -z "$__tag" ]] && \
     die "\e[1m$FUNCNAME\e[21m - missing repotag ($__repotag), name ($__name), or tag ($__tag)"
 
-  # deactivate docker-machine
-  docker/deactivate-machine
-  docker version >/dev/null || die "dex failed communicating with docker. is it running? do you have access to its socket?" "executing 'docker version' must succeed"
+  docker/local version >/dev/null || die "dex failed communicating with docker. is it running? do you have access to its socket?" "executing 'docker version' must succeed"
 
   # ensure DEX_HOME is absolute
   DEX_HOME=${DEX_HOME:-~/.dex}
@@ -58,7 +56,7 @@ v1-runtime(){
   while read label value ; do
     [[ -z "$label" || ! "${label:0:19}" == "org.dockerland.dex." ]] && continue #docker-cli injects newline...
     eval "${label/org.dockerland.dex.}=\"$value\""
-  done < <(docker inspect --type image -f '{{range $key, $value := .Config.Labels }}{{println $key $value }}{{ end }}' $__repotag)
+  done < <(docker/local inspect --type image -f '{{range $key, $value := .Config.Labels }}{{println $key $value }}{{ end }}' $__repotag)
 
   # rutime defaults -- override through 'run' flags or exporting variables
   #
@@ -239,6 +237,9 @@ v1-runtime(){
   else
     docker_flags+=" --tty=false"
   fi
+
+  # deactivate docker-machine
+  docker/deactivate-machine
 
   # allow debugging by passing DEX_DEBUG=true, e.g.
   #  DEX_DEBUG=true dex run sed ...
