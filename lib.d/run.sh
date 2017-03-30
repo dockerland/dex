@@ -106,7 +106,7 @@ dex/run/mk-reference(){
     }
 
     # remove reference container
-    docker rm --force $id
+    docker rm --force $id >/dev/null
   )
 
 }
