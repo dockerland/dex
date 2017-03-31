@@ -3,8 +3,13 @@
 The dex runtime is responsible for consistently executing application containers
 by passing flags `docker run`.
 
+It provides conveniences for tool authors, for instance, a label that will automatically add the executing UID and GID to a container's /etc/passwd or host => container X11 binds.
+
+Installed images are simply a copy of the runtime script that invokes the
+docker container, passing along the necessary arguments to match desired behavior.
+
 As an example, the runtime passes the `--user $CURRENT_UID:$CURRENT_GID` flag so that dex application containers always execute under the _current user and group_. This ensures after-effects (e.g. a git checkout to a bind mount) are owned by the executing user,
-as you would expect if `git` was system installed. See [default behavior](#default-behavior) for more on runtime defaults.
+as you would expect if `git` was system installed. See [default behavior](#default-flags) for more on runtime defaults.
 
 * Image labels override or augment default runtime behavior, and are defined by _tool authors_ in Dockerfiles. E.g. the `org.dockerland.dex.window` label toggles X11 support for a GUI application.
 * In addition to labels, environmental variables impacting behavior may be passed by _tool users_ at runtime. For instance `DEX_DOCKER_ENTRYPOINT=bash dex run sed` will drop into the bash shell of the `extra/sed` application container instead of running sed.
@@ -14,8 +19,8 @@ The runtime is an [accessible bash script](https://github.com/dockerland/dex/blo
 
 ## runtime labels
 
-> * space-separate values for labels supporting multiple values
-* labels supporting paths values allow /host-path:/container-path:ro|rw format as well as /path
+* use space for a delimiter for labels supporting multiple values
+* labels specifying paths support `/path` and  `/host-path:/container-path:ro|rw` formats
 
 label | description
 --- | ---
@@ -23,7 +28,7 @@ label | description
 `org.dockerland.dex.docker_envars` | specified variables are passed through from host environment to container. defaults to `"LANG TZ"` supports wildcards, e.g. `"LANG TZ DOCKER_*"`
 `org.dockerland.dex.docker_flags` | arbitrary runtime flags, e.g. `org.dockerland.dex.docker_flags="-p 7777:80 --memory 256mb"`
 `org.dockerland.dex.docker_groups` | add named groups to container user via `docker run --group-add` mechanism
-`org.dockerland.dex.docker_home` | host directory to bind-mount to /dex/home in container. set to `~` to use the executing user's real home directory. defaults to a unique home per application (see [default behavior](#default-behavior))
+`org.dockerland.dex.docker_home` | host directory to bind-mount to /dex/home in container. set to `~` to use the executing user's real home directory. defaults to a unique home per application (see [default flags](#default-flags))
 `org.dockerland.dex.docker_volumes` | named paths are bind mounted into the container (only if they exist on host). E.g. `org.dockerland.dex.docker_volumes="/etc/hosts:/etc/hosts:ro /tmp:/host/tmp"`
 `org.dockerland.dex.docker_workspace` | host directory to bind-mount as containers CWD. Some images (like [dosemu2](https://github.com/briceburg/docker-dosemu2/blob/01433015360840d99cfd9d7283ddf71e88e928d6/Dockerfile-dex-v1#L35)) use `'/'` to mount the host root to /dex/workspace in order to access the entire host filesystem, and rely on the `DEX_HOST_PWD` environmental variable in an entrypoint to adjust.
 `org.dockerland.dex.host_docker` | `(empty, 'rw', or 'rw')` bind mounts the host's docker socket into container under /var/run/docker.sock. Also adds the user to the host's docker group and passes through DOCKER_* and MACHINE_STORAGE_PATH envars.
@@ -33,7 +38,7 @@ label | description
 
 ## runtime variables
 
-> variables apply to installed 'dexecutables' as well as `dex run`. E.g. `DEX_DEBUG=true dsed` as well as `DEX_DEBUG=true dex run sed`.
+* environment variables apply to installed images as well as `dex run`. Each invokes the same runtime.
 
 variable | default | description
 --- | --- | ---
@@ -48,7 +53,9 @@ variable | default | description
 `DEX_PERSIST` | false | persist container after it exits
 
 
-## default behavior
+## default flags
+
+* the below flags are passed by default, and can be considered 'default behavior' for application containers.
 
 flag | description | override
 --- | --- | ---
@@ -63,7 +70,9 @@ flag | description | override
 
 ---
 
-in addition, information about the application container image and host system are made available to the container via the following environmental variables;
+#### default environmtal variables
+
+in addition, information about the application container image and host system are made available to dex containers via the following environmental variables;
 
 var | description
 --- | ---

@@ -19,7 +19,7 @@ DEX_DOCKER_ENTRYPOINT=sh DEX_DOCKER_FLAGS="-it" DEX_DOCKER_CMD= dansible-playboo
 
 The process is no different than providing a regular
 Dockerfile for your application, with the following exceptions:
-* dex uses _[special labels](v1-runtime.md#runtim)_ to specify runtime behavior and version
+* dex uses _[special labels](v1-runtime.md#runtime-labels)_ to specify runtime behavior and version
 * dex generates a runtime script to execute your image (for consistency and convenience). It applies the working directory, users, groups, devices, volumes, variables, &c. needed to run your application.
 
 If you have already containerized your application, all you need to do is add

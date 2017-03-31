@@ -118,7 +118,7 @@ they pass. See [tests](tests/) for more.
 
 ### containerize your application
 
-The process is the same as providing a normal Dockerfile, except you use [label(s)](https://docs.docker.com/engine/reference/builder/#/label) to effect runtime behavior.
+The process is the same as providing a normal Dockerfile, except you use [label(s)](docs/v1-runtime.md#runtime-labels) to effect runtime behavior.
 
 
 > Others may find your image useful! **Please** publish to one of our [repositories](https://github.com/dockerland).

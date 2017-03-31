@@ -12,20 +12,21 @@ __applications available to dex are dictated by source repository checkouts__.
 
 Source Repositories are defined one-per-line in `$DEX_HOME/sources.list` as `<name> <url>`. URLs may point to the  _remote URL_ or _local path_ of a [git repository](https://git-scm.com/). Each repository _must_ have a `dex-images/` tree containing images.
 
-Use `dex repo` to manage source repositories. on.
+Use `dex repo` to manage source repositories.
 
 [sources.list example](sources.list) - [repository example](https://github.com/dockerland/dex-dockerfiles-core)
 
-> Repository checkouts are performed __once__ when a source is added.  Use `dex repo pull` to refresh checkout(s), or pass the `--pull` flag to run/ls/install/image commands to perform a checkout _on-the-fly_.
+> :star: Repository checkouts are performed __once__ when added.  Use `dex repo pull` to refresh checkout(s), or pass the `--pull` flag to `dex run|ls|install|etc` commands to perform a checkout _on-the-fly_.
 
 ### environmental variables
 
-You may override _default_ application runtime and dex command behavior by specifying environmental variables. [Learn about environmental variables](https://github.com/dockerland/charleston-containers/blob/master/docs/02-concepts.md#environmental-variables) if `export a=b` vs `a=b` is foreign.
+Use environmental variables to override _default_ default command and container runtime behavior.
 
 #### dex command
 
-variables effecting command behavior, e.g.
+variables effecting command behavior.
 
+Here's an example overriding the bin directory and prefix.
 ```sh
 DEX_BIN_DIR=~/bin/ DEX_BIN_PREFIX=acme- dex install ag
 # ^^^ ag installed to ~/bin/acme-ag
@@ -43,12 +44,14 @@ DEX_RUNTIME | v1 | runtime api version
 
 #### dex runtime
 
-variables effecting runtime behavior, e.g.
+variables effecting runtime behavior.
 
+Here's an example overriding the entrypoint of an installed image.
 ```sh
 dex install --global ansible
 DEX_DOCKER_ENTYPOINT=bash ansible
-# ...we're now in the ansible container's bash shell...
+$
+# ^^^ ...we're now in the ansible container's bash shell...
 ```
 
 See [v1 runtime variables](v1-runtime.md#runtime-variables) for a complete list.
@@ -61,9 +64,6 @@ WIP
 #### as a bootstrap
 
 see [dex and a "modern" bootstrap](https://github.com/dockerland/charleston-containers/tree/master/talks/20170301_Dex-and-a-modern-Bootstrap)
-
-
-
 
 #### as a dependency manager
 
