@@ -14,10 +14,6 @@ RUN apk add --no-cache \
   && git clone --depth 1 https://github.com/sstephenson/bats.git /tmp/bats && \
      /tmp/bats/install.sh /usr/local && rm -rf /tmp/bats
 
-RUN curl -L https://github.com/docker/machine/releases/download/v0.8.1/docker-machine-Linux-x86_64 >/usr/local/bin/docker-machine && \
-  chmod +x /usr/local/bin/docker-machine
-
-
 ARG NAMESPACE
 ENV \
   HOME="/$NAMESPACE/home"
