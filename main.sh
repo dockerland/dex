@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 #
-# dex
+# dex version @VERSION@ build @BUILD@
+#   https://github.com/dockerland/dex
+# Copyright 2016-present Brice Burgess, Licensed under the Apache License 2.0
 #
 
 main(){
