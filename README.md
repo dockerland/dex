@@ -42,6 +42,15 @@ dex run extra/ag "hello"
 DEX_DEBUG=true dex run extra/ag "hello"
 ```
 
+##### bind mount a host path by passing arbitrary volume flag
+```sh
+$ mkdir -p /tmp/ping/pong
+$ DEX_DOCKER_FLAGS="-v /tmp/ping:/tmp/ping" ./main.sh run debian ls /tmp/ping
+pong
+```
+
+see [v1-runtime docs](docs/v1-runtime.md#runtime-variables) for more runtime variables.
+
 ##### use DOS like a boss
 ```sh
 mkdir dos-test
