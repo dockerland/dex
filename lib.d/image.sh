@@ -129,16 +129,16 @@ dex/image-ls(){
 
   if $all; then
     local flags=(
-      "--filter=label=org.dockerland.dex.namespace"
+      "--filter label=org.dockerland.dex.namespace"
     )
   else
     local flags=(
-      "--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
+      "--filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
     )
   fi
-  [ -n "$image" ] && flags+=( "--filter=label=org.dockerland.dex.image=$image" )
-  [ -n "$repo" ] && flags+=( "--filter=label=org.dockerland.dex.repo=$repo" )
-  [ -n "$tag" ] && flags+=( "--filter=label=org.dockerland.dex.tag=$tag" )
+  [ -n "$image" ] && flags+=( "--filter label=org.dockerland.dex.image=$image" )
+  [ -n "$repo" ] && flags+=( "--filter label=org.dockerland.dex.repo=$repo" )
+  [ -n "$tag" ] && flags+=( "--filter label=org.dockerland.dex.tag=$tag" )
   [ -n "$format" ] && flags+=( "--format=\"$format\"" )
   $quiet && flags+=( "-q" )
   docker/local images ${flags[@]}

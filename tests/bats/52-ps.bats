@@ -18,7 +18,7 @@ teardown(){
 }
 
 remove_containers(){
-  for c in $(docker/local ps -aq --filter="label=org.dockerland.dex.namespace=$DEX_NAMESPACE"); do
+  for c in $(docker/local ps -aq --filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE); do
     docker rm --force $c
   done
 }
@@ -31,8 +31,8 @@ remove_containers(){
 
 @test "ps output resembles docker ps command" {
   docker/local run $DEX_NAMESPACE/test-repo/alpine:latest
-  diff <($APP ps -q) <(docker/local ps -aq --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE)
-  diff <($APP ps --format "{{.Repository}}") <(docker/local ps -a --format "{{.Repository}}" --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE)
+  diff <($APP ps -q) <(docker/local ps -aq --filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE)
+  diff <($APP ps --format "{{.Repository}}") <(docker/local ps -a --format "{{.Repository}}" --filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE)
 }
 
 @test "ps -a lists containers across runtimes" {

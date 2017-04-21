@@ -15,8 +15,8 @@ dex/get-image(){
     "--filter label=org.dockerland.dex.image=$image"
   )
 
-  [ -n "$repo" ] && flags+=( "--filter=\"label=org.dockerland.dex.repo=$repo\"" )
-  [ -n "$tag" ] && flags+=( "--filter=\"label=org.dockerland.dex.tag=$tag\"" )
+  [ -n "$repo" ] && flags+=( "--filter label=org.dockerland.dex.repo=$repo" )
+  [ -n "$tag" ] && flags+=( "--filter label=org.dockerland.dex.tag=$tag" )
 
   docker/local images ${flags[@]} | head -n1
 }

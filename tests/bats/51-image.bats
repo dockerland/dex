@@ -16,7 +16,7 @@ teardown(){
 }
 
 rm/images(){
-  for image in $(docker images -q --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE); do
+  for image in $(docker images -q --filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE); do
     docker rmi --force $image
   done
 }
@@ -94,8 +94,8 @@ done < <(docker/find/labels $DEX_NAMESPACE/test-repo/alpine:latest)
 
 @test "image ls flags and output resemble 'docker images' command" {
   filters=(
-    "--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
-    "--filter=label=org.dockerland.dex.repo=test-repo"
+    "--filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
+    "--filter label=org.dockerland.dex.repo=test-repo"
   )
   diff <($APP image ls test-repo/ --format "{{.Repository}}" | sort) <(docker images "${filters[@]}" --format "{{.Repository}}" | sort)
   diff <($APP image ls -q test-repo/ | sort) <(docker images -q "${filters[@]}" | sort)
@@ -103,16 +103,16 @@ done < <(docker/find/labels $DEX_NAMESPACE/test-repo/alpine:latest)
 
 @test "image ls supports tag and image filters" {
   filters=(
-    "--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
-    "--filter=label=org.dockerland.dex.image=alpine"
-    "--filter=label=org.dockerland.dex.repo=test-repo"
+    "--filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
+    "--filter label=org.dockerland.dex.image=alpine"
+    "--filter label=org.dockerland.dex.repo=test-repo"
   )
   diff <($APP image ls test-repo/alpine -q | sort) <(docker images -q "${filters[@]}" | sort)
 
   filters=(
-    "--filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
-    "--filter=label=org.dockerland.dex.repo=test-repo"
-    "--filter=label=org.dockerland.dex.tag=latest"
+    "--filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE"
+    "--filter label=org.dockerland.dex.repo=test-repo"
+    "--filter label=org.dockerland.dex.tag=latest"
   )
   diff <($APP image ls -q test-repo/:latest | sort) <(docker images -q "${filters[@]}" | sort)
 }

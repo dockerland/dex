@@ -326,10 +326,10 @@ teardown(){
   export DOCKER_HOST=an.invalid-host.tld
   export DOCKER_MACHINE_NAME=invalid-host
 
-  run docker/local ps -aq --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE
+  run docker/local ps -aq --filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE
   [ ${#lines[@]} -eq 0 ]
 
   run $APP run --persist test-repo/debian
-  run docker/local ps -aq --filter=label=org.dockerland.dex.namespace=$DEX_NAMESPACE
+  run docker/local ps -aq --filter label=org.dockerland.dex.namespace=$DEX_NAMESPACE
   [ ${#lines[@]} -eq 1 ]
 }

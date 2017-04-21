@@ -69,7 +69,7 @@ Lets pretend your application is named "my-app". We'll create its Dockerfile und
 cd /path/to/my/local-repo
 mkdir -p dex-images/my-app
 cp /path/to/my-app/Dockerfile dex-images/my-app/Dockerfile
-echo "LABEL org.dockerland.dex.api=\"v1\"" >> dex-images/my-app/Dockerfile
+echo "LABEL org.dockerland.dex.api=v1" >> dex-images/my-app/Dockerfile
 git add dex-images
 git commit -m "dexified my-app"
 ```
