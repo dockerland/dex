@@ -109,24 +109,22 @@ _mkrelease: _release_check $(NAMESPACE)
 	git push $(REMOTE_GH) $(RELEASE_BRANCH)
 	$(eval RELEASE_SHA=$(shell git rev-parse $(RELEASE_BRANCH)))
 	$(eval CREATE_JSON=$(shell printf '{"tag_name": "%s","target_commitish": "%s","draft": false,"prerelease": %s}' $(RELEASE_TAG) $(RELEASE_SHA) $(PRERELEASE)))
-	( \
+	@( \
 	  cd $(CURDIR) ; \
 		id=$$(curl -sLH "Authorization: token $(GH_TOKEN)" $(GH_URL)/repos/$(GH_PROJECT)/releases/tags/$(RELEASE_TAG) | jq -Me .id) ; \
-		if [ $$id = "null" ]; then \
-		  echo "  * attempting to create release $(RELEASE_TAG) ..." ; \
-      id=$$(curl -sLH "Authorization: token $(GH_TOKEN)" -X POST --data '$(CREATE_JSON)' $(GH_URL)/repos/$(GH_PROJECT)/releases | jq -Me .id) ; \
-		else \
-		  echo "  * attempting to update release $(RELEASE_TAG) ..." ; \
-			git push $(REMOTE_GH) :$(RELEASE_TAG) ; \
-		  curl -sLH "Authorization: token $(GH_TOKEN)" -X PATCH --data '$(CREATE_JSON)' $(GH_URL)/repos/$(GH_PROJECT)/releases/$$id ; \
+		if [ $$id != "null" ]; then \
+			 echo "  * removing existing release $(RELEASE_TAG) ..." ; \
+       curl -sLH "Authorization: token $(GH_TOKEN)" -X DELETE $(GH_URL)/repos/$(GH_PROJECT)/releases/$$id ; \
+			 git push $(REMOTE_GH) :$(RELEASE_TAG) ; \
 		fi ; \
+		echo "  * creating release $(RELEASE_TAG) ..." ; \
+    id=$$(curl -sLH "Authorization: token $(GH_TOKEN)" -X POST --data '$(CREATE_JSON)' $(GH_URL)/repos/$(GH_PROJECT)/releases | jq -Me .id) ; \
 		[ $$id = "null" ] && echo "  !! unable to create release" && exit 1 ; \
 		echo "  * uploading dist/$(NAMESPACE) to release $(RELEASE_TAG) ($$id) ..." ; \
     curl -sL -H "Authorization: token $(GH_TOKEN)" -H "Content-Type: text/x-shellscript" --data-binary @"dist/$(NAMESPACE)" -X POST $(GH_UPLOAD_URL)/repos/$(GH_PROJECT)/releases/$$id/assets?name=$(NAMESPACE) &>/dev/null ; \
 	)
-
-	$(info * publishing to get.iceburg.net/$(NAMESPACE)/latest-$(RELEASE_BRANCH)/)
 	@( \
+	  echo "  * publishing to get.iceburg.net/$(NAMESPACE)/latest-$(RELEASE_BRANCH)/" ; \
 		set -e ; \
 	  cd $(CURDIR)/dist ; \
 		for file in * ; do \
